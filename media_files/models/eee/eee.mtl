@@ -1,0 +1,22 @@
+newmtl blinn1SG
+illum 4
+Kd 0.00 0.00 0.00
+Ka 0.00 0.00 0.00
+Tf 1.00 1.00 1.00
+map_Kd 0002.jpg
+# map_Kn ../media_files/normal_map/brick_N.dds
+# map_Ks ../media_files/Test/spec-glos2/PreviewSphere_Sphere_Specular.tga
+# map_Ks ../media_files/Test/2k_earth_daymap.jpg
+# map_Ks ../media_files/normal_map/brick_D.dds
+Ni 1.00
+Ks 0.50 0.50 0.50
+newmtl lambert2SG
+illum 4
+Kd 0.00 0.00 0.00
+Ka 0.00 0.00 0.00
+Tf 1.00 1.00 1.00
+map_Kd wal69ar_small.jpg
+# map_Kn ../media_files/normal_map/Terrain1_Norm.dds
+# map_Ks ../media_files/Test/spec-glos2/PreviewSphere_Sphere_Specular.tga
+# map_Ks ../media_files/normal_map/Grass_Diff.dds
+Ni 1.00

@@ -1,0 +1,137 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<Project ToolsVersion="4.0" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+  <ItemGroup>
+    <Filter Include="src">
+      <UniqueIdentifier>{9673a075-8a1a-4062-b31c-85a5a2f4176a}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="shaders">
+      <UniqueIdentifier>{0e0e6f60-10c5-44e1-acf9-a3d790dc323b}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="core">
+      <UniqueIdentifier>{ba75eba9-c692-4b38-b5ca-b06e67c6feb1}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="misc">
+      <UniqueIdentifier>{810744f0-8b80-46b0-bf94-4729a07f1a65}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Model">
+      <UniqueIdentifier>{c700a6bd-916c-4751-9325-39e5efa25245}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Render">
+      <UniqueIdentifier>{636406d0-43b2-4a95-b3dc-64921baf131b}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Model\skeletal">
+      <UniqueIdentifier>{8b063d4b-9e64-4029-967e-b3e0cd56918e}</UniqueIdentifier>
+    </Filter>
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="src\mymath.inl">
+      <Filter>core</Filter>
+    </None>
+    <None Include="media_files\shaders\shader.fs">
+      <Filter>shaders</Filter>
+    </None>
+    <None Include="media_files\shaders\shader.vs">
+      <Filter>shaders</Filter>
+    </None>
+    <None Include="media_files\shaders\skintest.frag">
+      <Filter>shaders</Filter>
+    </None>
+    <None Include="media_files\shaders\skintest.vert">
+      <Filter>shaders</Filter>
+    </None>
+  </ItemGroup>
+  <ItemGroup>
+    <ClCompile Include="src\shader.cpp">
+      <Filter>Render</Filter>
+    </ClCompile>
+    <ClCompile Include="External\OpenGL\src\glad.c">
+      <Filter>Render</Filter>
+    </ClCompile>
+    <ClCompile Include="src\core.cpp">
+      <Filter>core</Filter>
+    </ClCompile>
+    <ClCompile Include="src\myutil.cpp">
+      <Filter>core</Filter>
+    </ClCompile>
+    <ClCompile Include="src\Texture.cpp">
+      <Filter>Render</Filter>
+    </ClCompile>
+    <ClCompile Include="src\mymath.cpp">
+      <Filter>core</Filter>
+    </ClCompile>
+    <ClCompile Include="src\Mesh.cpp">
+      <Filter>Model</Filter>
+    </ClCompile>
+    <ClCompile Include="src\Model.cpp">
+      <Filter>Model</Filter>
+    </ClCompile>
+    <ClCompile Include="src\basic_mesh.cpp">
+      <Filter>Model</Filter>
+    </ClCompile>
+    <ClCompile Include="src\skinned_mesh.cpp">
+      <Filter>Model\skeletal</Filter>
+    </ClCompile>
+    <ClCompile Include="src\main.cpp">
+      <Filter>src</Filter>
+    </ClCompile>
+  </ItemGroup>
+  <ItemGroup>
+    <ClInclude Include="src\shader.h">
+      <Filter>Render</Filter>
+    </ClInclude>
+    <ClInclude Include="src\core.h">
+      <Filter>core</Filter>
+    </ClInclude>
+    <ClInclude Include="src\Texture.h">
+      <Filter>Render</Filter>
+    </ClInclude>
+    <ClInclude Include="src\myutil.h">
+      <Filter>core</Filter>
+    </ClInclude>
+    <ClInclude Include="src\mymath.h">
+      <Filter>core</Filter>
+    </ClInclude>
+    <ClInclude Include="src\world_transform.h">
+      <Filter>misc</Filter>
+    </ClInclude>
+    <ClInclude Include="src\camera_ogldev.h">
+      <Filter>misc</Filter>
+    </ClInclude>
+    <ClInclude Include="src\geometry.h">
+      <Filter>misc</Filter>
+    </ClInclude>
+    <ClInclude Include="src\Mesh.h">
+      <Filter>Model</Filter>
+    </ClInclude>
+    <ClInclude Include="src\types.h">
+      <Filter>core</Filter>
+    </ClInclude>
+    <ClInclude Include="src\Model.h">
+      <Filter>Model</Filter>
+    </ClInclude>
+    <ClInclude Include="src\camera.h">
+      <Filter>core</Filter>
+    </ClInclude>
+    <ClInclude Include="src\basic_mesh.h">
+      <Filter>Model</Filter>
+    </ClInclude>
+    <ClInclude Include="src\skinned_mesh.h">
+      <Filter>Model\skeletal</Filter>
+    </ClInclude>
+    <ClInclude Include="src\AnimTest.h">
+      <Filter>Model\skeletal</Filter>
+    </ClInclude>
+    <ClInclude Include="src\Animator.h">
+      <Filter>Model\skeletal</Filter>
+    </ClInclude>
+    <ClInclude Include="src\AnimTest2.h">
+      <Filter>Model\skeletal</Filter>
+    </ClInclude>
+    <ClInclude Include="src\myanimator.h">
+      <Filter>Model\skeletal</Filter>
+    </ClInclude>
+    <ClInclude Include="src\AnimTest3.h">
+      <Filter>Model\skeletal</Filter>
+    </ClInclude>
+  </ItemGroup>
+</Project>

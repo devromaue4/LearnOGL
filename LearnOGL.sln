@@ -1,0 +1,31 @@
+﻿
+Microsoft Visual Studio Solution File, Format Version 12.00
+# Visual Studio Version 17
+VisualStudioVersion = 17.14.36109.1
+MinimumVisualStudioVersion = 10.0.40219.1
+Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "LearnOGL", "LearnOGL.vcxproj", "{ACEF18B7-BE3F-48F9-9225-241DE19A6931}"
+EndProject
+Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "assimp_sandbox", "assimp_sandbox\assimp_sandbox.vcxproj", "{9153EAA5-2CA3-4D77-A8E3-A38F0754EA6B}"
+EndProject
+Global
+	GlobalSection(SolutionConfigurationPlatforms) = preSolution
+		Debug|x64 = Debug|x64
+		Release|x64 = Release|x64
+	EndGlobalSection
+	GlobalSection(ProjectConfigurationPlatforms) = postSolution
+		{ACEF18B7-BE3F-48F9-9225-241DE19A6931}.Debug|x64.ActiveCfg = Debug|x64
+		{ACEF18B7-BE3F-48F9-9225-241DE19A6931}.Debug|x64.Build.0 = Debug|x64
+		{ACEF18B7-BE3F-48F9-9225-241DE19A6931}.Release|x64.ActiveCfg = Release|x64
+		{ACEF18B7-BE3F-48F9-9225-241DE19A6931}.Release|x64.Build.0 = Release|x64
+		{9153EAA5-2CA3-4D77-A8E3-A38F0754EA6B}.Debug|x64.ActiveCfg = Debug|x64
+		{9153EAA5-2CA3-4D77-A8E3-A38F0754EA6B}.Debug|x64.Build.0 = Debug|x64
+		{9153EAA5-2CA3-4D77-A8E3-A38F0754EA6B}.Release|x64.ActiveCfg = Release|x64
+		{9153EAA5-2CA3-4D77-A8E3-A38F0754EA6B}.Release|x64.Build.0 = Release|x64
+	EndGlobalSection
+	GlobalSection(SolutionProperties) = preSolution
+		HideSolutionNode = FALSE
+	EndGlobalSection
+	GlobalSection(ExtensibilityGlobals) = postSolution
+		SolutionGuid = {72F5F984-7C34-44AA-8613-2F33D3795D60}
+	EndGlobalSection
+EndGlobal
