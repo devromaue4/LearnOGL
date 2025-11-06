@@ -16,7 +16,7 @@
 #include "skinned_mesh.h"
 //#include "Animator.h"
 //#include "AnimTest.h"
-#include "AnimTest2.h"
+//#include "AnimTest2.h"
 #include "AnimTest3.h"
 //#include "mymath.h"
 
@@ -39,7 +39,10 @@ float deltaTime = 0;
 float lastFrame = 0;
 
 //Camera gCamera(WIDTH, HEIGHT, my::vec3(0, 30, 100));
-CameraOGLDEV GameCamera(WIDTH, HEIGHT, glm::vec3(0,30,100), glm::vec3(0.0f, 0.0f, -1));
+CameraOGLDEV GameCamera(WIDTH, HEIGHT, glm::vec3(-30,70,250), glm::vec3(0.0f, 0.0f, -1));
+//CameraOGLDEV GameCamera(WIDTH, HEIGHT, glm::vec3(0,30,100), glm::vec3(0.0f, 0.0f, -1));
+
+glm::mat4 gmProj;
 
 //Model* g_pModel;
 //Animation* g_pAnimation;
@@ -49,6 +52,7 @@ SkinnedMesh* gSkinnedMesh;
 //MySkeletalModel* pMySkelModel;
 //MySkeletalModel2* pMySkelModel3;
 MySkeletalModel3* pMySkelModel3;
+float blendFactor = 0.0f;
 
 //int DisplayBoneIndex;
 //const int MAX_BONES = 200;
@@ -104,7 +108,7 @@ void InitGeo() {
 	//if (!gSkinnedMesh->LoadMesh("../media_files/skeletalmeshes/Vanguard/Vanguard_Walking_in_place.fbx"))
 	if (!gSkinnedMesh->LoadMesh("../media_files/skeletalmeshes/Vanguard/iclone_7_raptoid_mascot_-_free_download.glb"))
 	//if (!gSkinnedMesh->LoadMesh("../media_files/skeletalmeshes/test_2_bones/2bones_new.fbx"))
-	//if (!gSkinnedMesh->LoadMesh("../media_files/skeletalmeshes/test_2_bones/2bones.fbx"))
+	//if (!gSkinnedMesh->LoadMesh("../media_files/skeletalmeshes/test_2_bones/box.fbx"))
 	//if (!gSkinnedMesh->LoadMesh("../media_files/skeletalmeshes/boblampclean/boblampclean.md5mesh"))
 	//if (!gSkinnedMesh->LoadMesh("../media_files/skeletalmeshes/vampire/dancing_vampire.dae"))
 	//if (!gSkinnedMesh->LoadMesh("../media_files/skeletalmeshes/Defeated.fbx"))
@@ -115,6 +119,7 @@ void InitGeo() {
 	//pMySkelModel3->Load("../media_files/skeletalmeshes/Vanguard/Vanguard_Walking_in_place.fbx");
 	pMySkelModel3->Load("../media_files/skeletalmeshes/Vanguard/iclone_7_raptoid_mascot_-_free_download.glb");
 	//pMySkelModel3->Load("../media_files/skeletalmeshes/test_2_bones/2bones_new.fbx");
+	//pMySkelModel3->Load("../media_files/skeletalmeshes/test_2_bones/box.fbx");
 	//pMySkelModel3->Load("../media_files/skeletalmeshes/boblampclean/boblampclean.md5mesh");
 	//pMySkelModel3->Load("../media_files/skeletalmeshes/vampire/dancing_vampire.dae");
 	//pMySkelModel3->Load("../media_files/skeletalmeshes/Defeated.fbx");
@@ -131,6 +136,8 @@ void InitGeo() {
 	//}
 
 	StartTimeMillis = glfwGetTime();
+	
+	gmProj = glm::perspective(glm::radians(45.0f), (float)WIDTH / HEIGHT, .1f, 1000.0f);
 }
 
 void Render() {
@@ -154,27 +161,25 @@ void Render() {
 	//my::mat4 mView = gCamera.getMat();
 	//gCamera.Speed = 100.0f;
 	glm::mat4 mView = GameCamera.GetMatrix();
-	glm::mat4 mProj = glm::perspective(glm::radians(45.0f), (float)WIDTH / HEIGHT, .1f, 1000.0f);
-	glm::mat4 mPVM = mProj * mView * mModel;
+	//glm::mat4 mPVM = gmProj * mView * mModel;
 
-	gShaderBase->setMat4("mPVM", mPVM);
-	//gShaderBase->setMat4("mModel", mModel);
-	//gShaderBase->setMat4("mView", mView);
-	//gShaderBase->setMat4("mProj", mProj);
+	//gShaderBase->setMat4("mPVM", mPVM);
+	gShaderBase->setMat4("mModel", mModel);
+	gShaderBase->setMat4("mView", mView);
+	gShaderBase->setMat4("mProj", gmProj);
 
 #ifndef OGLDEV_SKINMESH
-	pMySkelModel3->UpdateAnim((float)AnimationTimeSec);
+	if(blendFactor > 0.0f) pMySkelModel3->UpdateAnimBlended((float)AnimationTimeSec, 0, 3, blendFactor);
+	else pMySkelModel3->UpdateAnim((float)AnimationTimeSec, 0);
 	const auto& bones = pMySkelModel3->m_Bones;
 	for (int i = 0; i < bones.size(); i++) {
-	//	//gShaderBase->setMat4("gBones[" + std::to_string(i) + "]", bones[i].Transform);
 		gShaderBase->setMat4("gBones[" + std::to_string(i) + "]", bones[i].FinalTransform);
-		//gShaderBase->setMat4("gBones[" + std::to_string(i) + "]", bones[i].Offset);
 	}
 	pMySkelModel3->Render();
 #else
 	//////////// animate ogldev ////////////
 	std::vector<glm::mat4> Transforms;
-	gSkinnedMesh->GetBoneTransforms((float)AnimationTimeSec, Transforms);
+	gSkinnedMesh->GetBoneTransforms((float)AnimationTimeSec, Transforms, 2);
 	for (int i = 0; i < Transforms.size(); i++)
 		gShaderBase->setMat4("gBones[" + std::to_string(i) + "]", Transforms[i]);
 	gSkinnedMesh->Render();
@@ -241,7 +246,7 @@ GLFWwindow* InitWindow() {
 	glfwWindowHint(GLFW_CONTEXT_VERSION_MINOR, 3);
 	glfwWindowHint(GLFW_OPENGL_PROFILE, GLFW_OPENGL_CORE_PROFILE);
 
-	GLFWwindow* pWnd = glfwCreateWindow(WIDTH, HEIGHT, "OpenGL: [ Skeletal Animation ]", nullptr, nullptr);
+	GLFWwindow* pWnd = glfwCreateWindow(WIDTH, HEIGHT, "OpenGL: [ Skeletal Animation (blend anibations) ]", nullptr, nullptr);
 
 	//GLFWmonitor* primMonitor = glfwGetPrimaryMonitor();
 	//const GLFWvidmode* mode = glfwGetVideoMode(primMonitor);
@@ -301,8 +306,15 @@ void processInput(GLFWwindow* wnd) {
 	//	glfwSetCursorPos(wnd, (WIDTH / 2), (HEIGHT / 2));
 	//}
 	
-	if (glfwGetKey(wnd, GLFW_KEY_MINUS) == GLFW_PRESS) GameCamera.OnKeyboard(GLFW_KEY_MINUS);
-	if (glfwGetKey(wnd, GLFW_KEY_EQUAL) == GLFW_PRESS) GameCamera.OnKeyboard(GLFW_KEY_EQUAL);
+	if (glfwGetKey(wnd, GLFW_KEY_MINUS) == GLFW_PRESS) {
+		blendFactor -= 0.005f; if (blendFactor < 0.0f) blendFactor = 0.0f;
+	}
+	if (glfwGetKey(wnd, GLFW_KEY_EQUAL) == GLFW_PRESS) {
+		blendFactor += 0.005f; if (blendFactor > 1.0f) blendFactor = 1.0f;
+	}
+
+	//if (glfwGetKey(wnd, GLFW_KEY_MINUS) == GLFW_PRESS) GameCamera.OnKeyboard(GLFW_KEY_MINUS);
+	//if (glfwGetKey(wnd, GLFW_KEY_EQUAL) == GLFW_PRESS) GameCamera.OnKeyboard(GLFW_KEY_EQUAL);
 	if (glfwGetKey(wnd, GLFW_KEY_W) == GLFW_PRESS) GameCamera.OnKeyboard(GLFW_KEY_W);
 	if (glfwGetKey(wnd, GLFW_KEY_S) == GLFW_PRESS) GameCamera.OnKeyboard(GLFW_KEY_S);
 	if (glfwGetKey(wnd, GLFW_KEY_A) == GLFW_PRESS) GameCamera.OnKeyboard(GLFW_KEY_A);

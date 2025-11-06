@@ -21,7 +21,7 @@ public:
 
 	uint NumBones() const { return (uint)m_BoneNameToIndexMap.size(); }
 
-	void GetBoneTransforms(float TimeInSeconds, std::vector<glm::mat4>& Transforms);
+	void GetBoneTransforms(float TimeInSeconds, std::vector<glm::mat4>& Transforms, int AnimIndex);
 
 private:
 	void Clear();
@@ -66,7 +66,7 @@ private:
 	void LoadMeshBones(uint MeshIndex, const aiMesh* paiMesh);
 	void LoadSingleBone(uint MeshIndex, const aiBone* pBone);
 	int GetBoneId(const aiBone* pBone);
-	void ReadNodeHierarchy(float AnimationTimeTicks, const aiNode* pNode, const glm::mat4& ParentTransform);
+	void ReadNodeHierarchy(float AnimationTimeTicks, const aiNode* pNode, const glm::mat4& ParentTransform, int AnimIndex);
 	const aiNodeAnim* FindNodeAnim(const aiAnimation* pAnimation, const std::string NodeName);
 	uint FindScaling(float AnimationTimeTicks, const aiNodeAnim* pNodeAnim);
 	uint FindRotation(float AnimationTimeTicks, const aiNodeAnim* pNodeAnim);

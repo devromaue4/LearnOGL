@@ -9,7 +9,10 @@ out vec3 NormalO;
 out vec2 TexCoordO;
 
 uniform mat4 gBones[200];
-uniform mat4 mPVM;
+// uniform mat4 mPVM;
+uniform mat4 mModel;
+uniform mat4 mView;
+uniform mat4 mProj;
 
 void main() {
 	mat4 boneTransform = gBones[BoneIDs[0]] * Weights[0];
@@ -20,7 +23,9 @@ void main() {
 
 	vec3 normalOut = normalize(mat3(boneTransform) * Normal);
 
-	gl_Position = mPVM * PosL;
+	// gl_Position = mPVM * PosL;
+	gl_Position = mProj * mView * mModel * PosL;
+	// gl_Position = mProj * mView * mModel * vec4(Pos, 1.0);
 	// gl_Position = mPVM * vec4(Pos, 1.0);
 	// gl_Position = vec4(Pos, 1.0);
 	// NormalO = Normal;

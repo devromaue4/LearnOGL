@@ -269,25 +269,25 @@ int SkinnedMesh::GetBoneId(const aiBone* pBone) {
 	return boneIndex;
 }
 
-void SkinnedMesh::GetBoneTransforms(float TimeInSeconds, std::vector<glm::mat4>& Transforms) {
+void SkinnedMesh::GetBoneTransforms(float TimeInSeconds, std::vector<glm::mat4>& Transforms, int AnimIndex) {
 
 	glm::mat4 Identity(1);
 
-	float TickPerSeconds = (float)(m_pScene->mAnimations[0]->mTicksPerSecond != 0 ? m_pScene->mAnimations[0]->mTicksPerSecond : 25.0f);
+	float TickPerSeconds = (float)(m_pScene->mAnimations[AnimIndex]->mTicksPerSecond != 0 ? m_pScene->mAnimations[AnimIndex]->mTicksPerSecond : 25.0f);
 	float TimeInTicks = TimeInSeconds * TickPerSeconds;
-	float AnimationTimeTicks = fmod(TimeInTicks, (float)m_pScene->mAnimations[0]->mDuration);
+	float AnimationTimeTicks = fmod(TimeInTicks, (float)m_pScene->mAnimations[AnimIndex]->mDuration);
 
-	ReadNodeHierarchy(AnimationTimeTicks, m_pScene->mRootNode, Identity);
+	ReadNodeHierarchy(AnimationTimeTicks, m_pScene->mRootNode, Identity, AnimIndex);
 	Transforms.resize(m_BoneInfo.size());
 
 	for (uint i = 0; i < m_BoneInfo.size(); i++)
 		Transforms[i] = m_BoneInfo[i].FinalTransformation;
 }
 
-void SkinnedMesh::ReadNodeHierarchy(float AnimationTimeTicks, const aiNode* pNode, const glm::mat4& ParentTransform) {
+void SkinnedMesh::ReadNodeHierarchy(float AnimationTimeTicks, const aiNode* pNode, const glm::mat4& ParentTransform, int AnimIndex) {
 	string NodeName(pNode->mName.data);
 
-	const aiAnimation* pAnimation = m_pScene->mAnimations[0];
+	const aiAnimation* pAnimation = m_pScene->mAnimations[AnimIndex];
 
 	glm::mat4 NodeTransformation;
 	memcpy(&NodeTransformation[0], &pNode->mTransformation, sizeof(float) * 16);
@@ -332,7 +332,7 @@ void SkinnedMesh::ReadNodeHierarchy(float AnimationTimeTicks, const aiNode* pNod
 	}
 
 	for (uint i = 0; i < pNode->mNumChildren; i++)
-		ReadNodeHierarchy(AnimationTimeTicks, pNode->mChildren[i], GlobalTransformation);
+		ReadNodeHierarchy(AnimationTimeTicks, pNode->mChildren[i], GlobalTransformation, AnimIndex);
 }
 
 const aiNodeAnim* SkinnedMesh::FindNodeAnim(const aiAnimation* pAnimation, const string NodeName) {

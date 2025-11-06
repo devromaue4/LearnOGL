@@ -597,8 +597,6 @@ namespace my {
 	}
 
 	FI quat slerp(const quat& q1, const quat& q2, float a) { 
-		quat q;
-
 		quat d = q2;
 
 		float cosTheta = dot(q1, q2);
@@ -609,37 +607,32 @@ namespace my {
 		}
 
 		// Check if they are very close together, to protect against divide−by−zero
-		float k0, k1;
+		//float k0, k1;
 		if (cosTheta > 0.9999f) {
 		//if (cosTheta > 1.0f - std::numeric_limits<float>::epsilon()) {
 			// just use linear interpolation
-			k0 = 1.0f - a;
-			k1 = a;
-			//return lerp(q1, d, a);
+			//k0 = 1.0f - a;
+			//k1 = a;
+			return lerp(q1, d, a);
 			//return quat(std::lerp(q1.w, d.w, a),
 			//	std::lerp(q1.x, d.x, a),
 			//	std::lerp(q1.y, d.y, a),
 			//	std::lerp(q1.z, d.z, a));
 		}
-		else {
-			float sinTheta = sqrt(1.0f - cosTheta * cosTheta);
-			float angle = atan2(sinTheta, cosTheta);
-			float oneOverSinTheta = 1.0f / sinTheta;
+		//else {
+		//	float sinTheta = sqrt(1.0f - cosTheta * cosTheta);
+		//	float angle = atan2(sinTheta, cosTheta);
+		//	float oneOverSinTheta = 1.0f / sinTheta;
 
-			k0 = sin((1.0f - a) * angle) * oneOverSinTheta;
-			k1 = sin(a * angle) * oneOverSinTheta;
-		}
+		//	k0 = sin((1.0f - a) * angle) * oneOverSinTheta;
+		//	k1 = sin(a * angle) * oneOverSinTheta;
+		//}
 
-		//p = (r * -q) * t * q;
-
-		//float angle =  acos(cosTheta);
-		//q = (sin((1 - a) * angle) * q1 + sin(a * angle) * d) / sin(angle);
-		//q = sin((1 - a) * angle) / sin(angle) * q1 + sin(a * angle) / sin(angle) * d;
+		float angle = acos(cosTheta);
+		return (sin((1 - a) * angle) * q1 + sin(a * angle) * d) / sin(angle);
 
 		// Interpolate
-		q = q1 * k0 + d * k1;
-
-		return q;
+		//return q1 * k0 + d * k1;
 	}
 
 	#include "mymath.inl"

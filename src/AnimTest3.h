@@ -10,10 +10,10 @@ struct MyVertex3 {
 	float weights[MAX_BONE_INFLUENCE]{};
 
 	void addWeight(uint iBoneID, float fWeight) {
-		//if (fWeight == .0f || fWeight <= 0.01f) return; // if skiped need renormalize weights (it not implements yet)
+		if (fWeight == 0.0f || fWeight <= 0.01f) return; // if skiped need renormalize weights (it not implements yet)
 
 		for (uint i = 0; i < MAX_BONE_INFLUENCE; i++) {
-			//if (boneIDs[i] == iBoneID) return;
+			//if (boneIDs[i] == iBoneID) return; // not work in my case
 			if (weights[i] == 0.0f) {
 				boneIDs[i] = iBoneID;
 				weights[i] = fWeight;
@@ -74,9 +74,17 @@ class MySkeletalModel3 {
 
 	my::mat4 m_GlobalInverseTransform = my::mat4(1);
 
+	std::string m_Directory;
+
 	// temporary
 	Assimp::Importer importer;
 	const aiScene* m_pScene;
+
+	struct LocalTranform {
+		my::vec3 pos;
+		my::quat rot;
+		my::vec3 scale;
+	};
 
 	void clear() {
 		for (Texture* texture : m_Textures) safe_delete(texture);
@@ -88,7 +96,7 @@ class MySkeletalModel3 {
 public:
 	std::vector<MyBone3>			m_Bones;
 
-	void Load(const char* fileName, bool bFlipUVs = false) {
+	void Load(std::string_view fileName, bool bFlipUVs = false) {
 		clear();
 
 		uint flags =
@@ -99,21 +107,24 @@ public:
 			| aiProcess_JoinIdenticalVertices
 			//| aiProcess_MakeLeftHanded
 			//| aiProcess_OptimizeGraph
-			//aiProcess_FindDegenerates
+			//| aiProcess_FindDegenerates
 			;
 		if (bFlipUVs) flags |= aiProcess_FlipUVs;
 
 		//Assimp::Importer importer;
 		//const aiScene* 
-		m_pScene = importer.ReadFile(fileName, flags);
+		m_pScene = importer.ReadFile(fileName.data(), flags);
 		if (!m_pScene || m_pScene->mFlags & AI_SCENE_FLAGS_INCOMPLETE || !m_pScene->mRootNode) {
 			log(importer.GetErrorString());
 			throw std::exception("MySkeletalModel3::Load!");
 		}
 
+		m_Directory = fileName.substr(0, fileName.find_last_of('/'));
+
 		m_GlobalInverseTransform = my::inverseAffineSSE(toMy(m_pScene->mRootNode->mTransformation));
 
 		m_Meshes.resize(m_pScene->mNumMeshes);
+		m_Textures.resize(m_pScene->mNumMaterials);
 
 		uint numVertices = 0, numIndices = 0;
 		calcVertices(m_pScene, numVertices, numIndices);
@@ -123,9 +134,13 @@ public:
 
 		loadGeoData(m_pScene);
 
+		ReadNodeHierarchy(m_pScene->mRootNode, my::mat4(1));
+
+		loadMaterials(m_pScene);
+
 		buildBuffers();
 
-		ReadNodeHierarchy(m_pScene->mRootNode, my::mat4(1));
+		//importer.FreeScene();
 	}
 
 	void calcVertices(const aiScene* pScene, uint& numVertices, uint& numIndices) {
@@ -194,6 +209,45 @@ public:
 		}
 	}
 
+	void loadMaterials(const aiScene* pScene) {
+		for (uint i = 0; i < pScene->mNumMaterials; i++)
+			loadDiffuseTexture(pScene, pScene->mMaterials[i], i);
+	}
+
+	void loadDiffuseTexture(const aiScene* pScene, const aiMaterial* pMaterial, int index) {
+		m_Textures[index] = nullptr;
+
+		if (pMaterial->GetTextureCount(aiTextureType_DIFFUSE) > 0) {
+			aiString path;
+			if (pMaterial->GetTexture(aiTextureType_DIFFUSE, 0, &path) == AI_SUCCESS) {
+				const aiTexture* pAiTexture = pScene->GetEmbeddedTexture(path.data);
+				if (pAiTexture) {
+					m_Textures[index] = new Texture;
+					if (!m_Textures[index]->Load(pAiTexture->mWidth, pAiTexture->pcData))
+						log("Error loading Embedded texture");
+				}
+				else {
+					std::string p(path.data);
+					//if (p.substr(0, 2) == ".\\") // don't know this code
+					//	p = p.substr(2, p.size() - 2);
+
+					//int sz = p.find_last_of('/') + 1;
+					//if(sz > 0) p = p.substr(sz, sz);
+
+					std::string fullPath = m_Directory + "/" + p;
+
+					m_Textures[index] = new Texture(fullPath.c_str());
+					if (!m_Textures[index]->Load()) {
+						log_error("loading texture " << fullPath);
+						safe_delete(m_Textures[index]);
+						m_Textures[index] = nullptr;
+						return;
+					}
+				}
+			}
+		}
+	}
+
 	void buildBuffers() {
 		glGenVertexArrays(1, &m_VAO);
 		glGenBuffers(1, &m_VBO);
@@ -235,26 +289,119 @@ public:
 			ReadNodeHierarchy(pNode->mChildren[i], GlobalTransform);
 	}
 
-	void UpdateAnim(float TimeInSec) {
+	void UpdateAnimBlended(float TimeInSec, uint animA, uint animB, float BlendFactor) {
+		if (animA >= m_pScene->mNumAnimations || animB >= m_pScene->mNumAnimations) {
+			log("No Animation"); assert(0);
+		}
+		if (BlendFactor < 0.0f || BlendFactor > 1.0f) {
+			log_error("invalid blend factor"); assert(0);
+		}
+
+		float AnimTimeTicksA = CalcAnimTimeTicks(TimeInSec, animA);
+		float AnimTimeTicksB = CalcAnimTimeTicks(TimeInSec, animB);
+
+		const aiAnimation* pAnimA= m_pScene->mAnimations[animA];
+		const aiAnimation* pAnimB= m_pScene->mAnimations[animB];
+
+		UpdateNodeHierarchyBlended(AnimTimeTicksA, AnimTimeTicksB, m_pScene->mRootNode, my::mat4(1), pAnimA, pAnimB, BlendFactor);
+	}
+
+	void UpdateNodeHierarchyBlended(float animTimeA, float animTimeB, const aiNode* pNode, const my::mat4& parentTrans, const aiAnimation* pAnimA, const aiAnimation* pAnimB, float blendFactor) {
+		std::string NodeName(pNode->mName.data);
+
+		my::mat4 NodeTransform = toMy(pNode->mTransformation);
+
+		const aiNodeAnim* pStartNodeAnim = FindNodeAnim(pAnimA, NodeName);
+
+		// calc local transform pStartNodeAnim
+		LocalTranform transA;
+		if (pStartNodeAnim) {
+			CalcInterpolatePosition(animTimeA, pStartNodeAnim, transA.pos);
+			CalcInterpolateRotation(animTimeA, pStartNodeAnim, transA.rot);
+			CalcInterpolateScaling(animTimeA, pStartNodeAnim, transA.scale);
+		}
+
+		const aiNodeAnim* pEndNodeAnim = FindNodeAnim(pAnimB, NodeName);
+
+		if ((pStartNodeAnim && !pEndNodeAnim) || (!pStartNodeAnim && pEndNodeAnim)) {
+			log_error("There is only one animation node.\n This case is not supported.");
+			exit(0);
+		}
+
+		// calc local transform pEndNodeAnim
+		LocalTranform transB;
+		if (pEndNodeAnim) {
+			CalcInterpolatePosition(animTimeB, pEndNodeAnim, transB.pos);
+			CalcInterpolateRotation(animTimeB, pEndNodeAnim, transB.rot);
+			CalcInterpolateScaling(animTimeB, pEndNodeAnim, transB.scale);
+		}
+
+		if (pStartNodeAnim && pEndNodeAnim) {
+			my::vec3 blendedTrans = (1.0f - blendFactor) * transA.pos + transB.pos * blendFactor;
+			//my::vec3 blendedTrans = my::lerp(transA.pos, transB.pos, blendFactor);
+			my::mat4 mTrans(1);
+			mTrans = my::translate(mTrans, blendedTrans);
+
+			//my::quat rot = my::lerp(transA.rot, transB.rot, blendFactor);
+			my::quat rot = my::slerp(transA.rot, transB.rot, blendFactor);
+			//aiQuaternion::Interpolate
+			my::mat4 mRot = my::toMat4(rot);
+
+			my::vec3 blendedScale = (1.0f - blendFactor) * transA.scale + transB.scale * blendFactor;
+			//my::vec3 blendedScale = my::lerp(transA.pos, transB.pos, blendFactor);
+			my::mat4 mScale(1);
+			mScale = my::scale(mScale, blendedScale);
+
+			NodeTransform = mTrans * mRot * mScale;
+		}
+
+		my::mat4 GlobalTransform = parentTrans * NodeTransform;
+
+		if (m_BonesMap.find(NodeName) != m_BonesMap.end()) {
+			uint BoneIndex = m_BonesMap[NodeName];
+			m_Bones[BoneIndex].FinalTransform = m_GlobalInverseTransform * GlobalTransform * m_Bones[BoneIndex].Offset;
+		}
+
+		for (uint i = 0; i < pNode->mNumChildren; i++)
+			UpdateNodeHierarchyBlended(animTimeA, animTimeB, pNode->mChildren[i], GlobalTransform, pAnimA, pAnimB, blendFactor);
+	}
+
+	float CalcAnimTimeTicks(float TimeInSec, unsigned int AnimIndex)
+	{
+		float TicksPerSecond = (float)(m_pScene->mAnimations[AnimIndex]->mTicksPerSecond != 0 ? m_pScene->mAnimations[AnimIndex]->mTicksPerSecond : 25.0f);
+		float TimeInTicks = TimeInSec * TicksPerSecond;
+		// we need to use the integral part of mDuration for the total length of the animation
+		float Duration = 0.0f;
+		float fraction = modf((float)m_pScene->mAnimations[AnimIndex]->mDuration, &Duration);
+		float AnimationTimeTicks = fmod(TimeInTicks, Duration);
+		return AnimationTimeTicks;
+	}
+
+	void UpdateAnim(float TimeInSec, uint AnimIndex) {
+
+		if (m_pScene->mNumAnimations == 0 || AnimIndex > m_pScene->mNumAnimations - 1) {
+			log("No Animation");
+			return;
+		}
 		
 		// calc anim time
-		float TimePerSeconds = (float)(m_pScene->mAnimations[0]->mTicksPerSecond != 0 ? m_pScene->mAnimations[0]->mTicksPerSecond : 25.0f);
+		float TimePerSeconds = (float)(m_pScene->mAnimations[AnimIndex]->mTicksPerSecond != 0 ? m_pScene->mAnimations[AnimIndex]->mTicksPerSecond : 25.0f);
 		float TimeInTicks = TimeInSec * TimePerSeconds;
-		float AnimTimeTicks = (float)fmod(TimeInTicks, m_pScene->mAnimations[0]->mDuration);
+		float AnimTimeTicks = (float)fmod(TimeInTicks, m_pScene->mAnimations[AnimIndex]->mDuration);
 		//float AnimTimeTicks = (float)fmod(TimeInSec * 10.0f, m_pScene->mAnimations[0]->mDuration); // for loop
 		//float AnimTimeTicks = TimeInSec * 10.0f;
 
-		UpdateAnimHierarchy(AnimTimeTicks, m_pScene->mRootNode, my::mat4(1));
+		UpdateAnimHierarchy(AnimTimeTicks, m_pScene->mRootNode, my::mat4(1), AnimIndex);
 	}
 
-	void UpdateAnimHierarchy(float AnimTimeTicks, const aiNode* pNode, const my::mat4& mParentTransform) {
+	void UpdateAnimHierarchy(float AnimTimeTicks, const aiNode* pNode, const my::mat4& mParentTransform, int AnimIndex) {
 		
 		my::mat4 mNodeTransform = toMy(pNode->mTransformation);
 
 		std::string NodeName = pNode->mName.C_Str();
 
 		const aiNodeAnim* pAnimNode = nullptr;
-		const aiAnimation* pAnim = m_pScene->mAnimations[0]; // get first animation
+		const aiAnimation* pAnim = m_pScene->mAnimations[AnimIndex]; // 0 get first animation
 		if (pAnim) {
 			for (uint ikey = 0; ikey < pAnim->mNumChannels; ikey++) {
 				pAnimNode = pAnim->mChannels[ikey];
@@ -291,7 +438,7 @@ public:
 		}
 
 		for (uint i = 0; i < pNode->mNumChildren; i++)
-			UpdateAnimHierarchy(AnimTimeTicks, pNode->mChildren[i], GlobalTransform);
+			UpdateAnimHierarchy(AnimTimeTicks, pNode->mChildren[i], GlobalTransform, AnimIndex);
 	}
 
 	void CalcInterpolatePosition(float AnimTimeTicks, const aiNodeAnim* pAnimNode, my::vec3& pos) {
@@ -341,6 +488,21 @@ public:
 		return (float)factor;
 	}
 
+	const aiNodeAnim* FindNodeAnim(const aiAnimation* pAnim, std::string_view NodeName) {
+		const aiNodeAnim* pAnimNode = nullptr;
+		//const aiAnimation* pAnim = m_pScene->mAnimations[AnimIndex]; // 0 get first animation
+		if (pAnim) {
+			for (uint ikey = 0; ikey < pAnim->mNumChannels; ikey++) {
+				pAnimNode = pAnim->mChannels[ikey];
+				if (pAnimNode->mNodeName.data == NodeName)
+					return pAnimNode;// break;
+				//pAnimNode = nullptr;
+			}
+		}
+
+		return nullptr;
+	}
+
 	uint FindPosIndex(float AnimTimeTicks, const aiNodeAnim* pAnimNode) {
 		for (uint i = 0; i < pAnimNode->mNumPositionKeys - 1; i++) {
 			float t = (float)pAnimNode->mPositionKeys[i + 1].mTime;
@@ -368,8 +530,14 @@ public:
 	void Render() {
 		glBindVertexArray(m_VAO);
 
-		for(uint i = 0; i < m_Meshes.size(); i++)
+		for (uint i = 0; i < m_Meshes.size(); i++) {
+			uint MatIndex = m_Meshes[i].MaterialIndex;
+			assert(MatIndex < m_Textures.size());
+			if (m_Textures.size())
+				if (m_Textures[MatIndex]) m_Textures[MatIndex]->Bind();
+
 			glDrawElementsBaseVertex(GL_TRIANGLES, m_Meshes[i].NumIndices, GL_UNSIGNED_INT, (void*)(sizeof(uint) * m_Meshes[i].BaseIndex), m_Meshes[i].BaseVertex);
+		}
 
 		glBindVertexArray(0);
 	}
