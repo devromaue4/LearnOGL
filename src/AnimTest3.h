@@ -105,8 +105,6 @@ public:
 			| aiProcess_GenSmoothNormals 
 			//| aiProcess_CalcTangentSpace |
 			| aiProcess_JoinIdenticalVertices
-			//| aiProcess_MakeLeftHanded
-			//| aiProcess_OptimizeGraph
 			//| aiProcess_FindDegenerates
 			;
 		if (bFlipUVs) flags |= aiProcess_FlipUVs;
@@ -337,18 +335,16 @@ public:
 		}
 
 		if (pStartNodeAnim && pEndNodeAnim) {
-			my::vec3 blendedTrans = (1.0f - blendFactor) * transA.pos + transB.pos * blendFactor;
-			//my::vec3 blendedTrans = my::lerp(transA.pos, transB.pos, blendFactor);
+			//my::vec3 blendedTrans = (1.0f - blendFactor) * transA.pos + transB.pos * blendFactor;
+			my::vec3 blendedTrans = my::lerp(transA.pos, transB.pos, blendFactor);
 			my::mat4 mTrans(1);
 			mTrans = my::translate(mTrans, blendedTrans);
 
-			//my::quat rot = my::lerp(transA.rot, transB.rot, blendFactor);
 			my::quat rot = my::slerp(transA.rot, transB.rot, blendFactor);
-			//aiQuaternion::Interpolate
 			my::mat4 mRot = my::toMat4(rot);
 
-			my::vec3 blendedScale = (1.0f - blendFactor) * transA.scale + transB.scale * blendFactor;
-			//my::vec3 blendedScale = my::lerp(transA.pos, transB.pos, blendFactor);
+			//my::vec3 blendedScale = (1.0f - blendFactor) * transA.scale + transB.scale * blendFactor;
+			my::vec3 blendedScale = my::lerp(transA.scale, transB.scale, blendFactor);
 			my::mat4 mScale(1);
 			mScale = my::scale(mScale, blendedScale);
 
@@ -372,7 +368,8 @@ public:
 		float TimeInTicks = TimeInSec * TicksPerSecond;
 		// we need to use the integral part of mDuration for the total length of the animation
 		float Duration = 0.0f;
-		float fraction = modf((float)m_pScene->mAnimations[AnimIndex]->mDuration, &Duration);
+		//float fraction = 
+			modf((float)m_pScene->mAnimations[AnimIndex]->mDuration, &Duration);
 		float AnimationTimeTicks = fmod(TimeInTicks, Duration);
 		return AnimationTimeTicks;
 	}
@@ -495,8 +492,7 @@ public:
 			for (uint ikey = 0; ikey < pAnim->mNumChannels; ikey++) {
 				pAnimNode = pAnim->mChannels[ikey];
 				if (pAnimNode->mNodeName.data == NodeName)
-					return pAnimNode;// break;
-				//pAnimNode = nullptr;
+					return pAnimNode;
 			}
 		}
 

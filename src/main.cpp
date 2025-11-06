@@ -246,7 +246,7 @@ GLFWwindow* InitWindow() {
 	glfwWindowHint(GLFW_CONTEXT_VERSION_MINOR, 3);
 	glfwWindowHint(GLFW_OPENGL_PROFILE, GLFW_OPENGL_CORE_PROFILE);
 
-	GLFWwindow* pWnd = glfwCreateWindow(WIDTH, HEIGHT, "OpenGL: [ Skeletal Animation (blend anibations) ]", nullptr, nullptr);
+	GLFWwindow* pWnd = glfwCreateWindow(WIDTH, HEIGHT, "OpenGL: [ Skeletal Animation (blend animations) ]", nullptr, nullptr);
 
 	//GLFWmonitor* primMonitor = glfwGetPrimaryMonitor();
 	//const GLFWvidmode* mode = glfwGetVideoMode(primMonitor);
