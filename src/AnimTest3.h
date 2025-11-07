@@ -341,6 +341,7 @@ public:
 			mTrans = my::translate(mTrans, blendedTrans);
 
 			my::quat rot = my::slerp(transA.rot, transB.rot, blendFactor);
+			rot = my::normalize(rot);
 			my::mat4 mRot = my::toMat4(rot);
 
 			//my::vec3 blendedScale = (1.0f - blendFactor) * transA.scale + transB.scale * blendFactor;

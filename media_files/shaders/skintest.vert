@@ -9,7 +9,7 @@ out vec3 NormalO;
 out vec2 TexCoordO;
 
 uniform mat4 gBones[200];
-// uniform mat4 mPVM;
+uniform mat4 mPVM;
 uniform mat4 mModel;
 uniform mat4 mView;
 uniform mat4 mProj;

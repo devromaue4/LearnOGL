@@ -577,11 +577,6 @@ namespace my {
 	}
 
 	// преобразовываем кватернион в матрицу поворота
-	// надо транспонировать
-	// | 1-2*(y*y+z*z) 2*(x*y-w*z)   2*(x*z+w*y)   |
-	// | 2*(x*y+w*z)   1-2*(x*x+z*z) 2*(y*z-w*x)   |
-	// | 2*(x*z-w*y)   2*(y*z+w*x)   1-2*(x*x+y*y) |
-	//
 	FI mat4 toMat4(const quat& q) {
 		return mat4(
 			1 - 2 * (q.y * q.y + q.z * q.z), 2 * (q.x * q.y + q.w * q.z), 2 * (q.x * q.z - q.w * q.y), 0.0f,
