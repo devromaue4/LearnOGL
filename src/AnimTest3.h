@@ -36,9 +36,9 @@ struct MyMeshContainer3 {
 
 struct MyBone3 {
 	std::string BoneName;
-	my::mat4 FinalTransform;
-	my::mat4 Transform;
-	my::mat4 Offset = my::mat4(1);
+	glm::mat4 FinalTransform;
+	glm::mat4 Transform;
+	glm::mat4 Offset = glm::mat4(1.0f);
 };
 
 //struct Key {
@@ -72,7 +72,7 @@ class MySkeletalModel3 {
 	std::map<std::string, uint>		m_BonesMap;
 	std::vector<Texture*>			m_Textures;
 
-	my::mat4 m_GlobalInverseTransform = my::mat4(1);
+	glm::mat4 m_GlobalInverseTransform = glm::mat4(1.0f);
 
 	std::string m_Directory;
 
@@ -81,9 +81,9 @@ class MySkeletalModel3 {
 	const aiScene* m_pScene;
 
 	struct LocalTranform {
-		my::vec3 pos;
-		my::quat rot;
-		my::vec3 scale;
+		glm::vec3 pos;
+		glm::quat rot;
+		glm::vec3 scale;
 	};
 
 	void clear() {
@@ -119,7 +119,7 @@ public:
 
 		m_Directory = fileName.substr(0, fileName.find_last_of('/'));
 
-		m_GlobalInverseTransform = my::inverseAffineSSE(toMy(m_pScene->mRootNode->mTransformation));
+		m_GlobalInverseTransform = glm::inverse(toGlm(m_pScene->mRootNode->mTransformation));
 
 		m_Meshes.resize(m_pScene->mNumMeshes);
 		m_Textures.resize(m_pScene->mNumMaterials);
@@ -132,7 +132,7 @@ public:
 
 		loadGeoData(m_pScene);
 
-		ReadNodeHierarchy(m_pScene->mRootNode, my::mat4(1));
+		ReadNodeHierarchy(m_pScene->mRootNode, glm::mat4(1.0f));
 
 		loadMaterials(m_pScene);
 
@@ -191,7 +191,7 @@ public:
 
 					myBone.BoneName = BoneName;
 					//log(BoneIndex << " " << myBone.BoneName);
-					myBone.Offset = toMy(pBone->mOffsetMatrix);
+					myBone.Offset = toGlm(pBone->mOffsetMatrix);
 					m_Bones.push_back(myBone); // realloc everytime not efficient
 				}
 				else BoneIndex = m_BonesMap[BoneName];
@@ -273,8 +273,8 @@ public:
 		glBindVertexArray(0);
 	}
 
-	void ReadNodeHierarchy(const aiNode* pNode, const my::mat4& mParentTransform) {
-		my::mat4 GlobalTransform = mParentTransform * toMy(pNode->mTransformation);
+	void ReadNodeHierarchy(const aiNode* pNode, const glm::mat4& mParentTransform) {
+		glm::mat4 GlobalTransform = mParentTransform * toGlm(pNode->mTransformation);
 
 		const char* NodeName = pNode->mName.C_Str();
 
@@ -301,13 +301,13 @@ public:
 		const aiAnimation* pAnimA= m_pScene->mAnimations[animA];
 		const aiAnimation* pAnimB= m_pScene->mAnimations[animB];
 
-		UpdateNodeHierarchyBlended(AnimTimeTicksA, AnimTimeTicksB, m_pScene->mRootNode, my::mat4(1), pAnimA, pAnimB, BlendFactor);
+		UpdateNodeHierarchyBlended(AnimTimeTicksA, AnimTimeTicksB, m_pScene->mRootNode, glm::mat4(1.0f), pAnimA, pAnimB, BlendFactor);
 	}
 
-	void UpdateNodeHierarchyBlended(float animTimeA, float animTimeB, const aiNode* pNode, const my::mat4& parentTrans, const aiAnimation* pAnimA, const aiAnimation* pAnimB, float blendFactor) {
+	void UpdateNodeHierarchyBlended(float animTimeA, float animTimeB, const aiNode* pNode, const glm::mat4& parentTrans, const aiAnimation* pAnimA, const aiAnimation* pAnimB, float blendFactor) {
 		std::string NodeName(pNode->mName.data);
 
-		my::mat4 NodeTransform = toMy(pNode->mTransformation);
+		glm::mat4 NodeTransform = toGlm(pNode->mTransformation);
 
 		const aiNodeAnim* pStartNodeAnim = FindNodeAnim(pAnimA, NodeName);
 
@@ -335,24 +335,26 @@ public:
 		}
 
 		if (pStartNodeAnim && pEndNodeAnim) {
-			//my::vec3 blendedTrans = (1.0f - blendFactor) * transA.pos + transB.pos * blendFactor;
-			my::vec3 blendedTrans = my::lerp(transA.pos, transB.pos, blendFactor);
-			my::mat4 mTrans(1);
-			mTrans = my::translate(mTrans, blendedTrans);
+			//glm::vec3 blendedTrans = (1.0f - blendFactor) * transA.pos + transB.pos * blendFactor;
+			//glm::vec3 blendedTrans = glm::lerp(transA.pos, transB.pos, blendFactor);
+			glm::vec3 blendedTrans = glm::mix(transA.pos, transB.pos, blendFactor);
+			glm::mat4 mTrans(1.0f);
+			mTrans = glm::translate(mTrans, blendedTrans);
 
-			my::quat rot = my::slerp(transA.rot, transB.rot, blendFactor);
-			rot = my::normalize(rot);
-			my::mat4 mRot = my::toMat4(rot);
+			glm::quat rot = glm::slerp(transA.rot, transB.rot, blendFactor);
+			rot = glm::normalize(rot);
+			glm::mat4 mRot = glm::toMat4(rot);
 
 			//my::vec3 blendedScale = (1.0f - blendFactor) * transA.scale + transB.scale * blendFactor;
-			my::vec3 blendedScale = my::lerp(transA.scale, transB.scale, blendFactor);
-			my::mat4 mScale(1);
-			mScale = my::scale(mScale, blendedScale);
+			//glm::vec3 blendedScale = glm::lerp(transA.scale, transB.scale, blendFactor);
+			glm::vec3 blendedScale = glm::mix(transA.scale, transB.scale, blendFactor);
+			glm::mat4 mScale(1);
+			mScale = glm::scale(mScale, blendedScale);
 
 			NodeTransform = mTrans * mRot * mScale;
 		}
 
-		my::mat4 GlobalTransform = parentTrans * NodeTransform;
+		glm::mat4 GlobalTransform = parentTrans * NodeTransform;
 
 		if (m_BonesMap.find(NodeName) != m_BonesMap.end()) {
 			uint BoneIndex = m_BonesMap[NodeName];
@@ -386,15 +388,13 @@ public:
 		float TimePerSeconds = (float)(m_pScene->mAnimations[AnimIndex]->mTicksPerSecond != 0 ? m_pScene->mAnimations[AnimIndex]->mTicksPerSecond : 25.0f);
 		float TimeInTicks = TimeInSec * TimePerSeconds;
 		float AnimTimeTicks = (float)fmod(TimeInTicks, m_pScene->mAnimations[AnimIndex]->mDuration);
-		//float AnimTimeTicks = (float)fmod(TimeInSec * 10.0f, m_pScene->mAnimations[0]->mDuration); // for loop
-		//float AnimTimeTicks = TimeInSec * 10.0f;
 
-		UpdateAnimHierarchy(AnimTimeTicks, m_pScene->mRootNode, my::mat4(1), AnimIndex);
+		UpdateAnimHierarchy(AnimTimeTicks, m_pScene->mRootNode, glm::mat4(1.0f), AnimIndex);
 	}
 
-	void UpdateAnimHierarchy(float AnimTimeTicks, const aiNode* pNode, const my::mat4& mParentTransform, int AnimIndex) {
+	void UpdateAnimHierarchy(float AnimTimeTicks, const aiNode* pNode, const glm::mat4& mParentTransform, int AnimIndex) {
 		
-		my::mat4 mNodeTransform = toMy(pNode->mTransformation);
+		glm::mat4 mNodeTransform = toGlm(pNode->mTransformation);
 
 		std::string NodeName = pNode->mName.C_Str();
 
@@ -411,24 +411,24 @@ public:
 
 		// find keys and interpolate between them
 		if (pAnimNode) {
-			my::vec3 pos;
+			glm::vec3 pos;
 			CalcInterpolatePosition(AnimTimeTicks, pAnimNode, pos);
-			my::mat4 mTrans(1);
-			mTrans = my::translate(mTrans, pos);
+			glm::mat4 mTrans(1.0f);
+			mTrans = glm::translate(mTrans, pos);
 
-			my::quat rot;
+			glm::quat rot;
 			CalcInterpolateRotation(AnimTimeTicks, pAnimNode, rot);
-			my::mat4 mRot = my::toMat4(rot);
+			glm::mat4 mRot = glm::toMat4(rot);
 
-			my::vec3 scale;
+			glm::vec3 scale;
 			CalcInterpolateScaling(AnimTimeTicks, pAnimNode, scale);
-			my::mat4 mScale(1);
-			mScale = my::scale(mScale, scale);
+			glm::mat4 mScale(1.0f);
+			mScale = glm::scale(mScale, scale);
 
 			mNodeTransform = mTrans * mRot * mScale;
 		}
 
-		my::mat4 GlobalTransform = mParentTransform * mNodeTransform;
+		glm::mat4 GlobalTransform = mParentTransform * mNodeTransform;
 		
 		if (m_BonesMap.find(NodeName) != m_BonesMap.end()) {
 			uint BoneIndex = m_BonesMap[NodeName];
@@ -439,9 +439,9 @@ public:
 			UpdateAnimHierarchy(AnimTimeTicks, pNode->mChildren[i], GlobalTransform, AnimIndex);
 	}
 
-	void CalcInterpolatePosition(float AnimTimeTicks, const aiNodeAnim* pAnimNode, my::vec3& pos) {
+	void CalcInterpolatePosition(float AnimTimeTicks, const aiNodeAnim* pAnimNode, glm::vec3& pos) {
 		if(pAnimNode->mNumPositionKeys == 1) {
-			pos = toMy(pAnimNode->mPositionKeys[0].mValue);
+			pos = toGlm(pAnimNode->mPositionKeys[0].mValue);
 			return;
 		}
 
@@ -449,12 +449,12 @@ public:
 		uint nextIndex = index + 1;
 		assert(nextIndex < pAnimNode->mNumPositionKeys);
 		float factor = GetScaleFactor(pAnimNode->mPositionKeys[index].mTime, pAnimNode->mPositionKeys[nextIndex].mTime, AnimTimeTicks);
-		pos = my::lerp_imp(toMy(pAnimNode->mPositionKeys[index].mValue), toMy(pAnimNode->mPositionKeys[nextIndex].mValue), factor);
+		pos = glm::mix(toGlm(pAnimNode->mPositionKeys[index].mValue), toGlm(pAnimNode->mPositionKeys[nextIndex].mValue), factor);
 	}
 
-	void CalcInterpolateRotation(float AnimTimeTicks, const aiNodeAnim* pAnimNode, my::quat& rot) {
+	void CalcInterpolateRotation(float AnimTimeTicks, const aiNodeAnim* pAnimNode, glm::quat& rot) {
 		if (pAnimNode->mNumRotationKeys == 1) {
-			rot = toMy(pAnimNode->mRotationKeys[0].mValue);
+			rot = toGlm(pAnimNode->mRotationKeys[0].mValue);
 			return;
 		}
 
@@ -462,13 +462,13 @@ public:
 		uint nextIndex = index + 1;
 		assert(nextIndex < pAnimNode->mNumRotationKeys);
 		float factor = GetScaleFactor(pAnimNode->mRotationKeys[index].mTime, pAnimNode->mRotationKeys[nextIndex].mTime, AnimTimeTicks);
-		rot = my::slerp(toMy(pAnimNode->mRotationKeys[index].mValue), toMy(pAnimNode->mRotationKeys[nextIndex].mValue), factor);
-		rot = my::normalize(rot);
+		rot = glm::slerp(toGlm(pAnimNode->mRotationKeys[index].mValue), toGlm(pAnimNode->mRotationKeys[nextIndex].mValue), factor);
+		rot = glm::normalize(rot);
 	}
 
-	void CalcInterpolateScaling(float AnimTimeTicks, const aiNodeAnim* pAnimNode, my::vec3& scale) {
+	void CalcInterpolateScaling(float AnimTimeTicks, const aiNodeAnim* pAnimNode, glm::vec3& scale) {
 		if (pAnimNode->mNumScalingKeys == 1) {
-			scale = toMy(pAnimNode->mScalingKeys[0].mValue);
+			scale = toGlm(pAnimNode->mScalingKeys[0].mValue);
 			return;
 		}
 
@@ -476,7 +476,7 @@ public:
 		uint nextIndex = index + 1;
 		assert(nextIndex < pAnimNode->mNumScalingKeys);
 		float factor = GetScaleFactor(pAnimNode->mScalingKeys[index].mTime, pAnimNode->mScalingKeys[nextIndex].mTime, AnimTimeTicks);
-		scale = my::lerp_imp(toMy(pAnimNode->mScalingKeys[index].mValue), toMy(pAnimNode->mScalingKeys[nextIndex].mValue), factor);
+		scale = glm::mix(toGlm(pAnimNode->mScalingKeys[index].mValue), toGlm(pAnimNode->mScalingKeys[nextIndex].mValue), factor);
 	}
 
 	float GetScaleFactor(double firstPos, double nextPos, float animTime) {

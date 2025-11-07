@@ -22,7 +22,7 @@ public:
 	void setFloat(const std::string& name, float value);
 	void setVec4(const std::string& name, const glm::vec4& value);
 	void setMat4(const std::string& name, const glm::mat4& value);
-	void setMat4(const std::string& name, const my::mat4& value);
+	//void setMat4(const std::string& name, const my::mat4& value);
 	//void setMat4(const std::string& name, const glm::mat4* value) const;
 
 private:

@@ -22,7 +22,7 @@
 #include <glm/gtc/quaternion.hpp>
 #include <glm/gtx/quaternion.hpp>
 
-#include "mymath.h"
+//#include "mymath.h"
 
 #include <assimp/Importer.hpp>
 #include <assimp/scene.h>
