@@ -23,34 +23,34 @@
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="External\OpenGL\src\glad.c" />
-    <ClCompile Include="src\basic_mesh.cpp" />
     <ClCompile Include="src\core.cpp" />
+    <ClCompile Include="src\learnopengl.com\Mesh.cpp" />
+    <ClCompile Include="src\learnopengl.com\Model.cpp" />
     <ClCompile Include="src\main.cpp" />
-    <ClCompile Include="src\Mesh.cpp" />
-    <ClCompile Include="src\Model.cpp" />
     <ClCompile Include="src\mymath.cpp" />
     <ClCompile Include="src\myutil.cpp" />
+    <ClCompile Include="src\ogldev\basic_mesh.cpp" />
+    <ClCompile Include="src\ogldev\skinned_mesh.cpp" />
     <ClCompile Include="src\shader.cpp" />
-    <ClCompile Include="src\skinned_mesh.cpp" />
+    <ClCompile Include="src\SkeletalModel.cpp" />
     <ClCompile Include="src\Texture.cpp" />
   </ItemGroup>
   <ItemGroup>
-    <ClInclude Include="src\Animator.h" />
-    <ClInclude Include="src\AnimTest.h" />
     <ClInclude Include="src\AnimTest2.h" />
-    <ClInclude Include="src\AnimTest3.h" />
-    <ClInclude Include="src\basic_mesh.h" />
+    <ClInclude Include="src\learnopengl.com\Animator.h" />
+    <ClInclude Include="src\learnopengl.com\Mesh.h" />
+    <ClInclude Include="src\learnopengl.com\Model.h" />
+    <ClInclude Include="src\ogldev\basic_mesh.h" />
+    <ClInclude Include="src\ogldev\skinned_mesh.h" />
+    <ClInclude Include="src\SkeletalModel.h" />
     <ClInclude Include="src\camera.h" />
     <ClInclude Include="src\camera_ogldev.h" />
     <ClInclude Include="src\core.h" />
     <ClInclude Include="src\geometry.h" />
-    <ClInclude Include="src\Mesh.h" />
-    <ClInclude Include="src\Model.h" />
     <ClInclude Include="src\myanimator.h" />
     <ClInclude Include="src\mymath.h" />
     <ClInclude Include="src\myutil.h" />
     <ClInclude Include="src\shader.h" />
-    <ClInclude Include="src\skinned_mesh.h" />
     <ClInclude Include="src\Texture.h" />
     <ClInclude Include="src\types.h" />
     <ClInclude Include="src\world_transform.h" />

@@ -22,6 +22,12 @@
     <Filter Include="Model\skeletal">
       <UniqueIdentifier>{8b063d4b-9e64-4029-967e-b3e0cd56918e}</UniqueIdentifier>
     </Filter>
+    <Filter Include="Model\skeletal\learnopengl.com">
+      <UniqueIdentifier>{daecfeba-df37-46ed-b43f-27ecddbc9cc1}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Model\skeletal\ogldev">
+      <UniqueIdentifier>{298b9bef-2f70-4f8b-a0a2-6b73489c8f28}</UniqueIdentifier>
+    </Filter>
   </ItemGroup>
   <ItemGroup>
     <None Include="src\mymath.inl">
@@ -59,20 +65,23 @@
     <ClCompile Include="src\mymath.cpp">
       <Filter>core</Filter>
     </ClCompile>
-    <ClCompile Include="src\Mesh.cpp">
-      <Filter>Model</Filter>
-    </ClCompile>
-    <ClCompile Include="src\Model.cpp">
-      <Filter>Model</Filter>
-    </ClCompile>
-    <ClCompile Include="src\basic_mesh.cpp">
-      <Filter>Model</Filter>
-    </ClCompile>
-    <ClCompile Include="src\skinned_mesh.cpp">
-      <Filter>Model\skeletal</Filter>
-    </ClCompile>
     <ClCompile Include="src\main.cpp">
       <Filter>src</Filter>
+    </ClCompile>
+    <ClCompile Include="src\SkeletalModel.cpp">
+      <Filter>Model\skeletal</Filter>
+    </ClCompile>
+    <ClCompile Include="src\learnopengl.com\Mesh.cpp">
+      <Filter>Model\skeletal\learnopengl.com</Filter>
+    </ClCompile>
+    <ClCompile Include="src\learnopengl.com\Model.cpp">
+      <Filter>Model\skeletal\learnopengl.com</Filter>
+    </ClCompile>
+    <ClCompile Include="src\ogldev\basic_mesh.cpp">
+      <Filter>Model\skeletal\ogldev</Filter>
+    </ClCompile>
+    <ClCompile Include="src\ogldev\skinned_mesh.cpp">
+      <Filter>Model\skeletal\ogldev</Filter>
     </ClCompile>
   </ItemGroup>
   <ItemGroup>
@@ -100,29 +109,11 @@
     <ClInclude Include="src\geometry.h">
       <Filter>misc</Filter>
     </ClInclude>
-    <ClInclude Include="src\Mesh.h">
-      <Filter>Model</Filter>
-    </ClInclude>
     <ClInclude Include="src\types.h">
       <Filter>core</Filter>
     </ClInclude>
-    <ClInclude Include="src\Model.h">
-      <Filter>Model</Filter>
-    </ClInclude>
     <ClInclude Include="src\camera.h">
       <Filter>core</Filter>
-    </ClInclude>
-    <ClInclude Include="src\basic_mesh.h">
-      <Filter>Model</Filter>
-    </ClInclude>
-    <ClInclude Include="src\skinned_mesh.h">
-      <Filter>Model\skeletal</Filter>
-    </ClInclude>
-    <ClInclude Include="src\AnimTest.h">
-      <Filter>Model\skeletal</Filter>
-    </ClInclude>
-    <ClInclude Include="src\Animator.h">
-      <Filter>Model\skeletal</Filter>
     </ClInclude>
     <ClInclude Include="src\AnimTest2.h">
       <Filter>Model\skeletal</Filter>
@@ -130,8 +121,23 @@
     <ClInclude Include="src\myanimator.h">
       <Filter>Model\skeletal</Filter>
     </ClInclude>
-    <ClInclude Include="src\AnimTest3.h">
+    <ClInclude Include="src\SkeletalModel.h">
       <Filter>Model\skeletal</Filter>
+    </ClInclude>
+    <ClInclude Include="src\learnopengl.com\Animator.h">
+      <Filter>Model\skeletal\learnopengl.com</Filter>
+    </ClInclude>
+    <ClInclude Include="src\learnopengl.com\Mesh.h">
+      <Filter>Model\skeletal\learnopengl.com</Filter>
+    </ClInclude>
+    <ClInclude Include="src\learnopengl.com\Model.h">
+      <Filter>Model\skeletal\learnopengl.com</Filter>
+    </ClInclude>
+    <ClInclude Include="src\ogldev\basic_mesh.h">
+      <Filter>Model\skeletal\ogldev</Filter>
+    </ClInclude>
+    <ClInclude Include="src\ogldev\skinned_mesh.h">
+      <Filter>Model\skeletal\ogldev</Filter>
     </ClInclude>
   </ItemGroup>
 </Project>

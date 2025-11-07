@@ -13,12 +13,9 @@
 #include "camera_ogldev.h"
 //#include "Model.h"
 //#include "basic_mesh.h"
-#include "skinned_mesh.h"
+//#include "skinned_mesh.h"
 //#include "Animator.h"
-//#include "AnimTest.h"
-//#include "AnimTest2.h"
-#include "AnimTest3.h"
-//#include "mymath.h"
+#include "SkeletalModel.h"
 
 #pragma warning( disable : 4100 ) // unreferenced parameter
 
@@ -48,10 +45,7 @@ glm::mat4 gmProj;
 //Animation* g_pAnimation;
 //Animator* g_pAnimator;
 //BasicMesh* gBaseMesh;
-SkinnedMesh* gSkinnedMesh;
-//MySkeletalModel* pMySkelModel;
-//MySkeletalModel2* pMySkelModel3;
-MySkeletalModel3* pMySkelModel3;
+SkeletalModel* pMySkelModel;
 float blendFactor = 0.0f;
 
 //int DisplayBoneIndex;
@@ -59,19 +53,6 @@ float blendFactor = 0.0f;
 //GLuint g_boneLocation[MAX_BONES];
 
 double StartTimeMillis = 0;
-
-//my::vec3 cubePositions[] = {
-//	my::vec3(0.0f,  0.0f,  0.0f),
-//	my::vec3(2.0f,  5.0f, -15.0f),
-//	my::vec3(-1.5f, -2.2f, -2.5f),
-//	my::vec3(-3.8f, -2.0f, -12.3f),
-//	my::vec3(2.4f, -0.4f, -3.5f),
-//	my::vec3(-1.7f,  3.0f, -7.5f),
-//	my::vec3(1.3f, -2.0f, -2.5f),
-//	my::vec3(1.5f,  2.0f, -2.5f),
-//	my::vec3(1.5f,  0.2f, -1.5f),
-//	my::vec3(-1.3f,  1.0f, -1.5f)
-//};
 
 void LoadTextures() {
 	//gTex0 = new Texture("../media_files/textures/container.jpg", false, GL_TEXTURE1); gTex0->Load();
@@ -96,34 +77,19 @@ void InitGeo() {
 	//glPolygonMode(GL_FRONT_AND_BACK, GL_FILL); // wireframe mode off
 	glEnable(GL_DEPTH_TEST);
 
-	//g_pModel = new Model("../media_files/skeletalmeshes/vampire/dancing_vampire.dae");
 	//g_pModel = new Model("../media_files/skeletalmeshes/test_2_bones/2bones.fbx");
 	//g_pAnimation = new Animation("../media_files/skeletalmeshes/test_2_bones/2bones.fbx", g_pModel);
 	//g_pAnimation = new Animation("../media_files/skeletalmeshes/vampire/dancing_vampire.dae", g_pModel);
 	//g_pAnimator = new Animator(g_pAnimation);
 
-//#define OGLDEV_SKINMESH
-#ifdef OGLDEV_SKINMESH
-	gSkinnedMesh = new SkinnedMesh;
-	//if (!gSkinnedMesh->LoadMesh("../media_files/skeletalmeshes/Vanguard/Vanguard_Walking_in_place.fbx"))
-	if (!gSkinnedMesh->LoadMesh("../media_files/skeletalmeshes/Vanguard/iclone_7_raptoid_mascot_-_free_download.glb"))
-	//if (!gSkinnedMesh->LoadMesh("../media_files/skeletalmeshes/test_2_bones/2bones_new.fbx"))
-	//if (!gSkinnedMesh->LoadMesh("../media_files/skeletalmeshes/test_2_bones/box.fbx"))
-	//if (!gSkinnedMesh->LoadMesh("../media_files/skeletalmeshes/boblampclean/boblampclean.md5mesh"))
-	//if (!gSkinnedMesh->LoadMesh("../media_files/skeletalmeshes/vampire/dancing_vampire.dae"))
-	//if (!gSkinnedMesh->LoadMesh("../media_files/skeletalmeshes/Defeated.fbx"))
-		throw std::exception("Failed SkinnedMesh::LoadMesh()");
-#else
 	// my
-	pMySkelModel3 = new MySkeletalModel3;
-	//pMySkelModel3->Load("../media_files/skeletalmeshes/Vanguard/Vanguard_Walking_in_place.fbx");
-	pMySkelModel3->Load("../media_files/skeletalmeshes/Vanguard/iclone_7_raptoid_mascot_-_free_download.glb");
-	//pMySkelModel3->Load("../media_files/skeletalmeshes/test_2_bones/2bones_new.fbx");
-	//pMySkelModel3->Load("../media_files/skeletalmeshes/test_2_bones/box.fbx");
-	//pMySkelModel3->Load("../media_files/skeletalmeshes/boblampclean/boblampclean.md5mesh");
-	//pMySkelModel3->Load("../media_files/skeletalmeshes/vampire/dancing_vampire.dae");
-	//pMySkelModel3->Load("../media_files/skeletalmeshes/Defeated.fbx");
-#endif
+	pMySkelModel = new SkeletalModel;
+	//pMySkelModel->Load("../media_files/skeletalmeshes/Vanguard/Vanguard_Walking_in_place.fbx");
+	pMySkelModel->Load("../media_files/skeletalmeshes/iclone_7_raptoid_mascot_-_free_download.glb");
+	//pMySkelModel->Load("../media_files/skeletalmeshes/test_2_bones/2bones_new.fbx");
+	//pMySkelModel->Load("../media_files/skeletalmeshes/boblampclean/boblampclean.md5mesh");
+	//pMySkelModel->Load("../media_files/skeletalmeshes/vampire/dancing_vampire.dae");
+	//pMySkelModel->Load("../media_files/skeletalmeshes/Defeated.fbx");
 
 	GameCamera.SetSpeedMove(2.1f);
 
@@ -154,12 +120,10 @@ void Render() {
 	gShaderBase->Use();
 
 	// --------------------------------------------------------------
-	glm::mat4 mModel(1);
+	glm::mat4 mModel(1.0f);
 	//mModel = my::translate(mModel, my::vec3(0, 0, -2));
 	mModel = glm::rotate(mModel, glm::radians(-90.0f), glm::vec3(1, 0, 0));
 	//mModel = glm::scale(mModel, glm::vec3(.5f, .5f, .5f));
-	//my::mat4 mView = gCamera.getMat();
-	//gCamera.Speed = 100.0f;
 	glm::mat4 mView = GameCamera.GetMatrix();
 	//glm::mat4 mPVM = gmProj * mView * mModel;
 
@@ -168,51 +132,17 @@ void Render() {
 	gShaderBase->setMat4("mView", mView);
 	gShaderBase->setMat4("mProj", gmProj);
 
-#ifndef OGLDEV_SKINMESH
-	if(blendFactor > 0.0f) pMySkelModel3->UpdateAnimBlended((float)AnimationTimeSec, 0, 3, blendFactor);
-	else pMySkelModel3->UpdateAnim((float)AnimationTimeSec, 0);
-	const auto& bones = pMySkelModel3->m_Bones;
+	if(blendFactor > 0.0f) pMySkelModel->UpdateAnimBlended((float)AnimationTimeSec, 0, 3, blendFactor);
+	else pMySkelModel->UpdateAnim((float)AnimationTimeSec, 0);
+	const auto& bones = pMySkelModel->m_Bones;
 	for (int i = 0; i < bones.size(); i++) {
 		gShaderBase->setMat4("gBones[" + std::to_string(i) + "]", bones[i].FinalTransform);
 	}
-	pMySkelModel3->Render();
-#else
-	//////////// animate ogldev ////////////
-	std::vector<glm::mat4> Transforms;
-	gSkinnedMesh->GetBoneTransforms((float)AnimationTimeSec, Transforms, 2);
-	for (int i = 0; i < Transforms.size(); i++)
-		gShaderBase->setMat4("gBones[" + std::to_string(i) + "]", Transforms[i]);
-	gSkinnedMesh->Render();
-#endif
-	///////////////////////////////////////
-	//cout << "deltaTime: " << deltaTime << endl;
-	//g_pAnimator->UpdateAnimation(500.0f * deltaTime);
-	//g_pAnimator->UpdateAnimation(.015f);
-	//g_pAnimator->UpdateAnimation(deltaTime);
-
-	//auto transforms = g_pAnimator->GetFinalBoneMatrices();
-	//const auto& transforms = *g_pAnimator->GetFinalBoneMatrices();
-	//for (int i = 0; i < transforms.size(); i++)
-		//gShaderBase->setMat4("finalBonesTransform[" + std::to_string(i) + "]", transforms[i]);
-
-	//gBaseMesh->Render();
-	//g_pModel->Draw(*gShaderBase);
+	pMySkelModel->Render();
 
 	//glUniform1f(gScaleLocation, scale);
 	//gShaderBase->setFloat("gScale", scale);
 	//gShaderBase->setFloat("gTrans", mixValue);
-
-	// lernopengl.com draw 10 cubes
-	//for (GLuint i = 0; i < 10; i++) {
-	//	my::mat4 mModel(1);
-	//	mModel = my::translate(mModel, cubePositions[i]);
-	//	float angle = 20.f * i;
-	//	if (i % 3 == 0) angle = (float)glfwGetTime() * 25.f;
-	//	mModel = my::rotate(mModel, my::radians(angle), my::vec3(1, .3f, .5f));
-	//	glUniformMatrix4fv(glGetUniformLocation(gShaderBase->m_ID, "mModel"), 1, GL_FALSE, mModel.data());
-	//	//gShaderBase->setMat4("mModel", *mModel._m);
-		//glDrawArrays(GL_TRIANGLES, 0, 36);
-	//}
 }
 
 void framebuffer_size_callback(GLFWwindow* wnd, int width, int height) {
@@ -235,7 +165,7 @@ void Cleanup() {
 	//safe_delete(g_pVAO);
 	//safe_delete(gTex1);
 	//safe_delete(gTex0);
-	//safe_delete(pMySkelModel2);
+	safe_delete(pMySkelModel);
 	safe_delete(gShaderBase);
 }
 

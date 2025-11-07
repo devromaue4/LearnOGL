@@ -38,3 +38,10 @@ struct AssimpNodeData {
 	int childrenCount;
 	std::vector<AssimpNodeData> children;
 };
+
+// for the SkeletalModel
+struct Node {
+	std::string Name;
+	glm::mat4 InvBindTransform; // transform
+	int ParentIndex;
+};

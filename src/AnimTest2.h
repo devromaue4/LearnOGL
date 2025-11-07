@@ -82,13 +82,11 @@ public:
 		//	aiProcess_RemoveRedundantMaterials;
 		// for skeletal meshes
 		uint flags = 
-			//aiProcess_LimitBoneWeights |
+			aiProcess_LimitBoneWeights |
 			aiProcess_Triangulate
-			//| aiProcess_GenSmoothNormals |
-			//aiProcess_JoinIdenticalVertices |
-			//aiProcess_CalcTangentSpace
-			//| aiProcess_OptimizeGraph
-			;
+			| aiProcess_GenSmoothNormals
+			| aiProcess_JoinIdenticalVertices
+			| aiProcess_CalcTangentSpace;
 		if(flipUVs) flags |= aiProcess_FlipUVs; // set flag
 
 		Assimp::Importer Importer;
