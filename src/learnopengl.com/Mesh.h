@@ -3,7 +3,7 @@
 
 using namespace std;
 
-struct Vertex {
+struct MVertex {
 	glm::vec3 Position;
 	glm::vec3 Normal;
 	glm::vec2 TexCoords;
@@ -19,14 +19,14 @@ struct MTexture {
 	string	path;
 };
 
-class Mesh {
+class MMesh {
 public:
 	// mesh data
-	vector<Vertex>		m_vertices;
+	vector<MVertex>		m_vertices;
 	vector<uint>		m_indices;
 	vector<MTexture>	m_textures;
 
-	Mesh(vector<Vertex> vertices, vector<uint> indices, vector<MTexture> textures);
+	MMesh(vector<MVertex> vertices, vector<uint> indices, vector<MTexture> textures);
 
 	void Draw(const class Shader& shader);
 

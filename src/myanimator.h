@@ -40,7 +40,7 @@ struct AssimpNodeData {
 };
 
 // for the SkeletalModel
-__declspec(align(16))
+//__declspec(align(16))
 struct Node {
 	std::string Name;
 	glm::mat4 InvBindTransform; // transform

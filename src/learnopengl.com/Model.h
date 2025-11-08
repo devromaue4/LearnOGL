@@ -13,7 +13,7 @@ struct BoneInfo {
 class Model {
 public:
 	vector<MTexture> textures_loaded; // stores all the textures loaded so far, optimization to make sure textures aren't loaded more than once.
-	vector<Mesh>	meshes;
+	vector<MMesh>	meshes;
 	string			directory;
 	bool			gammaCorrection;
 
@@ -23,9 +23,9 @@ public:
 	auto& GetBoneInfoMap() { return m_BoneInfoMap; }
 	int& GetBoneCount() { return m_BoneCounter; }
 
-	void SetVertexBoneDataToDefault(Vertex& vertex);
-	void SetVertexBoneData(Vertex& vertex, int boneID, float weight);
-	void ExtractBoneWeightForVertices(std::vector<Vertex>& vertices, aiMesh* mesh/*, const aiScene* scene*/);
+	void SetVertexBoneDataToDefault(MVertex& vertex);
+	void SetVertexBoneData(MVertex& vertex, int boneID, float weight);
+	void ExtractBoneWeightForVertices(std::vector<MVertex>& vertices, aiMesh* mesh/*, const aiScene* scene*/);
 
 	Model(string const& path, bool gamma = false) : gammaCorrection(gamma) { loadModel(path); }
 	void Draw(const class Shader& shader);
@@ -33,7 +33,7 @@ public:
 private:
 	void loadModel(string path, bool flipUVs = false);
 	void processNode(aiNode* node, const aiScene* scene);
-	Mesh processMesh(aiMesh* mesh, const aiScene* scene);
+	MMesh processMesh(aiMesh* mesh, const aiScene* scene);
 	vector<MTexture> loadMaterialTextures(aiMaterial* material, aiTextureType type, string typeName);
 
 	void cleanup();

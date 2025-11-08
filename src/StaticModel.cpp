@@ -1,0 +1,158 @@
+#include "StaticModel.h"
+
+void StaticModel::Load(std::string_view fileName, bool bFlipUVs) {
+	clear();
+
+	uint flags = aiProcess_Triangulate
+		| aiProcess_GenSmoothNormals
+		| aiProcess_CalcTangentSpace
+		| aiProcess_JoinIdenticalVertices
+		| aiProcess_ImproveCacheLocality
+		| aiProcess_RemoveRedundantMaterials;
+	if (bFlipUVs) flags |= aiProcess_FlipUVs;
+
+	Assimp::Importer importer;
+	const aiScene* pScene = importer.ReadFile(fileName.data(), flags);
+	if (!pScene || pScene->mFlags & AI_SCENE_FLAGS_INCOMPLETE || !pScene->mRootNode) {
+		log(importer.GetErrorString());
+		throw std::exception("StaticModel::Load!");
+	}
+
+	m_Directory = fileName.substr(0, fileName.find_last_of('/'));
+
+	m_Meshes.resize(pScene->mNumMeshes);
+	m_Textures.resize(pScene->mNumMaterials);
+
+	uint numVertices = 0, numIndices = 0;
+	calcVertices(pScene, numVertices, numIndices);
+
+	m_Vertices.reserve(numVertices);
+	m_Indices.reserve(numIndices);
+
+	loadGeoData(pScene);
+
+	//ReadNodeHierarchy(m_RootNode, pScene->mRootNode, glm::mat4(1.0f));
+
+	loadMaterials(pScene);
+
+	buildBuffers();
+
+	importer.FreeScene();
+}
+
+void StaticModel::calcVertices(const aiScene* pScene, uint& numVertices, uint& numIndices) {
+	for (uint iMesh = 0; iMesh < pScene->mNumMeshes; iMesh++) {
+		m_Meshes[iMesh].MaterialIndex = pScene->mMeshes[iMesh]->mMaterialIndex;
+		m_Meshes[iMesh].BaseVertex = numVertices;
+		m_Meshes[iMesh].BaseIndex = numIndices;
+
+		numVertices += pScene->mMeshes[iMesh]->mNumVertices;
+		m_Meshes[iMesh].NumIndices = pScene->mMeshes[iMesh]->mNumFaces * 3;
+		numIndices += m_Meshes[iMesh].NumIndices;
+	}
+}
+
+void StaticModel::loadGeoData(const aiScene* pScene) {
+	SVertex myVert;
+
+	for (uint iMesh = 0; iMesh < pScene->mNumMeshes; iMesh++) {
+		const aiMesh* pMesh = pScene->mMeshes[iMesh];
+		for (uint iVert = 0; iVert < pMesh->mNumVertices; iVert++) {
+			myVert.pos = toGlm(pMesh->mVertices[iVert]);
+
+			if (pMesh->HasNormals())
+				myVert.normal = toGlm(pMesh->mNormals[iVert]);
+			else myVert.normal = glm::vec3(.0f, 1.f, .0f);
+
+			if (pMesh->HasTextureCoords(0)) {
+				const aiVector3D& tc = pMesh->mTextureCoords[0][iVert];
+				myVert.texCoord = glm::vec2(tc.x, tc.y);
+			}
+
+			m_Vertices.push_back(myVert);
+		}
+
+		for (uint iface = 0; iface < pMesh->mNumFaces; iface++) {
+			m_Indices.push_back(pMesh->mFaces[iface].mIndices[0]);
+			m_Indices.push_back(pMesh->mFaces[iface].mIndices[1]);
+			m_Indices.push_back(pMesh->mFaces[iface].mIndices[2]);
+		}
+	}
+}
+
+void StaticModel::loadMaterials(const aiScene* pScene) {
+	for (uint i = 0; i < pScene->mNumMaterials; i++)
+		loadDiffuseTexture(pScene, pScene->mMaterials[i], i);
+}
+
+void StaticModel::loadDiffuseTexture(const aiScene* pScene, const aiMaterial* pMaterial, int index) {
+	m_Textures[index] = nullptr;
+
+	if (pMaterial->GetTextureCount(aiTextureType_DIFFUSE) > 0) {
+		aiString path;
+		if (pMaterial->GetTexture(aiTextureType_DIFFUSE, 0, &path) == AI_SUCCESS) {
+			const aiTexture* pAiTexture = pScene->GetEmbeddedTexture(path.data);
+			if (pAiTexture) {
+				m_Textures[index] = new Texture;
+				if (!m_Textures[index]->Load(pAiTexture->mWidth, pAiTexture->pcData))
+					log("Error loading Embedded texture");
+			}
+			else {
+				std::string p(path.data);
+				//if (p.substr(0, 2) == ".\\") // don't know this code
+				//	p = p.substr(2, p.size() - 2);
+
+				//int sz = p.find_last_of('/') + 1;
+				//if(sz > 0) p = p.substr(sz, sz);
+
+				std::string fullPath = m_Directory + "/" + p;
+
+				m_Textures[index] = new Texture(fullPath.c_str());
+				if (!m_Textures[index]->Load()) {
+					log_error("loading texture " << fullPath);
+					safe_delete(m_Textures[index]);
+					m_Textures[index] = nullptr;
+					return;
+				}
+			}
+		}
+	}
+}
+
+void StaticModel::buildBuffers() {
+	glGenVertexArrays(1, &m_VAO);
+	glGenBuffers(1, &m_VBO);
+	glGenBuffers(1, &m_EBO);
+
+	glBindVertexArray(m_VAO);
+	glBindBuffer(GL_ARRAY_BUFFER, m_VBO);
+	glBufferData(GL_ARRAY_BUFFER, sizeof(SVertex) * m_Vertices.size(), &m_Vertices[0], GL_STATIC_DRAW);
+
+	glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, m_EBO);
+	glBufferData(GL_ELEMENT_ARRAY_BUFFER, sizeof(uint) * m_Indices.size(), &m_Indices[0], GL_STATIC_DRAW);
+
+	GLsizei stride = sizeof(SVertex);
+	glEnableVertexAttribArray(0);
+	glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, stride, (const void*)0);
+	glEnableVertexAttribArray(1);
+	glVertexAttribPointer(1, 3, GL_FLOAT, GL_FALSE, stride, (const void*)offsetof(SVertex, normal));
+	glEnableVertexAttribArray(2);
+	glVertexAttribPointer(2, 2, GL_FLOAT, GL_FALSE, stride, (const void*)offsetof(SVertex, texCoord));
+
+	glBindVertexArray(0);
+}
+
+void StaticModel::Render() {
+	glBindVertexArray(m_VAO);
+
+	for (uint i = 0; i < m_Meshes.size(); i++) {
+		uint MatIndex = m_Meshes[i].MaterialIndex;
+		assert(MatIndex < m_Textures.size());
+		if (m_Textures.size())
+			if (m_Textures[MatIndex]) m_Textures[MatIndex]->Bind();
+
+		glDrawElementsBaseVertex(GL_TRIANGLES, m_Meshes[i].NumIndices, GL_UNSIGNED_INT, (void*)(sizeof(uint) * m_Meshes[i].BaseIndex), m_Meshes[i].BaseVertex);
+	}
+
+	glBindVertexArray(0);
+}

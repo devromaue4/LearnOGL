@@ -1,6 +1,36 @@
 #include "SkeletalModel.h"
 #include <numeric>
 
+void SkeletalModel::InitReqNodeMap(const aiNode* pNode) {
+	std::string NodeName(pNode->mName.C_Str());
+	NodeInfo info(pNode);
+
+	m_RequiredNodeMap[NodeName] = info;
+
+	for (uint i = 0; i < pNode->mNumChildren; i++)
+		InitReqNodeMap(pNode->mChildren[i]);
+}
+
+void SkeletalModel::MarkReqNodesForBone(const aiBone* pBone) {
+	std::string NodeName(pBone->mName.data);
+
+	const aiNode* pParent = nullptr;
+
+	do {
+		std::map<std::string, NodeInfo>::iterator it = m_RequiredNodeMap.find(NodeName);
+		if (it == m_RequiredNodeMap.end()) {
+			log_error("Cannot find bone in the hierarchy " << NodeName.c_str());
+			assert(0);
+		}
+
+		it->second.isRequired = true;
+		pParent = it->second.pNode->mParent;
+		if (pParent)
+			NodeName = std::string(pParent->mName.data);
+
+	} while (pParent);
+}
+
 void SkeletalModel::Load(std::string_view fileName, bool bFlipUVs) {
 	clear();
 
@@ -8,9 +38,7 @@ void SkeletalModel::Load(std::string_view fileName, bool bFlipUVs) {
 		aiProcess_Triangulate
 		| aiProcess_GenSmoothNormals
 		| aiProcess_CalcTangentSpace
-		| aiProcess_JoinIdenticalVertices
-		//| aiProcess_OptimizeGraph
-		;
+		| aiProcess_JoinIdenticalVertices;
 	if (bFlipUVs) flags |= aiProcess_FlipUVs;
 
 	Assimp::Importer importer;
@@ -371,8 +399,8 @@ void SkeletalModel::UpdateNodeHierarchyBlended(float animTimeA, float animTimeB,
 	for (int i = 0; i < pNode.childrenCount; i++) {
 		const std::string& childName = pNode.children[i].Name;
 
-		std::map<std::string, NodeInfo>::iterator it = m_requiredNodeMap.find(childName);
-		if (it == m_requiredNodeMap.end()) {
+		std::map<std::string, NodeInfo>::iterator it = m_RequiredNodeMap.find(childName);
+		if (it == m_RequiredNodeMap.end()) {
 			log_error("Cannot find bone in the hierarchy " << childName.c_str());
 			assert(0);
 		}
@@ -444,8 +472,8 @@ void SkeletalModel::UpdateAnimHierarchy(float AnimTimeTicks, const Node* pNode, 
 	for (int i = 0; i < pNode->childrenCount; i++) {
 		const std::string& childName = pNode->children[i].Name;
 
-		std::map<std::string, NodeInfo>::iterator it = m_requiredNodeMap.find(childName);
-		if (it == m_requiredNodeMap.end()) {
+		std::map<std::string, NodeInfo>::iterator it = m_RequiredNodeMap.find(childName);
+		if (it == m_RequiredNodeMap.end()) {
 			log_error("Cannot find bone in the hierarchy " << childName.c_str());
 			assert(0);
 		}

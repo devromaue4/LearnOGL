@@ -1,7 +1,7 @@
 #include "Mesh.h"
 #include "shader.h"
 
-Mesh::Mesh(vector<Vertex> vertices, vector<uint> indices, vector<MTexture> textures) {
+MMesh::MMesh(vector<MVertex> vertices, vector<uint> indices, vector<MTexture> textures) {
 	m_vertices = vertices;
 	m_indices = indices;
 	m_textures = textures;
@@ -9,42 +9,42 @@ Mesh::Mesh(vector<Vertex> vertices, vector<uint> indices, vector<MTexture> textu
 	setupMesh();
 }
 
-void Mesh::setupMesh() {
+void MMesh::setupMesh() {
 	glGenVertexArrays(1, &VAO);
 	glGenBuffers(1, &VBO);
 	glGenBuffers(1, &EBO);
 
 	glBindVertexArray(VAO);
 	glBindBuffer(GL_ARRAY_BUFFER, VBO);
-	glBufferData(GL_ARRAY_BUFFER, m_vertices.size() * sizeof(Vertex), &m_vertices[0], GL_STATIC_DRAW);
+	glBufferData(GL_ARRAY_BUFFER, m_vertices.size() * sizeof(MVertex), &m_vertices[0], GL_STATIC_DRAW);
 
 	glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, EBO);
 	glBufferData(GL_ELEMENT_ARRAY_BUFFER, m_indices.size() * sizeof(uint), &m_indices[0], GL_STATIC_DRAW);
 
-	GLsizei stride = sizeof(Vertex);	
+	GLsizei stride = sizeof(MVertex);
 	glEnableVertexAttribArray(0); // pos
 	glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, stride, (void*)0);
 	glEnableVertexAttribArray(1);// norm
-	glVertexAttribPointer(1, 3, GL_FLOAT, GL_FALSE, stride, (void*)offsetof(Vertex, Normal));
+	glVertexAttribPointer(1, 3, GL_FLOAT, GL_FALSE, stride, (void*)offsetof(MVertex, Normal));
 	glEnableVertexAttribArray(2);// tex
-	glVertexAttribPointer(2, 2, GL_FLOAT, GL_FALSE, stride, (void*)offsetof(Vertex, TexCoords));
+	glVertexAttribPointer(2, 2, GL_FLOAT, GL_FALSE, stride, (void*)offsetof(MVertex, TexCoords));
 	// vertex tangent
 	glEnableVertexAttribArray(3);
-	glVertexAttribPointer(3, 3, GL_FLOAT, GL_FALSE, stride, (void*)offsetof(Vertex, Tangent));
+	glVertexAttribPointer(3, 3, GL_FLOAT, GL_FALSE, stride, (void*)offsetof(MVertex, Tangent));
 	// vertex bitangent
 	glEnableVertexAttribArray(4);
-	glVertexAttribPointer(4, 3, GL_FLOAT, GL_FALSE, stride, (void*)offsetof(Vertex, Bitangent));
+	glVertexAttribPointer(4, 3, GL_FLOAT, GL_FALSE, stride, (void*)offsetof(MVertex, Bitangent));
 	// ids
 	glEnableVertexAttribArray(5);
-	glVertexAttribIPointer(5, 4, GL_INT, stride, (void*)offsetof(Vertex, m_BoneIDs));
+	glVertexAttribIPointer(5, 4, GL_INT, stride, (void*)offsetof(MVertex, m_BoneIDs));
 	// weights
 	glEnableVertexAttribArray(6);
-	glVertexAttribPointer(6, 4, GL_FLOAT, GL_FALSE, stride, (void*)offsetof(Vertex, m_Weights));
+	glVertexAttribPointer(6, 4, GL_FLOAT, GL_FALSE, stride, (void*)offsetof(MVertex, m_Weights));
 
 	glBindVertexArray(0);
 }
 
-void Mesh::Draw(const Shader& shader) {
+void MMesh::Draw(const Shader& shader) {
 	uint duffuseNr = 1, specularNr = 1;
 	uint normalNr = 1;
 	uint heightNr = 1;

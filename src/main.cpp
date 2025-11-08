@@ -15,7 +15,8 @@
 //#include "basic_mesh.h"
 //#include "skinned_mesh.h"
 //#include "Animator.h"
-#include "SkeletalModel.h"
+//#include "SkeletalModel.h"
+#include "StaticModel.h"
 
 #pragma warning( disable : 4100 ) // unreferenced parameter
 
@@ -45,8 +46,11 @@ glm::mat4 gmProj;
 //Animation* g_pAnimation;
 //Animator* g_pAnimator;
 //BasicMesh* gBaseMesh;
-SkeletalModel* pMySkelModel;
+//SkeletalModel* pMySkelModel;
+StaticModel* pStaticModel;
 float blendFactor = 0.0f;
+
+std::vector<int> TestVector;
 
 //int DisplayBoneIndex;
 //const int MAX_BONES = 200;
@@ -63,8 +67,8 @@ void LoadTextures() {
 
 void CompileShaders() {
 
-	gShaderBase = new Shader("../media_files/shaders/skintest.vert", "../media_files/shaders/skintest.frag");
-	//gShaderBase = new Shader("../media_files/shaders/skinning.vs", "../media_files/shaders/skinning.fs");
+	//gShaderBase = new Shader("../media_files/shaders/skintest.vert", "../media_files/shaders/skintest.frag");
+	gShaderBase = new Shader("../media_files/shaders/dir_light.vert", "../media_files/shaders/dir_light.frag");
 	//gScaleLocation = glGetUniformLocation(gShaderBase->m_ID, "gScale"); //if (gScaleLocation == -1) throw glsl_error("failed getting uniform variable!");
 	//gUColorTris = glGetUniformLocation(g_pShaderBase->m_ID, "ourColor"); if (gUColorTris == -1) throw glsl_error("failed getting uniform variable!");
 }
@@ -77,19 +81,15 @@ void InitGeo() {
 	//glPolygonMode(GL_FRONT_AND_BACK, GL_FILL); // wireframe mode off
 	glEnable(GL_DEPTH_TEST);
 
-	//g_pModel = new Model("../media_files/skeletalmeshes/test_2_bones/2bones.fbx");
-	//g_pAnimation = new Animation("../media_files/skeletalmeshes/test_2_bones/2bones.fbx", g_pModel);
-	//g_pAnimation = new Animation("../media_files/skeletalmeshes/vampire/dancing_vampire.dae", g_pModel);
-	//g_pAnimator = new Animator(g_pAnimation);
-
-	// my
-	pMySkelModel = new SkeletalModel;
+	pStaticModel = new StaticModel;
+	pStaticModel->Load("../media_files/skeletalmeshes/boblampclean/boblampclean.md5mesh");
+	//pMySkelModel = new SkeletalModel;
 	//pMySkelModel->Load("../media_files/skeletalmeshes/Vanguard/Vanguard_Walking_in_place.fbx");
-	pMySkelModel->Load("../media_files/skeletalmeshes/iclone_7_raptoid_mascot_-_free_download.glb");
-	//pMySkelModel->Load("../media_files/skeletalmeshes/test_2_bones/2bones_new.fbx");
+	//pMySkelModel->Load("../media_files/skeletalmeshes/iclone_7_raptoid_mascot_-_free_download.glb");
 	//pMySkelModel->Load("../media_files/skeletalmeshes/boblampclean/boblampclean.md5mesh");
 	//pMySkelModel->Load("../media_files/skeletalmeshes/vampire/dancing_vampire.dae");
-	//pMySkelModel->Load("../media_files/skeletalmeshes/Defeated.fbx");
+
+	TestVector.push_back(1);
 
 	GameCamera.SetSpeedMove(2.1f);
 
@@ -132,14 +132,15 @@ void Render() {
 	gShaderBase->setMat4("mView", mView);
 	gShaderBase->setMat4("mProj", gmProj);
 
-	if(blendFactor > 0.0f) pMySkelModel->UpdateAnimBlended((float)AnimationTimeSec, 0, 3, blendFactor);
-	else pMySkelModel->UpdateAnim((float)AnimationTimeSec, 0);
-	const auto& bones = pMySkelModel->m_Bones;
-	//const auto& bones = pMySkelModel->m_Nodes;
-	for (int i = 0; i < bones.size(); i++) {
-		gShaderBase->setMat4("gBones[" + std::to_string(i) + "]", bones[i].FinalTransform);
-	}
-	pMySkelModel->Render();
+	//if(blendFactor > 0.0f) pMySkelModel->UpdateAnimBlended((float)AnimationTimeSec, 0, 3, blendFactor);
+	//else pMySkelModel->UpdateAnim((float)AnimationTimeSec, 0);
+	//const auto& bones = pMySkelModel->m_Bones;
+	//for (int i = 0; i < bones.size(); i++) {
+	//	gShaderBase->setMat4("gBones[" + std::to_string(i) + "]", bones[i].FinalTransform);
+	//}
+	//pMySkelModel->Render();
+
+	pStaticModel->Render();
 
 	//glUniform1f(gScaleLocation, scale);
 	//gShaderBase->setFloat("gScale", scale);
@@ -166,7 +167,7 @@ void Cleanup() {
 	//safe_delete(g_pVAO);
 	//safe_delete(gTex1);
 	//safe_delete(gTex0);
-	safe_delete(pMySkelModel);
+	//safe_delete(pMySkelModel);
 	safe_delete(gShaderBase);
 }
 

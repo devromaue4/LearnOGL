@@ -24,8 +24,12 @@
   <ItemGroup>
     <ClCompile Include="External\OpenGL\src\glad.c" />
     <ClCompile Include="src\core.cpp" />
-    <ClCompile Include="src\learnopengl.com\Mesh.cpp" />
-    <ClCompile Include="src\learnopengl.com\Model.cpp" />
+    <ClCompile Include="src\learnopengl.com\Mesh.cpp">
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Release|x64'">true</ExcludedFromBuild>
+    </ClCompile>
+    <ClCompile Include="src\learnopengl.com\Model.cpp">
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Release|x64'">true</ExcludedFromBuild>
+    </ClCompile>
     <ClCompile Include="src\main.cpp" />
     <ClCompile Include="src\mymath.cpp" />
     <ClCompile Include="src\myutil.cpp" />
@@ -33,13 +37,20 @@
     <ClCompile Include="src\ogldev\skinned_mesh.cpp" />
     <ClCompile Include="src\shader.cpp" />
     <ClCompile Include="src\SkeletalModel.cpp" />
+    <ClCompile Include="src\StaticModel.cpp" />
     <ClCompile Include="src\Texture.cpp" />
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="src\AnimTest2.h" />
-    <ClInclude Include="src\learnopengl.com\Animator.h" />
-    <ClInclude Include="src\learnopengl.com\Mesh.h" />
-    <ClInclude Include="src\learnopengl.com\Model.h" />
+    <ClInclude Include="src\learnopengl.com\Animator.h">
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Release|x64'">true</ExcludedFromBuild>
+    </ClInclude>
+    <ClInclude Include="src\learnopengl.com\Mesh.h">
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Release|x64'">true</ExcludedFromBuild>
+    </ClInclude>
+    <ClInclude Include="src\learnopengl.com\Model.h">
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Release|x64'">true</ExcludedFromBuild>
+    </ClInclude>
     <ClInclude Include="src\ogldev\basic_mesh.h" />
     <ClInclude Include="src\ogldev\skinned_mesh.h" />
     <ClInclude Include="src\SkeletalModel.h" />
@@ -51,6 +62,7 @@
     <ClInclude Include="src\mymath.h" />
     <ClInclude Include="src\myutil.h" />
     <ClInclude Include="src\shader.h" />
+    <ClInclude Include="src\StaticModel.h" />
     <ClInclude Include="src\Texture.h" />
     <ClInclude Include="src\types.h" />
     <ClInclude Include="src\world_transform.h" />

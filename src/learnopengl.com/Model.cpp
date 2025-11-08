@@ -49,14 +49,14 @@ uint TextureFromFile(const char* path, const string& directory/*, bool gamma*/) 
 	return textureID;
 }
 
-void Model::SetVertexBoneDataToDefault(Vertex& vertex) {
+void Model::SetVertexBoneDataToDefault(MVertex& vertex) {
 	for (int i = 0; i < MAX_BONE_INFLUENCE; i++) {
 		vertex.m_BoneIDs[i] = -1;
 		vertex.m_Weights[i] = 0.0f;
 	}
 }
 
-void Model::SetVertexBoneData(Vertex& vertex, int boneID, float weight) {
+void Model::SetVertexBoneData(MVertex& vertex, int boneID, float weight) {
 	for (int i = 0; i < MAX_BONE_INFLUENCE; i++) {
 		if(vertex.m_BoneIDs[i] < 0) {
 			vertex.m_BoneIDs[i] = boneID;
@@ -66,7 +66,7 @@ void Model::SetVertexBoneData(Vertex& vertex, int boneID, float weight) {
 	}
 }
 
-void Model::ExtractBoneWeightForVertices(std::vector<Vertex>& vertices, aiMesh* mesh/*, const aiScene* scene*/) {
+void Model::ExtractBoneWeightForVertices(std::vector<MVertex>& vertices, aiMesh* mesh/*, const aiScene* scene*/) {
 	for (uint boneIndex = 0; boneIndex < mesh->mNumBones; ++boneIndex) {
 		int boneID = -1;
 		string boneName = mesh->mBones[boneIndex]->mName.C_Str();
@@ -131,13 +131,13 @@ void Model::processNode(aiNode* node, const aiScene* scene) {
 		processNode(node->mChildren[i], scene);
 }
 
-Mesh Model::processMesh(aiMesh* mesh, const aiScene* scene) {
-	vector<Vertex> vertices;
+MMesh Model::processMesh(aiMesh* mesh, const aiScene* scene) {
+	vector<MVertex> vertices;
 	vector<uint> indices;
 	vector<MTexture> textures;
 
 	for (uint i = 0; i < mesh->mNumVertices; i++) {
-		Vertex vertex;
+		MVertex vertex;
 
 		SetVertexBoneDataToDefault(vertex);
 
@@ -183,7 +183,7 @@ Mesh Model::processMesh(aiMesh* mesh, const aiScene* scene) {
 
 	ExtractBoneWeightForVertices(vertices, mesh);// , scene);
 
-	return Mesh(vertices, indices, textures);
+	return MMesh(vertices, indices, textures);
 }
 
 vector<MTexture> Model::loadMaterialTextures(aiMaterial* material, aiTextureType type, string typeName) {

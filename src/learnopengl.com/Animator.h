@@ -154,19 +154,18 @@ private:
 	}
 };
 
-struct AssimpNodeData {
+struct lAssimpNodeData {
 	glm::mat4 transformation;
 	std::string name;
 	int childrenCount;
-	std::vector<AssimpNodeData> children;
+	std::vector<lAssimpNodeData> children;
 };
 
 class Animation {
 	float m_Duration;
-	//int m_TicksPerSeconds;
 	float m_TicksPerSeconds;
 	std::vector<Bone> m_Bones;
-	AssimpNodeData m_RootNode;
+	lAssimpNodeData m_RootNode;
 	std::map<std::string, BoneInfo> m_BoneInfoMap;
 
 public:
@@ -197,7 +196,7 @@ public:
 
 	float GetTicksPerSecons() { return m_TicksPerSeconds; }
 	float GetDuration() { return m_Duration; }
-	const AssimpNodeData& GetRootNode() { return m_RootNode; }
+	const lAssimpNodeData& GetRootNode() { return m_RootNode; }
 	const std::map<std::string, BoneInfo>& GetBoneIDMap() { return m_BoneInfoMap; }
 
 private:
@@ -219,7 +218,7 @@ private:
 		m_BoneInfoMap = boneInfoMap;
 	}
 
-	void ReadHeirarchyData(AssimpNodeData& dest, const aiNode* src) {
+	void ReadHeirarchyData(lAssimpNodeData& dest, const aiNode* src) {
 		assert(src);
 
 		dest.name = src->mName.data;
@@ -227,7 +226,7 @@ private:
 		dest.childrenCount = src->mNumChildren;
 
 		for (uint i = 0; i < src->mNumChildren; i++) {
-			AssimpNodeData newData;
+			lAssimpNodeData newData;
 			ReadHeirarchyData(newData, src->mChildren[i]);
 			dest.children.push_back(newData);
 		}
@@ -264,7 +263,7 @@ public:
 		m_CurrentTime = 0.0f;
 	}
 
-	void CalculateBoneTransform(const AssimpNodeData* node, const glm::mat4& parentTransform) {
+	void CalculateBoneTransform(const lAssimpNodeData* node, const glm::mat4& parentTransform) {
 		const std::string& nodeName = node->name;
 		glm::mat4 nodeTransform = node->transformation;
 
