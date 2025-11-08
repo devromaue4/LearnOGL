@@ -37,8 +37,8 @@ float deltaTime = 0;
 float lastFrame = 0;
 
 //Camera gCamera(WIDTH, HEIGHT, my::vec3(0, 30, 100));
-CameraOGLDEV GameCamera(WIDTH, HEIGHT, glm::vec3(-30,70,250), glm::vec3(0.0f, 0.0f, -1));
-//CameraOGLDEV GameCamera(WIDTH, HEIGHT, glm::vec3(0,30,100), glm::vec3(0.0f, 0.0f, -1));
+//CameraOGLDEV GameCamera(WIDTH, HEIGHT, glm::vec3(-30,70,250), glm::vec3(0.0f, 0.0f, -1));
+CameraOGLDEV GameCamera(WIDTH, HEIGHT, glm::vec3(0,0,10), glm::vec3(0.0f, 0.0f, -1));
 
 glm::mat4 gmProj;
 
@@ -49,8 +49,6 @@ glm::mat4 gmProj;
 //SkeletalModel* pMySkelModel;
 StaticModel* pStaticModel;
 float blendFactor = 0.0f;
-
-std::vector<int> TestVector;
 
 //int DisplayBoneIndex;
 //const int MAX_BONES = 200;
@@ -74,24 +72,23 @@ void CompileShaders() {
 }
 
 void InitGeo() {
-	glEnable(GL_CULL_FACE);
+	//glEnable(GL_CULL_FACE);
 	//glFrontFace(GL_CW);
 	//glCullFace(GL_FRONT);
-	//glPolygonMode(GL_FRONT_AND_BACK, GL_LINE); // wireframe mode on
+	glPolygonMode(GL_FRONT_AND_BACK, GL_LINE); // wireframe mode on
 	//glPolygonMode(GL_FRONT_AND_BACK, GL_FILL); // wireframe mode off
 	glEnable(GL_DEPTH_TEST);
 
 	pStaticModel = new StaticModel;
-	pStaticModel->Load("../media_files/skeletalmeshes/boblampclean/boblampclean.md5mesh");
+	pStaticModel->Load("../media_files/models/vis_bones/box.fbx");
 	//pMySkelModel = new SkeletalModel;
 	//pMySkelModel->Load("../media_files/skeletalmeshes/Vanguard/Vanguard_Walking_in_place.fbx");
 	//pMySkelModel->Load("../media_files/skeletalmeshes/iclone_7_raptoid_mascot_-_free_download.glb");
 	//pMySkelModel->Load("../media_files/skeletalmeshes/boblampclean/boblampclean.md5mesh");
 	//pMySkelModel->Load("../media_files/skeletalmeshes/vampire/dancing_vampire.dae");
 
-	TestVector.push_back(1);
-
-	GameCamera.SetSpeedMove(2.1f);
+	//GameCamera.SetSpeedMove(2.1f);
+	GameCamera.SetSpeedMove(.2f);
 
 	//gShaderBase->setInt("gDisplayBoneIndex", DisplayBoneIndex);
 	//for (uint i = 0; i < MAX_BONES; i++) {
@@ -122,7 +119,7 @@ void Render() {
 	// --------------------------------------------------------------
 	glm::mat4 mModel(1.0f);
 	//mModel = my::translate(mModel, my::vec3(0, 0, -2));
-	mModel = glm::rotate(mModel, glm::radians(-90.0f), glm::vec3(1, 0, 0));
+	//mModel = glm::rotate(mModel, glm::radians(-90.0f), glm::vec3(1, 0, 0));
 	//mModel = glm::scale(mModel, glm::vec3(.5f, .5f, .5f));
 	glm::mat4 mView = GameCamera.GetMatrix();
 	//glm::mat4 mPVM = gmProj * mView * mModel;
@@ -140,6 +137,31 @@ void Render() {
 	//}
 	//pMySkelModel->Render();
 
+	static float rot = 0;
+	rot += 0.5f;
+
+	//glm::mat4 mRoot = glm::rotate(glm::mat4(1), glm::radians(0.0f), glm::vec3(0, 0, 1.0f));
+	glm::mat4 mRoot = glm::rotate(glm::mat4(1), glm::radians(rot), glm::vec3(0, 0, 1.0f));
+	//glm::mat4 mRoot = glm::rotate(glm::mat4(1), glm::radians(90.0f), glm::vec3(0, 0, 1.0f));
+	//glm::mat4 mRoot(1.0f);
+	glm::mat4 mJoin1_Offset = glm::translate(glm::mat4(1), glm::vec3(3.092f, 0 ,0));
+	mJoin1_Offset = glm::rotate(mJoin1_Offset, glm::radians(-rot), glm::vec3(0, 0, 1.0f));
+	glm::mat4 mJoin2_Offset = glm::translate(glm::mat4(1), glm::vec3(3.107, 0, 0));
+	glm::mat4 mJoin3_Offset = glm::translate(glm::mat4(1), glm::vec3(3.107, 0.5f, 0));
+
+	gShaderBase->setMat4("mModel", mRoot);
+	pStaticModel->Render();
+
+	glm::mat4 Global = mRoot * mJoin1_Offset;
+	gShaderBase->setMat4("mModel", Global);
+	pStaticModel->Render();
+
+	Global = Global * mJoin2_Offset;
+	gShaderBase->setMat4("mModel", Global);
+	pStaticModel->Render();
+
+	Global = Global * mJoin3_Offset;
+	gShaderBase->setMat4("mModel", Global);
 	pStaticModel->Render();
 
 	//glUniform1f(gScaleLocation, scale);
@@ -178,7 +200,7 @@ GLFWwindow* InitWindow() {
 	glfwWindowHint(GLFW_CONTEXT_VERSION_MINOR, 3);
 	glfwWindowHint(GLFW_OPENGL_PROFILE, GLFW_OPENGL_CORE_PROFILE);
 
-	GLFWwindow* pWnd = glfwCreateWindow(WIDTH, HEIGHT, "OpenGL: [ Skeletal Animation (blend animations) ]", nullptr, nullptr);
+	GLFWwindow* pWnd = glfwCreateWindow(WIDTH, HEIGHT, "OpenGL: [ Represent Bones Transformations ]", nullptr, nullptr);
 
 	//GLFWmonitor* primMonitor = glfwGetPrimaryMonitor();
 	//const GLFWvidmode* mode = glfwGetVideoMode(primMonitor);
