@@ -135,6 +135,7 @@ void Render() {
 	if(blendFactor > 0.0f) pMySkelModel->UpdateAnimBlended((float)AnimationTimeSec, 0, 3, blendFactor);
 	else pMySkelModel->UpdateAnim((float)AnimationTimeSec, 0);
 	const auto& bones = pMySkelModel->m_Bones;
+	//const auto& bones = pMySkelModel->m_Nodes;
 	for (int i = 0; i < bones.size(); i++) {
 		gShaderBase->setMat4("gBones[" + std::to_string(i) + "]", bones[i].FinalTransform);
 	}

@@ -13,41 +13,42 @@ void SkeletalModel::Load(std::string_view fileName, bool bFlipUVs) {
 		;
 	if (bFlipUVs) flags |= aiProcess_FlipUVs;
 
-	//Assimp::Importer importer;
-	//const aiScene* 
-	m_pScene = importer.ReadFile(fileName.data(), flags);
-	if (!m_pScene || m_pScene->mFlags & AI_SCENE_FLAGS_INCOMPLETE || !m_pScene->mRootNode) {
+	Assimp::Importer importer;
+	const aiScene* pScene = importer.ReadFile(fileName.data(), flags);
+	if (!pScene || pScene->mFlags & AI_SCENE_FLAGS_INCOMPLETE || !pScene->mRootNode) {
 		log(importer.GetErrorString());
 		throw std::exception("MySkeletalModel3::Load!");
 	}
 
 	m_Directory = fileName.substr(0, fileName.find_last_of('/'));
 
-	m_GlobalInverseTransform = glm::inverse(toGlm(m_pScene->mRootNode->mTransformation));
+	m_GlobalInverseTransform = glm::inverse(toGlm(pScene->mRootNode->mTransformation));
 
-	m_Meshes.resize(m_pScene->mNumMeshes);
-	m_Textures.resize(m_pScene->mNumMaterials);
+	m_Meshes.resize(pScene->mNumMeshes);
+	m_Textures.resize(pScene->mNumMaterials);
 
 	uint numVertices = 0, numIndices = 0;
-	calcVertices(m_pScene, numVertices, numIndices);
+	calcVertices(pScene, numVertices, numIndices);
 
 	m_Vertices.reserve(numVertices);
 	m_Indices.reserve(numIndices);
 
-	loadGeoData(m_pScene);
+	InitReqNodeMap(pScene->mRootNode);
 
-	loadAnimData(m_pScene);
+	loadGeoData(pScene);
 
-	log("-----------------------------------------------------------");
-	ReadNodeHierarchy(m_pScene->mRootNode, glm::mat4(1.0f), -1);
-	log("NumNodes: " << numNodes);
-	log("-----------------------------------------------------------");
+	loadAnimData(pScene);
 
-	loadMaterials(m_pScene);
+	//log("-----------------------------------------------------------");
+	ReadNodeHierarchy(m_RootNode, pScene->mRootNode, glm::mat4(1.0f));
+	//log("NumNodes: " << numNodes);
+	//log("-----------------------------------------------------------");
+
+	loadMaterials(pScene);
 
 	buildBuffers();
 
-	//importer.FreeScene();
+	importer.FreeScene();
 }
 
 void SkeletalModel::calcVertices(const aiScene* pScene, uint& numVertices, uint& numIndices) {
@@ -101,6 +102,8 @@ void SkeletalModel::loadGeoData(const aiScene* pScene) {
 				myBone.BoneName = BoneName;
 				myBone.Offset = toGlm(pBone->mOffsetMatrix);
 				m_Bones.push_back(myBone); // realloc everytime not efficient
+
+				MarkReqNodesForBone(pBone);
 			}
 			else BoneIndex = m_BonesMap[BoneName];
 
@@ -111,6 +114,8 @@ void SkeletalModel::loadGeoData(const aiScene* pScene) {
 
 				m_Vertices[vertID].addWeight(BoneIndex, fWeight);
 			}
+
+			//MarkReqNodesForBone(pBone);
 		}
 	}
 
@@ -223,24 +228,24 @@ void SkeletalModel::buildBuffers() {
 }
 
 void SkeletalModel::loadAnimData(const aiScene* scene) {
-	log("NumAnimation: " << scene->mNumAnimations);
+	//log("NumAnimation: " << scene->mNumAnimations);
 	m_Animations.reserve(scene->mNumAnimations);
 
 	for (uint iAnim = 0; iAnim < scene->mNumAnimations; iAnim++) {
 		aiAnimation* pAnimation = scene->mAnimations[iAnim];
-		log("NameAnimation: " << pAnimation->mName.C_Str());
+		//log("NameAnimation: " << pAnimation->mName.C_Str());
 
 		MyAnimation animation;
 		animation.Name = pAnimation->mName.data;
 		animation.Duration = pAnimation->mDuration;
 		animation.TicksPerSecond = pAnimation->mTicksPerSecond;
 
-		log("NumKeys: " << pAnimation->mNumChannels);
+		//log("NumKeys: " << pAnimation->mNumChannels);
 		animation.m_Keys.reserve(pAnimation->mNumChannels);
 
 		for (uint iChanel = 0; iChanel < pAnimation->mNumChannels; iChanel++) {
 			const aiNodeAnim* pNodeAnim = pAnimation->mChannels[iChanel];
-			log("NodeName: " << pNodeAnim->mNodeName.data);
+			//log("NodeName: " << pNodeAnim->mNodeName.data);
 
 			Key key;
 			key.PosKeys.reserve(pNodeAnim->mNumPositionKeys);
@@ -270,35 +275,31 @@ void SkeletalModel::loadAnimData(const aiScene* scene) {
 	}
 }
 
-void SkeletalModel::ReadNodeHierarchy(const aiNode* pNode, const glm::mat4& mParentTransform, int parentIndex) {
+void SkeletalModel::ReadNodeHierarchy(Node& node, const aiNode* pNode, const glm::mat4& mParentTransform) {
 	glm::mat4 GlobalTransform = mParentTransform * toGlm(pNode->mTransformation);
 
 	const char* NodeName = pNode->mName.C_Str();
+	
+	//log("NodeName: " << NodeName);
+	node.Name = pNode->mName.data;
+	node.InvBindTransform = toGlm(pNode->mTransformation);
+	node.childrenCount = pNode->mNumChildren;
+	//numNodes++;
 
-	int currentIndex = 0;
 	if (m_BonesMap.find(NodeName) != m_BonesMap.end()) {
 		uint BoneIndex = m_BonesMap[NodeName];
 		m_Bones[BoneIndex].FinalTransform = m_GlobalInverseTransform * GlobalTransform * m_Bones[BoneIndex].Offset;
-	
-		/////////
-		log("NodeName: " << NodeName);	
-		Node node;
-		node.Name = NodeName;
-		node.InvBindTransform = toGlm(pNode->mTransformation);
-		//node.childrenCount = src->mNumChildren;
-		node.ParentIndex = parentIndex;
-		currentIndex = (int)m_Nodes.size();
-		m_Nodes.push_back(node);
-		numNodes++;
-		//////////
 	}
 
-	for (uint i = 0; i < pNode->mNumChildren; i++)
-		ReadNodeHierarchy(pNode->mChildren[i], GlobalTransform, currentIndex);
+	for (uint i = 0; i < pNode->mNumChildren; i++) {
+		Node lNode;
+		ReadNodeHierarchy(lNode, pNode->mChildren[i], GlobalTransform);
+		node.children.push_back(lNode);
+	}
 }
 
 void SkeletalModel::UpdateAnimBlended(float TimeInSec, uint animA, uint animB, float BlendFactor) {
-	if (animA >= m_pScene->mNumAnimations || animB >= m_pScene->mNumAnimations) {
+	if (animA >= m_Animations.size() || animB >= m_Animations.size()) {
 		log("No Animation"); assert(0);
 	}
 	if (BlendFactor < 0.0f || BlendFactor > 1.0f) {
@@ -308,18 +309,16 @@ void SkeletalModel::UpdateAnimBlended(float TimeInSec, uint animA, uint animB, f
 	float AnimTimeTicksA = CalcAnimTimeTicks(TimeInSec, animA);
 	float AnimTimeTicksB = CalcAnimTimeTicks(TimeInSec, animB);
 
-	const aiAnimation* pAnimA = m_pScene->mAnimations[animA];
-	const aiAnimation* pAnimB = m_pScene->mAnimations[animB];
+	const MyAnimation& pAnimA = m_Animations[animA];
+	const MyAnimation& pAnimB = m_Animations[animB];
 
-	UpdateNodeHierarchyBlended(AnimTimeTicksA, AnimTimeTicksB, m_pScene->mRootNode, glm::mat4(1.0f), pAnimA, pAnimB, BlendFactor);
+	UpdateNodeHierarchyBlended(AnimTimeTicksA, AnimTimeTicksB, m_RootNode, glm::mat4(1.0f), pAnimA, pAnimB, BlendFactor);
 }
 
-void SkeletalModel::UpdateNodeHierarchyBlended(float animTimeA, float animTimeB, const aiNode* pNode, const glm::mat4& parentTrans, const aiAnimation* pAnimA, const aiAnimation* pAnimB, float blendFactor) {
-	std::string NodeName(pNode->mName.data);
+void SkeletalModel::UpdateNodeHierarchyBlended(float animTimeA, float animTimeB, const Node& pNode, const glm::mat4& parentTrans, const MyAnimation& pAnimA, const MyAnimation& pAnimB, float blendFactor) {
+	glm::mat4 NodeTransform = pNode.InvBindTransform;
 
-	glm::mat4 NodeTransform = toGlm(pNode->mTransformation);
-
-	const aiNodeAnim* pStartNodeAnim = FindNodeAnim(pAnimA, NodeName);
+	const Key* pStartNodeAnim = FindNodeAnim(pAnimA, pNode.Name);
 
 	// calc local transform pStartNodeAnim
 	LocalTranform transA;
@@ -329,7 +328,7 @@ void SkeletalModel::UpdateNodeHierarchyBlended(float animTimeA, float animTimeB,
 		CalcInterpolateScaling(animTimeA, pStartNodeAnim, transA.scale);
 	}
 
-	const aiNodeAnim* pEndNodeAnim = FindNodeAnim(pAnimB, NodeName);
+	const Key* pEndNodeAnim = FindNodeAnim(pAnimB, pNode.Name);
 
 	if ((pStartNodeAnim && !pEndNodeAnim) || (!pStartNodeAnim && pEndNodeAnim)) {
 		log_error("There is only one animation node.\n This case is not supported.");
@@ -364,71 +363,71 @@ void SkeletalModel::UpdateNodeHierarchyBlended(float animTimeA, float animTimeB,
 
 	glm::mat4 GlobalTransform = parentTrans * NodeTransform;
 
-	if (m_BonesMap.find(NodeName) != m_BonesMap.end()) {
-		uint BoneIndex = m_BonesMap[NodeName];
+	if (m_BonesMap.find(pNode.Name) != m_BonesMap.end()) {
+		uint BoneIndex = m_BonesMap[pNode.Name];
 		m_Bones[BoneIndex].FinalTransform = m_GlobalInverseTransform * GlobalTransform * m_Bones[BoneIndex].Offset;
 	}
 
-	for (uint i = 0; i < pNode->mNumChildren; i++)
-		UpdateNodeHierarchyBlended(animTimeA, animTimeB, pNode->mChildren[i], GlobalTransform, pAnimA, pAnimB, blendFactor);
+	for (int i = 0; i < pNode.childrenCount; i++) {
+		const std::string& childName = pNode.children[i].Name;
+
+		std::map<std::string, NodeInfo>::iterator it = m_requiredNodeMap.find(childName);
+		if (it == m_requiredNodeMap.end()) {
+			log_error("Cannot find bone in the hierarchy " << childName.c_str());
+			assert(0);
+		}
+
+		if (it->second.isRequired)
+			UpdateNodeHierarchyBlended(animTimeA, animTimeB, pNode.children[i], GlobalTransform, pAnimA, pAnimB, blendFactor);
+	}
 }
 
 float SkeletalModel::CalcAnimTimeTicks(float TimeInSec, unsigned int AnimIndex) {
-	float TicksPerSecond = (float)(m_pScene->mAnimations[AnimIndex]->mTicksPerSecond != 0 ? m_pScene->mAnimations[AnimIndex]->mTicksPerSecond : 25.0f);
+	float TicksPerSecond = (float)(m_Animations[AnimIndex].TicksPerSecond != 0 ? m_Animations[AnimIndex].TicksPerSecond : 25.0f);
 	float TimeInTicks = TimeInSec * TicksPerSecond;
 	// we need to use the integral part of mDuration for the total length of the animation
 	float Duration = 0.0f;
 	//float fraction = 
-	modf((float)m_pScene->mAnimations[AnimIndex]->mDuration, &Duration);
+	modf((float)m_Animations[AnimIndex].Duration, &Duration);
 	float AnimationTimeTicks = fmod(TimeInTicks, Duration);
 	return AnimationTimeTicks;
 }
 
 void SkeletalModel::UpdateAnim(float TimeInSec, uint AnimIndex) {
 
-	if (m_pScene->mNumAnimations == 0 || AnimIndex > m_pScene->mNumAnimations - 1) {
+	if (m_Animations.size() == 0 || AnimIndex > m_Animations.size() - 1) {
 		log("No Animation");
 		return;
 	}
 
 	// calc anim time
-	float TimePerSeconds = (float)(m_pScene->mAnimations[AnimIndex]->mTicksPerSecond != 0 ? m_pScene->mAnimations[AnimIndex]->mTicksPerSecond : 25.0f);
+	float TimePerSeconds = (float)(m_Animations[AnimIndex].TicksPerSecond != 0 ? m_Animations[AnimIndex].TicksPerSecond : 25.0f);
 	float TimeInTicks = TimeInSec * TimePerSeconds;
-	float AnimTimeTicks = (float)fmod(TimeInTicks, m_pScene->mAnimations[AnimIndex]->mDuration);
+	float AnimTimeTicks = (float)fmod(TimeInTicks, m_Animations[AnimIndex].Duration);
 
-	UpdateAnimHierarchy(AnimTimeTicks, m_pScene->mRootNode, glm::mat4(1.0f), AnimIndex);
+	UpdateAnimHierarchy(AnimTimeTicks, &m_RootNode, glm::mat4(1.0f), AnimIndex);
 }
 
-void SkeletalModel::UpdateAnimHierarchy(float AnimTimeTicks, const aiNode* pNode, const glm::mat4& mParentTransform, int AnimIndex) {
+void SkeletalModel::UpdateAnimHierarchy(float AnimTimeTicks, const Node* pNode, const glm::mat4& mParentTransform, int AnimIndex) {
 
-	glm::mat4 mNodeTransform = toGlm(pNode->mTransformation);
+	glm::mat4 mNodeTransform = pNode->InvBindTransform;
 
-	std::string NodeName = pNode->mName.C_Str();
-
-	const aiNodeAnim* pAnimNode = nullptr;
-	const aiAnimation* pAnim = m_pScene->mAnimations[AnimIndex]; // 0 get first animation
-	if (pAnim) {
-		for (uint ikey = 0; ikey < pAnim->mNumChannels; ikey++) {
-			pAnimNode = pAnim->mChannels[ikey];
-			if (pAnimNode->mNodeName.data == NodeName)
-				break;
-			pAnimNode = nullptr;
-		}
-	}
+	std::string NodeName(pNode->Name);
 
 	// find keys and interpolate between them
-	if (pAnimNode) {
+	const Key* pKey = FindNodeAnim(m_Animations[AnimIndex], NodeName);
+	if (pKey) {
 		glm::vec3 pos;
-		CalcInterpolatePosition(AnimTimeTicks, pAnimNode, pos);
+		CalcInterpolatePosition(AnimTimeTicks, pKey, pos);
 		glm::mat4 mTrans(1.0f);
 		mTrans = glm::translate(mTrans, pos);
 
 		glm::quat rot;
-		CalcInterpolateRotation(AnimTimeTicks, pAnimNode, rot);
+		CalcInterpolateRotation(AnimTimeTicks, pKey, rot);
 		glm::mat4 mRot = glm::toMat4(rot);
 
 		glm::vec3 scale;
-		CalcInterpolateScaling(AnimTimeTicks, pAnimNode, scale);
+		CalcInterpolateScaling(AnimTimeTicks, pKey, scale);
 		glm::mat4 mScale(1.0f);
 		mScale = glm::scale(mScale, scale);
 
@@ -442,48 +441,58 @@ void SkeletalModel::UpdateAnimHierarchy(float AnimTimeTicks, const aiNode* pNode
 		m_Bones[BoneIndex].FinalTransform = m_GlobalInverseTransform * GlobalTransform * m_Bones[BoneIndex].Offset;
 	}
 
-	for (uint i = 0; i < pNode->mNumChildren; i++)
-		UpdateAnimHierarchy(AnimTimeTicks, pNode->mChildren[i], GlobalTransform, AnimIndex);
+	for (int i = 0; i < pNode->childrenCount; i++) {
+		const std::string& childName = pNode->children[i].Name;
+
+		std::map<std::string, NodeInfo>::iterator it = m_requiredNodeMap.find(childName);
+		if (it == m_requiredNodeMap.end()) {
+			log_error("Cannot find bone in the hierarchy " << childName.c_str());
+			assert(0);
+		}
+
+		if (it->second.isRequired)
+			UpdateAnimHierarchy(AnimTimeTicks, &pNode->children[i], GlobalTransform, AnimIndex);
+	}
 }
 
-void SkeletalModel::CalcInterpolatePosition(float AnimTimeTicks, const aiNodeAnim* pAnimNode, glm::vec3& pos) {
-	if (pAnimNode->mNumPositionKeys == 1) {
-		pos = toGlm(pAnimNode->mPositionKeys[0].mValue);
+void SkeletalModel::CalcInterpolatePosition(float AnimTimeTicks, const Key* pAnimNode, glm::vec3& pos) {
+	if (pAnimNode->PosKeys.size() == 1) {
+		pos = pAnimNode->PosKeys[0].position;
 		return;
 	}
 
 	uint index = FindPosIndex(AnimTimeTicks, pAnimNode);
 	uint nextIndex = index + 1;
-	assert(nextIndex < pAnimNode->mNumPositionKeys);
-	float factor = GetScaleFactor(pAnimNode->mPositionKeys[index].mTime, pAnimNode->mPositionKeys[nextIndex].mTime, AnimTimeTicks);
-	pos = glm::mix(toGlm(pAnimNode->mPositionKeys[index].mValue), toGlm(pAnimNode->mPositionKeys[nextIndex].mValue), factor);
+	assert(nextIndex < pAnimNode->PosKeys.size());
+	float factor = GetScaleFactor(pAnimNode->PosKeys[index].time, pAnimNode->PosKeys[nextIndex].time, AnimTimeTicks);
+	pos = glm::mix(pAnimNode->PosKeys[index].position, pAnimNode->PosKeys[nextIndex].position, factor);
 }
 
-void SkeletalModel::CalcInterpolateRotation(float AnimTimeTicks, const aiNodeAnim* pAnimNode, glm::quat& rot) {
-	if (pAnimNode->mNumRotationKeys == 1) {
-		rot = toGlm(pAnimNode->mRotationKeys[0].mValue);
+void SkeletalModel::CalcInterpolateRotation(float AnimTimeTicks, const Key* pAnimNode, glm::quat& rot) {
+	if (pAnimNode->RotKeys.size() == 1) {
+		rot = pAnimNode->RotKeys[0].rotation;
 		return;
 	}
 
 	uint index = FindRotIndex(AnimTimeTicks, pAnimNode);
 	uint nextIndex = index + 1;
-	assert(nextIndex < pAnimNode->mNumRotationKeys);
-	float factor = GetScaleFactor(pAnimNode->mRotationKeys[index].mTime, pAnimNode->mRotationKeys[nextIndex].mTime, AnimTimeTicks);
-	rot = glm::slerp(toGlm(pAnimNode->mRotationKeys[index].mValue), toGlm(pAnimNode->mRotationKeys[nextIndex].mValue), factor);
+	assert(nextIndex < pAnimNode->RotKeys.size());
+	float factor = GetScaleFactor(pAnimNode->RotKeys[index].time, pAnimNode->RotKeys[nextIndex].time, AnimTimeTicks);
+	rot = glm::slerp(pAnimNode->RotKeys[index].rotation, pAnimNode->RotKeys[nextIndex].rotation, factor);
 	rot = glm::normalize(rot);
 }
 
-void SkeletalModel::CalcInterpolateScaling(float AnimTimeTicks, const aiNodeAnim* pAnimNode, glm::vec3& scale) {
-	if (pAnimNode->mNumScalingKeys == 1) {
-		scale = toGlm(pAnimNode->mScalingKeys[0].mValue);
+void SkeletalModel::CalcInterpolateScaling(float AnimTimeTicks, const Key* pAnimNode, glm::vec3& scale) {
+	if (pAnimNode->ScalKeys.size() == 1) {
+		scale = pAnimNode->ScalKeys[0].scale;
 		return;
 	}
 
 	uint index = FindScaleIndex(AnimTimeTicks, pAnimNode);
 	uint nextIndex = index + 1;
-	assert(nextIndex < pAnimNode->mNumScalingKeys);
-	float factor = GetScaleFactor(pAnimNode->mScalingKeys[index].mTime, pAnimNode->mScalingKeys[nextIndex].mTime, AnimTimeTicks);
-	scale = glm::mix(toGlm(pAnimNode->mScalingKeys[index].mValue), toGlm(pAnimNode->mScalingKeys[nextIndex].mValue), factor);
+	assert(nextIndex < pAnimNode->ScalKeys.size());
+	float factor = GetScaleFactor(pAnimNode->ScalKeys[index].time, pAnimNode->ScalKeys[nextIndex].time, AnimTimeTicks);
+	scale = glm::mix(pAnimNode->ScalKeys[index].scale, pAnimNode->ScalKeys[nextIndex].scale, factor);
 }
 
 float SkeletalModel::GetScaleFactor(double firstPos, double nextPos, float animTime) {
@@ -493,39 +502,42 @@ float SkeletalModel::GetScaleFactor(double firstPos, double nextPos, float animT
 	return (float)factor;
 }
 
-const aiNodeAnim* SkeletalModel::FindNodeAnim(const aiAnimation* pAnim, std::string_view NodeName) {
-	const aiNodeAnim* pAnimNode = nullptr;
+const Key* SkeletalModel::FindNodeAnim(const MyAnimation& pAnim, std::string_view NodeName) {
+	//const aiNodeAnim* pAnimNode = nullptr;
+	const Key* pkey = nullptr;
 	//const aiAnimation* pAnim = m_pScene->mAnimations[AnimIndex]; // 0 get first animation
-	if (pAnim) {
-		for (uint ikey = 0; ikey < pAnim->mNumChannels; ikey++) {
-			pAnimNode = pAnim->mChannels[ikey];
-			if (pAnimNode->mNodeName.data == NodeName)
-				return pAnimNode;
+	//if (pAnim) {
+		for (uint ikey = 0; ikey < pAnim.m_Keys.size(); ikey++) {
+			pkey = &pAnim.m_Keys[ikey];
+			if (pkey->Name == NodeName)
+				return pkey;
+			//if (pAnimNode->mNodeName.data == NodeName)
+				//return pAnimNode;
 		}
-	}
+	//}
 
 	return nullptr;
 }
 
-uint SkeletalModel::FindPosIndex(float AnimTimeTicks, const aiNodeAnim* pAnimNode) {
-	for (uint i = 0; i < pAnimNode->mNumPositionKeys - 1; i++) {
-		float t = (float)pAnimNode->mPositionKeys[i + 1].mTime;
+uint SkeletalModel::FindPosIndex(float AnimTimeTicks, const Key* pAnimNode) {
+	for (uint i = 0; i < pAnimNode->PosKeys.size() - 1; i++) {
+		float t = (float)pAnimNode->PosKeys[i + 1].time;
 		if (t > AnimTimeTicks) return i;
 	}
 	return 0;
 }
 
-uint SkeletalModel::FindRotIndex(float AnimTimeTicks, const aiNodeAnim* pAnimNode) {
-	for (uint i = 0; i < pAnimNode->mNumRotationKeys - 1; i++) {
-		float t = (float)pAnimNode->mRotationKeys[i + 1].mTime;
+uint SkeletalModel::FindRotIndex(float AnimTimeTicks, const Key* pAnimNode) {
+	for (uint i = 0; i < pAnimNode->RotKeys.size() - 1; i++) {
+		float t = (float)pAnimNode->RotKeys[i + 1].time;
 		if (t > AnimTimeTicks) return i;
 	}
 	return 0;
 }
 
-uint SkeletalModel::FindScaleIndex(float AnimTimeTicks, const aiNodeAnim* pAnimNode) {
-	for (uint i = 0; i < pAnimNode->mNumScalingKeys - 1; i++) {
-		float t = (float)pAnimNode->mScalingKeys[i + 1].mTime;
+uint SkeletalModel::FindScaleIndex(float AnimTimeTicks, const Key* pAnimNode) {
+	for (uint i = 0; i < pAnimNode->ScalKeys.size() - 1; i++) {
+		float t = (float)pAnimNode->ScalKeys[i + 1].time;
 		if (t > AnimTimeTicks) return i;
 	}
 	return 0;

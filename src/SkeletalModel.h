@@ -3,7 +3,7 @@
 #include "Texture.h"
 #include "myanimator.h"
 
-//__declspec(align(16))
+__declspec(align(16))
 struct WeightedVertex {
 	glm::vec3 pos;
 	glm::vec3 normal;
@@ -85,15 +85,10 @@ class SkeletalModel {
 
 	std::string m_Directory;
 
-	// temporary
-	Assimp::Importer importer;
-	const aiScene* m_pScene;
-
 	std::vector<MyAnimation> m_Animations;
 
-	uint numNodes;
-	std::vector<Node> m_Nodes;
-
+	//uint numNodes;
+	
 	struct LocalTranform {
 		glm::vec3 pos;
 		glm::quat rot;
@@ -111,8 +106,42 @@ public:
 	~SkeletalModel() { clear(); }
 
 	std::vector<Bone> m_Bones;
+	//std::vector<Node> m_Nodes;
+	Node m_RootNode;
+
+	std::map<std::string, NodeInfo> m_requiredNodeMap;
 
 public:
+	void InitReqNodeMap(const aiNode* pNode) {
+		std::string NodeName(pNode->mName.C_Str());
+		NodeInfo info(pNode);
+
+		m_requiredNodeMap[NodeName] = info;
+
+		for (uint i = 0; i < pNode->mNumChildren; i++)
+			InitReqNodeMap(pNode->mChildren[i]);
+	}
+
+	void MarkReqNodesForBone(const aiBone* pBone) {
+		std::string NodeName(pBone->mName.data);
+
+		const aiNode* pParent = nullptr;
+
+		do {
+			std::map<std::string, NodeInfo>::iterator it = m_requiredNodeMap.find(NodeName);
+			if (it == m_requiredNodeMap.end()) {
+				log_error("Cannot find bone in the hierarchy " << NodeName.c_str());
+				assert(0);
+			}
+
+			it->second.isRequired = true;
+			pParent = it->second.pNode->mParent;
+			if (pParent)
+				NodeName = std::string(pParent->mName.data);
+
+		} while (pParent);
+	}
+
 	void Load(std::string_view fileName, bool bFlipUVs = false);
 	void calcVertices(const aiScene* pScene, uint& numVertices, uint& numIndices);
 	void loadGeoData(const aiScene* pScene);
@@ -121,25 +150,25 @@ public:
 	void loadDiffuseTexture(const aiScene* pScene, const aiMaterial* pMaterial, int index);
 	void buildBuffers();
 	void loadAnimData(const aiScene* scene);
-	void ReadNodeHierarchy(const aiNode* pNode, const glm::mat4& mParentTransform, int parentIndex);
+	void ReadNodeHierarchy(Node& node, const aiNode* pNode, const glm::mat4& mParentTransform);
 	void UpdateAnimBlended(float TimeInSec, uint animA, uint animB, float BlendFactor);
-	void UpdateNodeHierarchyBlended(float animTimeA, float animTimeB, const aiNode* pNode, const glm::mat4& parentTrans, const aiAnimation* pAnimA, const aiAnimation* pAnimB, float blendFactor);
+	void UpdateNodeHierarchyBlended(float animTimeA, float animTimeB, const Node& pNode, const glm::mat4& parentTrans, const MyAnimation& pAnimA, const MyAnimation& pAnimB, float blendFactor);
 
 	float CalcAnimTimeTicks(float TimeInSec, unsigned int AnimIndex);
 	float GetScaleFactor(double firstPos, double nextPos, float animTime);
 
 	void UpdateAnim(float TimeInSec, uint AnimIndex);
-	void UpdateAnimHierarchy(float AnimTimeTicks, const aiNode* pNode, const glm::mat4& mParentTransform, int AnimIndex);
+	void UpdateAnimHierarchy(float AnimTimeTicks, const Node* pNode, const glm::mat4& mParentTransform, int AnimIndex);
 
-	void CalcInterpolatePosition(float AnimTimeTicks, const aiNodeAnim* pAnimNode, glm::vec3& pos);
-	void CalcInterpolateRotation(float AnimTimeTicks, const aiNodeAnim* pAnimNode, glm::quat& rot);
-	void CalcInterpolateScaling(float AnimTimeTicks, const aiNodeAnim* pAnimNode, glm::vec3& scale);
+	void CalcInterpolatePosition(float AnimTimeTicks, const Key* pAnimNode, glm::vec3& pos);
+	void CalcInterpolateRotation(float AnimTimeTicks, const Key* pAnimNode, glm::quat& rot);
+	void CalcInterpolateScaling(float AnimTimeTicks, const Key* pAnimNode, glm::vec3& scale);
 
-	const aiNodeAnim* FindNodeAnim(const aiAnimation* pAnim, std::string_view NodeName);
+	const Key* FindNodeAnim(const MyAnimation& pAnim, std::string_view NodeName);
 
-	uint FindPosIndex(float AnimTimeTicks, const aiNodeAnim* pAnimNode);
-	uint FindRotIndex(float AnimTimeTicks, const aiNodeAnim* pAnimNode);
-	uint FindScaleIndex(float AnimTimeTicks, const aiNodeAnim* pAnimNode);
+	uint FindPosIndex(float AnimTimeTicks, const Key* pAnimNode);
+	uint FindRotIndex(float AnimTimeTicks, const Key* pAnimNode);
+	uint FindScaleIndex(float AnimTimeTicks, const Key* pAnimNode);
 
 	void Render();
 };

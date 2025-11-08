@@ -40,8 +40,19 @@ struct AssimpNodeData {
 };
 
 // for the SkeletalModel
+__declspec(align(16))
 struct Node {
 	std::string Name;
 	glm::mat4 InvBindTransform; // transform
-	int ParentIndex;
+	//----------------------
+	int childrenCount;
+	std::vector<Node> children;
 };
+
+struct NodeInfo {
+	NodeInfo() {}
+	NodeInfo(const aiNode* n) : pNode(n) {}
+	const aiNode* pNode = nullptr;
+	bool isRequired = false;
+};
+
