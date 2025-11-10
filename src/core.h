@@ -42,7 +42,8 @@ struct glsl_compile_error : glsl_error {
 	glsl_compile_error(const char* s, GLuint shaderID);
 };
 
-#define FI __forceinline
+#define FINL __forceinline // !!! this should be used only in critical places found by PROFILER
+#define INL inline
 
 #define log(s) std::cout << s << std::endl
 #define log_error(s) std::cerr << "Error: " << s << std::endl

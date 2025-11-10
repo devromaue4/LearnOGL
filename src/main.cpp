@@ -15,7 +15,7 @@
 //#include "basic_mesh.h"
 //#include "skinned_mesh.h"
 //#include "Animator.h"
-//#include "SkeletalModel.h"
+#include "SkeletalModel.h"
 #include "StaticModel.h"
 
 #pragma warning( disable : 4100 ) // unreferenced parameter
@@ -46,7 +46,7 @@ glm::mat4 gmProj;
 //Animation* g_pAnimation;
 //Animator* g_pAnimator;
 //BasicMesh* gBaseMesh;
-//SkeletalModel* pMySkelModel;
+SkeletalModel* pMySkelModel;
 StaticModel* pStaticModel;
 float blendFactor = 0.0f;
 
@@ -72,7 +72,7 @@ void CompileShaders() {
 }
 
 void InitGeo() {
-	//glEnable(GL_CULL_FACE);
+	glEnable(GL_CULL_FACE);
 	//glFrontFace(GL_CW);
 	//glCullFace(GL_FRONT);
 	glPolygonMode(GL_FRONT_AND_BACK, GL_LINE); // wireframe mode on
@@ -81,6 +81,7 @@ void InitGeo() {
 
 	pStaticModel = new StaticModel;
 	pStaticModel->Load("../media_files/models/vis_bones/box.fbx");
+	
 	//pMySkelModel = new SkeletalModel;
 	//pMySkelModel->Load("../media_files/skeletalmeshes/Vanguard/Vanguard_Walking_in_place.fbx");
 	//pMySkelModel->Load("../media_files/skeletalmeshes/iclone_7_raptoid_mascot_-_free_download.glb");
@@ -119,7 +120,7 @@ void Render() {
 	// --------------------------------------------------------------
 	glm::mat4 mModel(1.0f);
 	//mModel = my::translate(mModel, my::vec3(0, 0, -2));
-	//mModel = glm::rotate(mModel, glm::radians(-90.0f), glm::vec3(1, 0, 0));
+	mModel = glm::rotate(mModel, glm::radians(-90.0f), glm::vec3(1, 0, 0));
 	//mModel = glm::scale(mModel, glm::vec3(.5f, .5f, .5f));
 	glm::mat4 mView = GameCamera.GetMatrix();
 	//glm::mat4 mPVM = gmProj * mView * mModel;
@@ -138,7 +139,7 @@ void Render() {
 	//pMySkelModel->Render();
 
 	static float rot = 0;
-	rot += 0.5f;
+	rot += 1.5f;
 
 	//glm::mat4 mRoot = glm::rotate(glm::mat4(1), glm::radians(0.0f), glm::vec3(0, 0, 1.0f));
 	glm::mat4 mRoot = glm::rotate(glm::mat4(1), glm::radians(rot), glm::vec3(0, 0, 1.0f));

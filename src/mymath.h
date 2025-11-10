@@ -6,15 +6,16 @@
 #include "core.h"
 
 #ifndef FI
-	#define FI __forceinline
+	//#define FINL __forceinline
+	#define INL inline
 #endif
 
 namespace my {
 
 	const double PI = 3.14159265359;
 
-	FI float radians(float degree) { return degree * static_cast<float>(PI / 180.0); }
-	FI float degrees(float radians) { return radians * static_cast<float>(180.0 / PI); }
+	INL float radians(float degree) { return degree * static_cast<float>(PI / 180.0); }
+	INL float degrees(float radians) { return radians * static_cast<float>(180.0 / PI); }
 
 	// --------------------------------------------------------
 	struct vec2 {
@@ -29,7 +30,7 @@ namespace my {
 		void normalize() { float l = sqrt(x * x + y * y); x /= l; y /= l; }
 	};
 
-	FI float dotProd(const vec2& v1, const vec2& v2) { return (v1.x * v2.x + v1.y * v2.y); }
+	INL float dotProd(const vec2& v1, const vec2& v2) { return (v1.x * v2.x + v1.y * v2.y); }
 
 	// --------------------------------------------------------
 	struct vec3 {
@@ -46,39 +47,39 @@ namespace my {
 		void rotate(float angle, const vec3& q);
 	};
 
-	FI vec3 operator+(const vec3& v1, const vec3& v2) { return vec3(v1.x + v2.x, v1.y + v2.y, v1.z + v2.z); }
-	FI vec3 operator-(const vec3& v1, const vec3& v2) { return vec3(v1.x - v2.x, v1.y - v2.y, v1.z - v2.z); }
+	INL vec3 operator+(const vec3& v1, const vec3& v2) { return vec3(v1.x + v2.x, v1.y + v2.y, v1.z + v2.z); }
+	INL vec3 operator-(const vec3& v1, const vec3& v2) { return vec3(v1.x - v2.x, v1.y - v2.y, v1.z - v2.z); }
 
-	FI vec3 operator*(const vec3& v, const float s) { return vec3(v.x * s, v.y * s, v.z * s); }
-	FI vec3 operator*(const float s, const vec3& v) { return vec3(v.x * s, v.y * s, v.z * s); }
+	INL vec3 operator*(const vec3& v, const float s) { return vec3(v.x * s, v.y * s, v.z * s); }
+	INL vec3 operator*(const float s, const vec3& v) { return vec3(v.x * s, v.y * s, v.z * s); }
 	//FI vec3 operator/(const quat& v, const float d) { return vec3(v.x / d, v.y / d, v.z / d); }
 
-	FI vec3 normalize(const vec3& v) { float l = sqrt(v.x * v.x + v.y * v.y + v.z * v.z); if (l <= 0) return vec3(0, 0, 0); return vec3(v.x / l, v.y / l, v.z / l); }
-	FI float dotProd(const vec3& v1, const vec3& v2) { return (v1.x * v2.x + v1.y * v2.y + v1.z * v2.z); }
-	FI vec3 crossProd(const vec3& v1, const vec3& v2) { return vec3(v1.y * v2.z - v1.z * v2.y, v1.z * v2.x - v1.x * v2.z, v1.x * v2.y - v1.y * v2.x); }
+	INL vec3 normalize(const vec3& v) { float l = sqrt(v.x * v.x + v.y * v.y + v.z * v.z); if (l <= 0) return vec3(0, 0, 0); return vec3(v.x / l, v.y / l, v.z / l); }
+	INL float dotProd(const vec3& v1, const vec3& v2) { return (v1.x * v2.x + v1.y * v2.y + v1.z * v2.z); }
+	INL vec3 crossProd(const vec3& v1, const vec3& v2) { return vec3(v1.y * v2.z - v1.z * v2.y, v1.z * v2.x - v1.x * v2.z, v1.x * v2.y - v1.y * v2.x); }
 
-	FI vec3 lerp(const vec3& v1, const vec3& v2, float a) {
+	INL vec3 lerp(const vec3& v1, const vec3& v2, float a) {
 		assert(a >= 0.0f && a <= 1.0f);
 		return v1 * (1.0f - a) + (v2 * a);
 	}
-	FI vec3 lerp_imp(const vec3& v1, const vec3& v2, float a) {
+	INL vec3 lerp_imp(const vec3& v1, const vec3& v2, float a) {
 		assert(a >= 0.0f && a <= 1.0f);
 		return v1 + a * (v2 - v1); // Imprecise method
 	}
 
 	// Вспомогательные функции
-	static FI void cross(const float a[3], const float b[3], float out[3]) {
+	static INL void cross(const float a[3], const float b[3], float out[3]) {
 		out[0] = a[1] * b[2] - a[2] * b[1];
 		out[1] = a[2] * b[0] - a[0] * b[2];
 		out[2] = a[0] * b[1] - a[1] * b[0];
 	}
 
-	static FI float dot(const float a[3], const float b[3]) {
+	static INL float dot(const float a[3], const float b[3]) {
 		return a[0] * b[0] + a[1] * b[1] + a[2] * b[2];
 	}
 
 	// compute cross product of two __m128 vectors (x,y,z,?)
-	static FI __m128 sse_cross(const __m128& a, const __m128& b) {
+	static INL __m128 sse_cross(const __m128& a, const __m128& b) {
 		// tmp1 = (a.y, a.z, a.x), tmp2 = (b.z, b.x, b.y) then a*tmp2 - b*tmp1 pattern
 		__m128 a_yzx = _mm_shuffle_ps(a, a, _MM_SHUFFLE(3, 0, 2, 1)); // (a.z,a.x,a.y,a.w) careful ordering
 		__m128 a_zxy = _mm_shuffle_ps(a, a, _MM_SHUFFLE(3, 1, 0, 2)); // (a.y,a.z,a.x,?)
@@ -88,7 +89,7 @@ namespace my {
 	}
 
 	// horizontal dot for first 3 components of vectors a and b
-	static FI float sse_dot3(const __m128& a, const __m128& b) {
+	static INL float sse_dot3(const __m128& a, const __m128& b) {
 		__m128 mul = _mm_mul_ps(a, b);
 		// sum x+y+z
 		float tmp[4];
@@ -103,13 +104,13 @@ namespace my {
 		vec4(float _x = .0f, float _y = .0f, float _z = .0f, float _w = .0f) : x(_x), y(_y), z(_z), w(_w) {}
 	};
 
-	FI vec4 operator*(const vec4& v1, const vec4& v2) {
+	INL vec4 operator*(const vec4& v1, const vec4& v2) {
 		return vec4(v1.x * v2.x, v1.y * v2.y, v1.z * v2.z, v1.w * v2.w);
 	}
-	FI vec4 operator-(const vec4& v1, const vec4& v2) {
+	INL vec4 operator-(const vec4& v1, const vec4& v2) {
 		return vec4(v1.x - v2.x, v1.y - v2.y, v1.z - v2.z, v1.w - v2.w);
 	}
-	FI vec4 operator+(const vec4& v1, const vec4& v2) {
+	INL vec4 operator+(const vec4& v1, const vec4& v2) {
 		return vec4(v1.x + v2.x, v1.y + v2.y, v1.z + v2.z, v1.w + v2.w);
 	}
 
@@ -123,10 +124,10 @@ namespace my {
 		void identity() { _m[0][0] = 1.0f; _m[1][1] = 1.0f; }
 	};
 
-	FI mat2 operator+(const mat2& m1, const mat2& m2);
-	FI mat2 operator*(const mat2& m1, const mat2& m2);
+	INL mat2 operator+(const mat2& m1, const mat2& m2);
+	INL mat2 operator*(const mat2& m1, const mat2& m2);
 
-	FI vec2 operator*(const mat2& m, const vec2& v) { return vec2(v.x * m._m[0][0] + v.y * m._m[0][1], v.x * m._m[1][0] + v.y * m._m[1][1]); }
+	INL vec2 operator*(const mat2& m, const vec2& v) { return vec2(v.x * m._m[0][0] + v.y * m._m[0][1], v.x * m._m[1][0] + v.y * m._m[1][1]); }
 
 	// --------------------------------------------------------
 	// matrix 3x3 возможно надо транспонировать 
@@ -137,13 +138,13 @@ namespace my {
 		void identity() { m[0][0] = 1.0f; m[1][1] = 1.0f; m[2][2] = 1.0f; }
 	};
 
-	FI vec3 operator*(const mat3& m, const vec3& v) {
+	INL vec3 operator*(const mat3& m, const vec3& v) {
 		return vec3(v.x * m.m[0][0] + v.y * m.m[0][1] + v.z * m.m[0][2],
 			v.x * m.m[1][0] + v.y * m.m[1][1] + v.z * m.m[1][2],
 			v.x * m.m[2][0] + v.y * m.m[2][1] + v.z * m.m[2][2]);
 	}
 
-	FI mat3 operator*(const mat3& m1, const mat3& m2);
+	INL mat3 operator*(const mat3& m1, const mat3& m2);
 
 	// --------------------------------------------------------
 	// matrix 4x4
@@ -183,14 +184,14 @@ namespace my {
 		}
 	};
 
-	FI vec3 operator*(const mat4& m, const vec3& v) {
+	INL vec3 operator*(const mat4& m, const vec3& v) {
 		return vec3(
 			v.x * m.m[0][0] + v.y * m.m[1][0] + v.z * m.m[2][0],
 			v.x * m.m[0][1] + v.y * m.m[1][1] + v.z * m.m[2][1],
 			v.x * m.m[0][2] + v.y * m.m[1][2] + v.z * m.m[2][2]);
 	}
 
-	FI vec4 operator*(const mat4& m, const vec4& v) {
+	INL vec4 operator*(const mat4& m, const vec4& v) {
 		return vec4(
 			v.x * m.m[0][0] + v.y * m.m[1][0] + v.z * m.m[2][0] + v.w * m.m[3][0],
 			v.x * m.m[0][1] + v.y * m.m[1][1] + v.z * m.m[2][1] + v.w * m.m[3][1],
@@ -199,24 +200,24 @@ namespace my {
 	}
 
 	// (2nd way only)
-	FI mat4 operator*(const mat4& m1, const mat4& m2);
+	INL mat4 operator*(const mat4& m1, const mat4& m2);
 
 	// вроде ок (не знаю точной формулы)
-	FI mat4 translate(const mat4& m, const vec3& v);
+	INL mat4 translate(const mat4& m, const vec3& v);
 
 	// вроде ок (не знаю точной формулы)
-	FI mat4 scale(const mat4& m, const vec3& v);
+	INL mat4 scale(const mat4& m, const vec3& v);
 
 	// error when all axis is zero
-	FI mat4 rotate(const mat4& m, float angle, const vec3& axis);
+	INL mat4 rotate(const mat4& m, float angle, const vec3& axis);
 
-	FI mat4 rotateX(float angle);
-	FI mat4 rotateY(float angle);
-	FI mat4 rotateZ(float angle);
+	INL mat4 rotateX(float angle);
+	INL mat4 rotateY(float angle);
+	INL mat4 rotateZ(float angle);
 
 	// универсальная версия (полная версия)
 	// Если матрица содержит перспективу - использовать полную версию
-	/*FI mat4 inverse(const mat4& a) {
+	/*INL mat4 inverse(const mat4& a) {
 		mat4 inv;
 		float invOut[16];
 		const float* m = &a.m[0][0];
@@ -349,7 +350,7 @@ namespace my {
 	}*/
 
 	// Быстрая инверсия для аффинных матриц (без перспективы)
-	FI mat4 inverseAffine(const mat4& a) {
+	INL mat4 inverseAffine(const mat4& a) {
 		mat4 inv;
 
 		// Извлекаем 3x3 часть (вращение/масштаб)
@@ -400,7 +401,7 @@ namespace my {
 	// (для аффинных матриц)
 	// Работает только если матрица аффинная(то есть m[3][3] == 1, m[0][3] = m[1][3] = m[2][3] = 0).
 	// Поддерживает вращение + масштаб + перенос.
-	FI mat4 inverseAffineSSE(const mat4& M) {
+	INL mat4 inverseAffineSSE(const mat4& M) {
 		mat4 inv;
 
 		// Загрузка 3 столбцов вращения/масштаба
@@ -450,7 +451,7 @@ namespace my {
 	}
 
 	// аналитическая формула (для аффинных матриц) 
-	FI mat4 invertAffine2(const mat4& src) {
+	INL mat4 invertAffine2(const mat4& src) {
 		// Верхний левый 3x3 — транспонируем и инвертируем
 		float det = src.m[0][0] * (src.m[1][1] * src.m[2][2] - src.m[2][1] * src.m[1][2]) -
 			src.m[1][0] * (src.m[0][1] * src.m[2][2] - src.m[2][1] * src.m[0][2]) +
@@ -488,31 +489,31 @@ namespace my {
 	// fovy convert to radians
 	// positive +z axis point in to the screen
 	// correct left-hand perspective (apect = height / width)
-	FI mat4 perspectiveLH_OGLDEV(float fovy, float aspect, float zNear, float zFar);
+	INL mat4 perspectiveLH_OGLDEV(float fovy, float aspect, float zNear, float zFar);
 
 	// left-handed
 	// negative one to one (z -1 to 1)
 	// This creates a symmetric frustum with vertical FOV
 	// fovy convert to radians
 	// positive +z axis point in to the screen
-	FI mat4 perspectiveLH(float fovy, float aspect, float zNear, float zFar);
+	INL mat4 perspectiveLH(float fovy, float aspect, float zNear, float zFar);
 
 	// left-handed
 	// negative zero to one (z 0 to 1)
 	// This creates a symmetric frustum with vertical FOV
 	// fovy convert to radians
 	// positive +z axis point in to the screen
-	FI mat4 perspectiveLH_ZO(float fovy, float aspect, float zNear, float zFar);
+	INL mat4 perspectiveLH_ZO(float fovy, float aspect, float zNear, float zFar);
 
 	// right-handed
 	// negative one to one (z -1 to 1)
 	// This creates a symmetric frustum with vertical FOV
 	// fovy convert to radians
 	// negative -z axis point in to the screen
-	FI mat4 perspectiveRH(float fovy, float aspect, float zNear, float zFar);
+	INL mat4 perspectiveRH(float fovy, float aspect, float zNear, float zFar);
 
-	FI mat4 lookAtLH(const vec3& eye, const vec3& at, const vec3& up);
-	FI mat4 lookAtRH(const vec3& eye, const vec3& at, const vec3& up);
+	INL mat4 lookAtLH(const vec3& eye, const vec3& at, const vec3& up);
+	INL mat4 lookAtRH(const vec3& eye, const vec3& at, const vec3& up);
 
 	// OGLDEV
 	struct Matrix4f {
@@ -555,18 +556,18 @@ namespace my {
 		quat conjugate()			const { return quat(w, -x, -y, -z); }
 	};
 
-	FI quat normalize(const my::quat& q) { float l = sqrt(q.w * q.w + q.x * q.x + q.y * q.y + q.z * q.z);
+	INL quat normalize(const my::quat& q) { float l = sqrt(q.w * q.w + q.x * q.x + q.y * q.y + q.z * q.z);
 		return quat(q.w / l, q.x / l, q.y / l, q.z / l); }
 
-	FI quat operator+(const quat& q1, const quat& q2) { return quat(q1.w + q2.w, q1.x + q2.x, q1.y + q2.y, q1.z + q2.z); }
-	FI quat operator-(const quat& q1, const quat& q2) { return quat(q1.w - q2.w, q1.x - q2.x, q1.y - q2.y, q1.z - q2.z); }
-	FI quat operator*(const quat& q, const float s)	{ return quat(q.w * s, q.x * s, q.y * s, q.z * s); }
-	FI quat operator*(const float s, const quat& q)	{ return quat(q.w * s, q.x * s, q.y * s, q.z * s); }
-	FI quat operator/(const quat& q, const float d) { return quat(q.w / d, q.x / d, q.y / d, q.z / d); }
-	FI quat operator*(const quat& q1, const quat& q2);
-	FI quat operator*(const quat& q, const vec3& v);
+	INL quat operator+(const quat& q1, const quat& q2) { return quat(q1.w + q2.w, q1.x + q2.x, q1.y + q2.y, q1.z + q2.z); }
+	INL quat operator-(const quat& q1, const quat& q2) { return quat(q1.w - q2.w, q1.x - q2.x, q1.y - q2.y, q1.z - q2.z); }
+	INL quat operator*(const quat& q, const float s) { return quat(q.w * s, q.x * s, q.y * s, q.z * s); }
+	INL quat operator*(const float s, const quat& q) { return quat(q.w * s, q.x * s, q.y * s, q.z * s); }
+	INL quat operator/(const quat& q, const float d) { return quat(q.w / d, q.x / d, q.y / d, q.z / d); }
+	INL quat operator*(const quat& q1, const quat& q2);
+	INL quat operator*(const quat& q, const vec3& v);
 
-	FI float dot(const quat& q1, const quat& q2) {
+	INL float dot(const quat& q1, const quat& q2) {
 		// VS 17.7.4 generates longer assembly (~20 instructions vs 11 instructions)
 //#if !defined(_MSC_VER)
 //		return q1.x * q2.x + q1.y * q2.y + q1.z * q2.z + q1.w * q2.w;
@@ -577,7 +578,7 @@ namespace my {
 	}
 
 	// преобразовываем кватернион в матрицу поворота
-	FI mat4 toMat4(const quat& q) {
+	INL mat4 toMat4(const quat& q) {
 		return mat4(
 			1 - 2 * (q.y * q.y + q.z * q.z), 2 * (q.x * q.y + q.w * q.z), 2 * (q.x * q.z - q.w * q.y), 0.0f,
 			2 * (q.x * q.y - q.w * q.z), 1 - 2 * (q.x * q.x + q.z * q.z), 2 * (q.y * q.z + q.w * q.x), 0.0f,
@@ -585,13 +586,13 @@ namespace my {
 			0.0f, 0.0f, 0.0f, 1.0f);
 	}
 	
-	FI quat lerp(const quat& q1, const quat& q2, float a) { 
+	INL quat lerp(const quat& q1, const quat& q2, float a) {
 		assert(a >= 0.0f && a <= 1.0f);
 		return q1 * (1.0f - a) + (q2 * a);
 		//return q1 + a * (q2 - q1); // Imprecise method
 	}
 
-	FI quat slerp(const quat& q1, const quat& q2, float a) { 
+	INL quat slerp(const quat& q1, const quat& q2, float a) {
 		quat d = q2;
 
 		float cosTheta = dot(q1, q2);
@@ -616,7 +617,7 @@ namespace my {
 		return (sin((1 - a) * angle) * q1 + sin(a * angle) * d) / sin(angle);
 	}
 
-	FI quat slerp2(const quat& q1, const quat& q2, float a) { 
+	INL quat slerp2(const quat& q1, const quat& q2, float a) {
 		quat d = q2;
 
 		float cosTheta = dot(q1, q2);

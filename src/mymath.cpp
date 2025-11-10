@@ -41,7 +41,7 @@ my::mat4::mat4(const vec4& v0, const vec4& v1, const vec4& v2, const vec4& v3) {
 	m[3][0] = v3.x; m[0][1] = v3.y; m[0][2] = v3.z; m[0][3] = v3.w;
 }
 
-FI my::quat my::quat::normalize() {
+INL my::quat my::quat::normalize() {
 	float l = length();
 	if (l <= 0.0f) return quat(1, 0, 0, 0);
 	float oneOverL = 1.0f / l;
@@ -72,7 +72,7 @@ my::Matrix4f my::Matrix4f::operator*(const Matrix4f& Right) const {
 
 // right-handed
 // This creates a symmetric frustum with horizontal FOV
-/*FI Matrix4f perspectiveRHHF(float fovx, float aspect, float zNear, float zFar) {
+/*INL Matrix4f perspectiveRHHF(float fovx, float aspect, float zNear, float zFar) {
 	const float DegToRad = acos(-1.0f) / 180;
 	float tangent = tan(fovx / 2.0f * DegToRad);
 	float right = zNear * tangent;
@@ -85,7 +85,7 @@ my::Matrix4f my::Matrix4f::operator*(const Matrix4f& Right) const {
 		0, 0, -1, 0);
 	return mProj;
 }
-FI Matrix4f orthoRH(float left, float right, float bottom, float top, float zNear, float zFar) {
+INL Matrix4f orthoRH(float left, float right, float bottom, float top, float zNear, float zFar) {
 	Matrix4f mProj(
 		2 / (right - left), 0, 0, -(right + left) / (right - left),
 		0, 2 / (top - bottom), 0, -(top + bottom) / (top - bottom),
