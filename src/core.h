@@ -52,4 +52,3 @@ struct glsl_compile_error : glsl_error {
 #define safe_delete(p)			{ if(p) { delete p; } }
 #define array_num_elems(a)		(sizeof(a)/sizeof(a[0]))
 
-#define MAX_BONE_INFLUENCE 4

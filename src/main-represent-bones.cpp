@@ -25,7 +25,7 @@
 int WIDTH = 1024, HEIGHT = 720;
 //int WIDTH = 1920, HEIGHT = 1080;
 
-std::shared_ptr<Shader> gShaderBase;
+Shader* gShaderBase;
 //Texture *gTex0, *gTex1;
 //GLint gScaleLocation = -1, gUColorTris = -1; // -1 means error
 
@@ -37,8 +37,8 @@ float deltaTime = 0;
 float lastFrame = 0;
 
 //Camera gCamera(WIDTH, HEIGHT, my::vec3(0, 30, 100));
-CameraOGLDEV GameCamera(WIDTH, HEIGHT, glm::vec3(-30,70,250), glm::vec3(0.0f, 0.0f, -1));
-//CameraOGLDEV GameCamera(WIDTH, HEIGHT, glm::vec3(0,0,10), glm::vec3(0.0f, 0.0f, -1));
+//CameraOGLDEV GameCamera(WIDTH, HEIGHT, glm::vec3(-30,70,250), glm::vec3(0.0f, 0.0f, -1));
+CameraOGLDEV GameCamera(WIDTH, HEIGHT, glm::vec3(0,0,10), glm::vec3(0.0f, 0.0f, -1));
 
 glm::mat4 gmProj;
 
@@ -46,8 +46,8 @@ glm::mat4 gmProj;
 //Animation* g_pAnimation;
 //Animator* g_pAnimator;
 //BasicMesh* gBaseMesh;
-//std::shared_ptr<StaticModel> pMyStaticModel;
-std::shared_ptr<SkeletalModel> pMySkelModel;
+SkeletalModel* pMySkelModel;
+StaticModel* pStaticModel;
 float blendFactor = 0.0f;
 
 //int DisplayBoneIndex;
@@ -65,8 +65,8 @@ void LoadTextures() {
 
 void CompileShaders() {
 
-	gShaderBase = std::make_shared<Shader>("../media_files/shaders/skintest.vert", "../media_files/shaders/skintest.frag");
-	//gShaderBase = std::make_shared<Shader>("../media_files/shaders/dir_light.vert", "../media_files/shaders/dir_light.frag");
+	//gShaderBase = new Shader("../media_files/shaders/skintest.vert", "../media_files/shaders/skintest.frag");
+	gShaderBase = new Shader("../media_files/shaders/dir_light.vert", "../media_files/shaders/dir_light.frag");
 	//gScaleLocation = glGetUniformLocation(gShaderBase->m_ID, "gScale"); //if (gScaleLocation == -1) throw glsl_error("failed getting uniform variable!");
 	//gUColorTris = glGetUniformLocation(g_pShaderBase->m_ID, "ourColor"); if (gUColorTris == -1) throw glsl_error("failed getting uniform variable!");
 }
@@ -75,24 +75,21 @@ void InitGeo() {
 	glEnable(GL_CULL_FACE);
 	//glFrontFace(GL_CW);
 	//glCullFace(GL_FRONT);
-	//glPolygonMode(GL_FRONT_AND_BACK, GL_LINE); // wireframe mode on
+	glPolygonMode(GL_FRONT_AND_BACK, GL_LINE); // wireframe mode on
 	//glPolygonMode(GL_FRONT_AND_BACK, GL_FILL); // wireframe mode off
 	glEnable(GL_DEPTH_TEST);
 
-	//pMyStaticModel = std::shared_ptr<StaticModel>(new StaticModel);
-	//pMyStaticModel = std::make_shared<StaticModel>();
-	//pMyStaticModel->Load("../media_files/models/vis_bones/box.fbx");
-	//pMyStaticModel->Load("../media_files/skeletalmeshes/boblampclean/boblampclean.md5mesh");
+	pStaticModel = new StaticModel;
+	pStaticModel->Load("../media_files/models/vis_bones/box.fbx");
 	
-	//pMySkelModel = std::shared_ptr<SkeletalModel>(new SkeletalModel);
-	pMySkelModel = std::make_shared<SkeletalModel>();
+	//pMySkelModel = new SkeletalModel;
 	//pMySkelModel->Load("../media_files/skeletalmeshes/Vanguard/Vanguard_Walking_in_place.fbx");
-	pMySkelModel->Load("../media_files/skeletalmeshes/iclone_7_raptoid_mascot_-_free_download.glb");
+	//pMySkelModel->Load("../media_files/skeletalmeshes/iclone_7_raptoid_mascot_-_free_download.glb");
 	//pMySkelModel->Load("../media_files/skeletalmeshes/boblampclean/boblampclean.md5mesh");
 	//pMySkelModel->Load("../media_files/skeletalmeshes/vampire/dancing_vampire.dae");
 
-	GameCamera.SetSpeedMove(2.1f);
-	//GameCamera.SetSpeedMove(.2f);
+	//GameCamera.SetSpeedMove(2.1f);
+	GameCamera.SetSpeedMove(.2f);
 
 	//gShaderBase->setInt("gDisplayBoneIndex", DisplayBoneIndex);
 	//for (uint i = 0; i < MAX_BONES; i++) {
@@ -133,42 +130,40 @@ void Render() {
 	gShaderBase->setMat4("mView", mView);
 	gShaderBase->setMat4("mProj", gmProj);
 
-	if(blendFactor > 0.0f) pMySkelModel->UpdateAnimBlended((float)AnimationTimeSec, 0, 3, blendFactor);
-	else pMySkelModel->UpdateAnim((float)AnimationTimeSec, 0);
-	const auto& bones = pMySkelModel->m_Bones;
-	for (int i = 0; i < bones.size(); i++) {
-		gShaderBase->setMat4("gBones[" + std::to_string(i) + "]", bones[i].FinalTransform);
-	}
-	pMySkelModel->Render();
+	//if(blendFactor > 0.0f) pMySkelModel->UpdateAnimBlended((float)AnimationTimeSec, 0, 3, blendFactor);
+	//else pMySkelModel->UpdateAnim((float)AnimationTimeSec, 0);
+	//const auto& bones = pMySkelModel->m_Bones;
+	//for (int i = 0; i < bones.size(); i++) {
+	//	gShaderBase->setMat4("gBones[" + std::to_string(i) + "]", bones[i].FinalTransform);
+	//}
+	//pMySkelModel->Render();
 
-	//pMyStaticModel->Render();
+	static float rot = 0;
+	rot += 1.5f;
 
-	//static float rot = 0;
-	//rot += 1.5f;
+	//glm::mat4 mRoot = glm::rotate(glm::mat4(1), glm::radians(0.0f), glm::vec3(0, 0, 1.0f));
+	glm::mat4 mRoot = glm::rotate(glm::mat4(1), glm::radians(rot), glm::vec3(0, 0, 1.0f));
+	//glm::mat4 mRoot = glm::rotate(glm::mat4(1), glm::radians(90.0f), glm::vec3(0, 0, 1.0f));
+	//glm::mat4 mRoot(1.0f);
+	glm::mat4 mJoin1_Offset = glm::translate(glm::mat4(1), glm::vec3(3.092f, 0 ,0));
+	mJoin1_Offset = glm::rotate(mJoin1_Offset, glm::radians(-rot), glm::vec3(0, 0, 1.0f));
+	glm::mat4 mJoin2_Offset = glm::translate(glm::mat4(1), glm::vec3(3.107, 0, 0));
+	glm::mat4 mJoin3_Offset = glm::translate(glm::mat4(1), glm::vec3(3.107, 0.5f, 0));
 
-	////glm::mat4 mRoot = glm::rotate(glm::mat4(1), glm::radians(0.0f), glm::vec3(0, 0, 1.0f));
-	//glm::mat4 mRoot = glm::rotate(glm::mat4(1), glm::radians(rot), glm::vec3(0, 0, 1.0f));
-	////glm::mat4 mRoot = glm::rotate(glm::mat4(1), glm::radians(90.0f), glm::vec3(0, 0, 1.0f));
-	////glm::mat4 mRoot(1.0f);
-	//glm::mat4 mJoin1_Offset = glm::translate(glm::mat4(1), glm::vec3(3.092f, 0 ,0));
-	//mJoin1_Offset = glm::rotate(mJoin1_Offset, glm::radians(-rot), glm::vec3(0, 0, 1.0f));
-	//glm::mat4 mJoin2_Offset = glm::translate(glm::mat4(1), glm::vec3(3.107, 0, 0));
-	//glm::mat4 mJoin3_Offset = glm::translate(glm::mat4(1), glm::vec3(3.107, 0.5f, 0));
+	gShaderBase->setMat4("mModel", mRoot);
+	pStaticModel->Render();
 
-	//gShaderBase->setMat4("mModel", mRoot);
-	//pStaticModel->Render();
+	glm::mat4 Global = mRoot * mJoin1_Offset;
+	gShaderBase->setMat4("mModel", Global);
+	pStaticModel->Render();
 
-	//glm::mat4 Global = mRoot * mJoin1_Offset;
-	//gShaderBase->setMat4("mModel", Global);
-	//pStaticModel->Render();
+	Global = Global * mJoin2_Offset;
+	gShaderBase->setMat4("mModel", Global);
+	pStaticModel->Render();
 
-	//Global = Global * mJoin2_Offset;
-	//gShaderBase->setMat4("mModel", Global);
-	//pStaticModel->Render();
-
-	//Global = Global * mJoin3_Offset;
-	//gShaderBase->setMat4("mModel", Global);
-	//pStaticModel->Render();
+	Global = Global * mJoin3_Offset;
+	gShaderBase->setMat4("mModel", Global);
+	pStaticModel->Render();
 
 	//glUniform1f(gScaleLocation, scale);
 	//gShaderBase->setFloat("gScale", scale);
@@ -190,8 +185,13 @@ void mouse_callback(GLFWwindow* window, double xposIn, double yposIn) {
 }
 
 void Cleanup() {
+	//safe_delete(g_pEBO);
+	//safe_delete(g_pVBO);
+	//safe_delete(g_pVAO);
+	//safe_delete(gTex1);
+	//safe_delete(gTex0);
 	//safe_delete(pMySkelModel);
-	//safe_delete(gShaderBase);
+	safe_delete(gShaderBase);
 }
 
 GLFWwindow* InitWindow() {

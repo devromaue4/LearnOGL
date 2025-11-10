@@ -93,7 +93,9 @@ void StaticModel::loadDiffuseTexture(const aiScene* pScene, const aiMaterial* pM
 		if (pMaterial->GetTexture(aiTextureType_DIFFUSE, 0, &path) == AI_SUCCESS) {
 			const aiTexture* pAiTexture = pScene->GetEmbeddedTexture(path.data);
 			if (pAiTexture) {
-				m_Textures[index] = new Texture;
+				//m_Textures[index] = new Texture;
+				//m_Textures[index] = std::shared_ptr<Texture>(new Texture);
+				m_Textures[index] = std::make_shared<Texture>();
 				if (!m_Textures[index]->Load(pAiTexture->mWidth, pAiTexture->pcData))
 					log("Error loading Embedded texture");
 			}
@@ -107,10 +109,12 @@ void StaticModel::loadDiffuseTexture(const aiScene* pScene, const aiMaterial* pM
 
 				std::string fullPath = m_Directory + "/" + p;
 
-				m_Textures[index] = new Texture(fullPath.c_str());
+				//m_Textures[index] = new Texture(fullPath.c_str());
+				//m_Textures[index] = std::shared_ptr<Texture>(new Texture(fullPath.c_str()));
+				m_Textures[index] = std::make_shared<Texture>(fullPath.c_str());
 				if (!m_Textures[index]->Load()) {
 					log_error("loading texture " << fullPath);
-					safe_delete(m_Textures[index]);
+					//safe_delete(m_Textures[index]);
 					m_Textures[index] = nullptr;
 					return;
 				}

@@ -143,7 +143,7 @@ void SkeletalModel::loadGeoData(const aiScene* pScene) {
 				m_Vertices[vertID].addWeight(BoneIndex, fWeight);
 			}
 
-			//MarkReqNodesForBone(pBone);
+			//MarkReqNodesForBone(pBone); call earlier
 		}
 	}
 
@@ -155,7 +155,7 @@ void SkeletalModel::NormalizeWeights() {
 	for (uint i = 0; i < m_Vertices.size(); i++) {
 		WeightedVertex& vertex = m_Vertices[i];
 		std::vector<float> validWeights;
-		for (int j = 0; j < MAX_BONE_INFLUENCE; j++) {
+		for (int j = 0; j < MAX_BONE_INF; j++) {
 			if (vertex.weights[j] < threshold)
 				vertex.weights[j] = 0.0f;
 			else
@@ -166,7 +166,7 @@ void SkeletalModel::NormalizeWeights() {
 		if (sum == 0.0f || sum == 1.0f) continue;
 
 		int validIndex = 0;
-		for (int j = 0; j < MAX_BONE_INFLUENCE; j++) {
+		for (int j = 0; j < MAX_BONE_INF; j++) {
 			if (vertex.weights[j] > 0.0f) {
 				vertex.weights[j] = validWeights[validIndex] / sum;
 				validIndex++;
@@ -202,7 +202,8 @@ void SkeletalModel::loadDiffuseTexture(const aiScene* pScene, const aiMaterial* 
 		if (pMaterial->GetTexture(aiTextureType_DIFFUSE, 0, &path) == AI_SUCCESS) {
 			const aiTexture* pAiTexture = pScene->GetEmbeddedTexture(path.data);
 			if (pAiTexture) {
-				m_Textures[index] = new Texture;
+				//m_Textures[index] = std::shared_ptr<Texture>(new Texture);
+				m_Textures[index] = std::make_shared<Texture>();
 				if (!m_Textures[index]->Load(pAiTexture->mWidth, pAiTexture->pcData))
 					log("Error loading Embedded texture");
 			}
@@ -216,10 +217,10 @@ void SkeletalModel::loadDiffuseTexture(const aiScene* pScene, const aiMaterial* 
 
 				std::string fullPath = m_Directory + "/" + p;
 
-				m_Textures[index] = new Texture(fullPath.c_str());
+				//m_Textures[index] = std::shared_ptr<Texture>(new Texture(fullPath.c_str()));
+				m_Textures[index] = std::make_shared<Texture>(fullPath.c_str());
 				if (!m_Textures[index]->Load()) {
 					log_error("loading texture " << fullPath);
-					safe_delete(m_Textures[index]);
 					m_Textures[index] = nullptr;
 					return;
 				}

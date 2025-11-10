@@ -50,14 +50,14 @@ uint TextureFromFile(const char* path, const string& directory/*, bool gamma*/) 
 }
 
 void Model::SetVertexBoneDataToDefault(MVertex& vertex) {
-	for (int i = 0; i < MAX_BONE_INFLUENCE; i++) {
+	for (int i = 0; i < MAX_BONE_INF; i++) {
 		vertex.m_BoneIDs[i] = -1;
 		vertex.m_Weights[i] = 0.0f;
 	}
 }
 
 void Model::SetVertexBoneData(MVertex& vertex, int boneID, float weight) {
-	for (int i = 0; i < MAX_BONE_INFLUENCE; i++) {
+	for (int i = 0; i < MAX_BONE_INF; i++) {
 		if(vertex.m_BoneIDs[i] < 0) {
 			vertex.m_BoneIDs[i] = boneID;
 			vertex.m_Weights[i] = weight;
@@ -99,18 +99,12 @@ void Model::Draw(const Shader& shader) {
 }
 
 void Model::loadModel(string path, bool flipUVs) {
-	uint flags = aiProcess_Triangulate | aiProcess_GenSmoothNormals | aiProcess_CalcTangentSpace;
+	uint flags = aiProcess_Triangulate | aiProcess_GenSmoothNormals | aiProcess_CalcTangentSpace | aiProcess_JoinIdenticalVertices
+		| aiProcess_ImproveCacheLocality
+		| aiProcess_RemoveRedundantMaterials;
 	if (flipUVs) flags |= aiProcess_FlipUVs; // set flag
 	Assimp::Importer importer;
 	const aiScene* scene = importer.ReadFile(path, flags);
-	//const aiScene* scene = importer.ReadFile(filename,
-	//	aiProcess_Triangulate |
-	//	//aiProcess_FlipUVs |
-	//	aiProcess_ConvertToLeftHanded |
-	//	aiProcess_JoinIdenticalVertices |
-	//	aiProcess_GenNormals |
-	//	aiProcess_CalcTangentSpace |    // 👉 нужно для normal map
-	//	aiProcess_ImproveCacheLocality);
 	if (!scene || scene->mFlags & AI_SCENE_FLAGS_INCOMPLETE || !scene->mRootNode) {
 		cout << "loadModel() " << importer.GetErrorString() << endl;
 		throw std::exception("failed to loadModel!");

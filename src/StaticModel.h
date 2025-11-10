@@ -21,12 +21,13 @@ class StaticModel {
 	std::vector<SVertex>			m_Vertices;
 	std::vector<uint>				m_Indices;
 	std::vector<MeshIndexedData>	m_Meshes;
-	std::vector<Texture*>			m_Textures;
+	//std::vector<Texture*>			m_Textures;
+	std::vector<std::shared_ptr<Texture>> m_Textures;
 
 	std::string m_Directory;
 
 	void clear() {
-		for (Texture* texture : m_Textures) safe_delete(texture);
+		//for (Texture* texture : m_Textures) safe_delete(texture);
 		if (m_EBO != 0) { glDeleteBuffers(1, &m_EBO); m_EBO = 0; }
 		if (m_VBO != 0) { glDeleteBuffers(1, &m_VBO); m_VBO = 0; }
 		if (m_VAO != 0) { glDeleteVertexArrays(1, &m_VAO); m_VAO = 0; }

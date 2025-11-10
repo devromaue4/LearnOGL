@@ -9,8 +9,8 @@ struct MVertex {
 	glm::vec2 TexCoords;
 	glm::vec3 Tangent;
 	glm::vec3 Bitangent;
-	int m_BoneIDs[MAX_BONE_INFLUENCE];//bone indexes which will influence this vertex	
-	float m_Weights[MAX_BONE_INFLUENCE];//weights from each bone
+	int m_BoneIDs[MAX_BONE_INF];//bone indexes which will influence this vertex	
+	float m_Weights[MAX_BONE_INF];//weights from each bone
 };
 
 struct MTexture {

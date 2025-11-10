@@ -9,14 +9,14 @@ struct WeightedVertex {
 	glm::vec3 pos;
 	glm::vec3 normal;
 	glm::vec2 texCoord;
-	uint boneIDs[MAX_BONE_INFLUENCE]{};
-	float weights[MAX_BONE_INFLUENCE]{};
+	uint boneIDs[MAX_BONE_INF]{};
+	float weights[MAX_BONE_INF]{};
 
 	void addWeight(uint iBoneID, float fWeight) {
 		if (fWeight == 0.0f) return;
 		//if (fWeight == 0.0f || fWeight <= 0.01f) return; // if skiped need renormalize weights (it not implements yet)
 
-		for (uint i = 0; i < MAX_BONE_INFLUENCE; i++) {
+		for (uint i = 0; i < MAX_BONE_INF; i++) {
 			//if (boneIDs[i] == iBoneID) return; // not work in my case
 			if (weights[i] == 0.0f) {
 				boneIDs[i] = iBoneID;
@@ -51,7 +51,7 @@ class SkeletalModel {
 	std::vector<uint>				m_Indices;
 	std::vector<MeshIndexedData>	m_Meshes;
 	std::map<std::string, uint>		m_BonesMap;
-	std::vector<Texture*>			m_Textures;
+	std::vector<std::shared_ptr<Texture>> m_Textures;
 
 	glm::mat4 m_GlobalInverseTransform = glm::mat4(1.0f);
 
@@ -68,7 +68,6 @@ class SkeletalModel {
 	};
 
 	void clear() {
-		for (Texture* texture : m_Textures) safe_delete(texture);
 		if (m_EBO != 0) { glDeleteBuffers(1, &m_EBO); m_EBO = 0; }
 		if (m_VBO != 0) { glDeleteBuffers(1, &m_VBO); m_VBO = 0; }
 		if (m_VAO != 0) { glDeleteVertexArrays(1, &m_VAO); m_VAO = 0; }
