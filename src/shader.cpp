@@ -19,9 +19,13 @@ const char* fragShaderSrc = "#version 330 core\n"
 const char* vertexShaderSource = R"glsl(
     #version 330 core
     layout (location = 0) in vec3 aPos;
-    uniform mat4 mPVM;
+    //uniform mat4 mPVM;
+	uniform mat4 mModel;
+	uniform mat4 mView;
+	uniform mat4 mProj;
     void main() {
-        gl_Position = mPVM * vec4(aPos, 1.0);
+        //gl_Position = mPVM * vec4(aPos, 1.0);
+		gl_Position = mProj * mView * mModel * vec4(aPos, 1.0);
     }
 )glsl";
 const char* fragmentShaderSource = R"glsl(
@@ -30,7 +34,8 @@ const char* fragmentShaderSource = R"glsl(
     out vec4 FragColor;
     void main() {
        //FragColor = vec4(1.0f, 0.5f, 0.2f, 1.0f);
-       FragColor = vec4(triangleColor, 1.0f);
+       FragColor = vec4(1.0f, 1.0f, 1.0f, 1.0f);
+       //FragColor = vec4(triangleColor, 1.0f);
     }
 )glsl";
 
@@ -38,8 +43,8 @@ Shader::Shader() {
 	m_ID = glCreateProgram();
 	if (!m_ID) throw glfw_error("creating shader program\n");
 
-	AddShader(m_ID, vertShaderSrc, GL_VERTEX_SHADER);
-	AddShader(m_ID, fragShaderSrc, GL_FRAGMENT_SHADER);
+	AddShader(m_ID, vertexShaderSource, GL_VERTEX_SHADER);
+	AddShader(m_ID, fragmentShaderSource, GL_FRAGMENT_SHADER);
 
 	glLinkProgram(m_ID); CheckLinkShader(m_ID);
 }

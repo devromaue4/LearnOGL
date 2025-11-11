@@ -11,12 +11,10 @@
 #include "shader.h"
 //#include "camera.h"
 #include "camera_ogldev.h"
-//#include "Model.h"
-//#include "basic_mesh.h"
 //#include "skinned_mesh.h"
-//#include "Animator.h"
 #include "SkeletalModel.h"
 #include "StaticModel.h"
+#include "geometry.h"
 
 #pragma warning( disable : 4100 ) // unreferenced parameter
 
@@ -29,32 +27,28 @@ std::shared_ptr<Shader> gShaderBase;
 //Texture *gTex0, *gTex1;
 //GLint gScaleLocation = -1, gUColorTris = -1; // -1 means error
 
-// stores how much we're seeing of either texture
-float mixValue = 0.2f;
-//float mixValue = 1.0f;
-
-float deltaTime = 0;
-float lastFrame = 0;
-
 //Camera gCamera(WIDTH, HEIGHT, my::vec3(0, 30, 100));
-CameraOGLDEV GameCamera(WIDTH, HEIGHT, glm::vec3(-30,70,250), glm::vec3(0.0f, 0.0f, -1));
+//CameraOGLDEV GameCamera(WIDTH, HEIGHT, glm::vec3(-30,70,250), glm::vec3(0.0f, 0.0f, -1));
+CameraOGLDEV GameCamera(WIDTH, HEIGHT, glm::vec3(0,0,30), glm::vec3(0.0f, 0.0f, -1));
 //CameraOGLDEV GameCamera(WIDTH, HEIGHT, glm::vec3(0,0,10), glm::vec3(0.0f, 0.0f, -1));
 
 glm::mat4 gmProj;
 
-//Model* g_pModel;
-//Animation* g_pAnimation;
-//Animator* g_pAnimator;
-//BasicMesh* gBaseMesh;
-//std::shared_ptr<StaticModel> pMyStaticModel;
-std::shared_ptr<SkeletalModel> pMySkelModel;
+std::shared_ptr<StaticModel> pMyStaticModel;
+//std::shared_ptr<SkeletalModel> pMySkelModel;
+std::shared_ptr<SBox> gBox;
+
 float blendFactor = 0.0f;
+// stores how much we're seeing of either texture
+float mixValue = 0.2f;
+//float mixValue = 1.0f;
+float deltaTime = 0;
+float lastFrame = 0;
+double StartTimeMillis = 0;
 
 //int DisplayBoneIndex;
 //const int MAX_BONES = 200;
 //GLuint g_boneLocation[MAX_BONES];
-
-double StartTimeMillis = 0;
 
 void LoadTextures() {
 	//gTex0 = new Texture("../media_files/textures/container.jpg", false, GL_TEXTURE1); gTex0->Load();
@@ -65,8 +59,8 @@ void LoadTextures() {
 
 void CompileShaders() {
 
-	gShaderBase = std::make_shared<Shader>("../media_files/shaders/skintest.vert", "../media_files/shaders/skintest.frag");
-	//gShaderBase = std::make_shared<Shader>("../media_files/shaders/dir_light.vert", "../media_files/shaders/dir_light.frag");
+	//gShaderBase = std::make_shared<Shader>("../media_files/shaders/skintest.vert", "../media_files/shaders/skintest.frag");
+	gShaderBase = std::make_shared<Shader>("../media_files/shaders/dir_light.vert", "../media_files/shaders/dir_light.frag");
 	//gScaleLocation = glGetUniformLocation(gShaderBase->m_ID, "gScale"); //if (gScaleLocation == -1) throw glsl_error("failed getting uniform variable!");
 	//gUColorTris = glGetUniformLocation(g_pShaderBase->m_ID, "ourColor"); if (gUColorTris == -1) throw glsl_error("failed getting uniform variable!");
 }
@@ -79,19 +73,19 @@ void InitGeo() {
 	//glPolygonMode(GL_FRONT_AND_BACK, GL_FILL); // wireframe mode off
 	glEnable(GL_DEPTH_TEST);
 
-	//pMyStaticModel = std::shared_ptr<StaticModel>(new StaticModel);
-	//pMyStaticModel = std::make_shared<StaticModel>();
+	gBox = std::make_shared<SBox>(3.f);
+
+	pMyStaticModel = std::make_shared<StaticModel>();
 	//pMyStaticModel->Load("../media_files/models/vis_bones/box.fbx");
-	//pMyStaticModel->Load("../media_files/skeletalmeshes/boblampclean/boblampclean.md5mesh");
+	pMyStaticModel->Load("../media_files/models/vis_bones/sphere.fbx");
 	
-	//pMySkelModel = std::shared_ptr<SkeletalModel>(new SkeletalModel);
-	pMySkelModel = std::make_shared<SkeletalModel>();
+	//pMySkelModel = std::make_shared<SkeletalModel>();
 	//pMySkelModel->Load("../media_files/skeletalmeshes/Vanguard/Vanguard_Walking_in_place.fbx");
-	pMySkelModel->Load("../media_files/skeletalmeshes/iclone_7_raptoid_mascot_-_free_download.glb");
+	//pMySkelModel->Load("../media_files/skeletalmeshes/iclone_7_raptoid_mascot_-_free_download.glb");
 	//pMySkelModel->Load("../media_files/skeletalmeshes/boblampclean/boblampclean.md5mesh");
 	//pMySkelModel->Load("../media_files/skeletalmeshes/vampire/dancing_vampire.dae");
 
-	GameCamera.SetSpeedMove(2.1f);
+	GameCamera.SetSpeedMove(1.2f);
 	//GameCamera.SetSpeedMove(.2f);
 
 	//gShaderBase->setInt("gDisplayBoneIndex", DisplayBoneIndex);
@@ -119,13 +113,13 @@ void Render() {
 	double AnimationTimeSec = (CurrentTimeMillis - StartTimeMillis) / 1.0;
 
 	gShaderBase->Use();
-
+	
 	// --------------------------------------------------------------
 	glm::mat4 mModel(1.0f);
 	//mModel = my::translate(mModel, my::vec3(0, 0, -2));
-	mModel = glm::rotate(mModel, glm::radians(-90.0f), glm::vec3(1, 0, 0));
+	//mModel = glm::rotate(mModel, glm::radians(-90.0f), glm::vec3(1, 0, 0));
 	//mModel = glm::scale(mModel, glm::vec3(.5f, .5f, .5f));
-	glm::mat4 mView = GameCamera.GetMatrix();
+	const glm::mat4& mView = GameCamera.GetMatrix();
 	//glm::mat4 mPVM = gmProj * mView * mModel;
 
 	//gShaderBase->setMat4("mPVM", mPVM);
@@ -133,15 +127,17 @@ void Render() {
 	gShaderBase->setMat4("mView", mView);
 	gShaderBase->setMat4("mProj", gmProj);
 
-	if(blendFactor > 0.0f) pMySkelModel->UpdateAnimBlended((float)AnimationTimeSec, 0, 3, blendFactor);
-	else pMySkelModel->UpdateAnim((float)AnimationTimeSec, 0);
-	const auto& bones = pMySkelModel->m_Bones;
-	for (int i = 0; i < bones.size(); i++) {
-		gShaderBase->setMat4("gBones[" + std::to_string(i) + "]", bones[i].FinalTransform);
-	}
-	pMySkelModel->Render();
+	//if(blendFactor > 0.0f) pMySkelModel->UpdateAnimBlended((float)AnimationTimeSec, 0, 3, blendFactor);
+	//else pMySkelModel->UpdateAnim((float)AnimationTimeSec, 0);
+	//const auto& bones = pMySkelModel->m_Bones;
+	//for (int i = 0; i < bones.size(); i++)
+	//	gShaderBase->setMat4("gBones[" + std::to_string(i) + "]", bones[i].FinalTransform);
+	//pMySkelModel->Render();
 
-	//pMyStaticModel->Render();
+	pMyStaticModel->Render();
+
+	mModel[3][0] = 15; // mModel[3][1] = 0; mModel[3][2] = 0;
+	gBox->Render(gmProj, mView, mModel);
 
 	//static float rot = 0;
 	//rot += 1.5f;
@@ -177,6 +173,7 @@ void Render() {
 
 void framebuffer_size_callback(GLFWwindow* wnd, int width, int height) {
 	WIDTH = width; HEIGHT = height;
+	gmProj = glm::perspective(glm::radians(45.0f), (float)WIDTH / HEIGHT, .1f, 1000.0f);
 	glViewport(0, 0, width, height);
 }
 
@@ -189,10 +186,7 @@ void mouse_callback(GLFWwindow* window, double xposIn, double yposIn) {
 	GameCamera.OnMouse((float)xposIn, (float)yposIn);
 }
 
-void Cleanup() {
-	//safe_delete(pMySkelModel);
-	//safe_delete(gShaderBase);
-}
+void Cleanup() {}
 
 GLFWwindow* InitWindow() {
 	glfwInit();

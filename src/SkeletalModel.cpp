@@ -17,7 +17,8 @@ void SkeletalModel::MarkReqNodesForBone(const aiBone* pBone) {
 	const aiNode* pParent = nullptr;
 
 	do {
-		std::map<std::string, NodeInfo>::iterator it = m_RequiredNodeMap.find(NodeName);
+		//std::map<std::string, NodeInfo>::iterator it = m_RequiredNodeMap.find(NodeName);
+		auto it = m_RequiredNodeMap.find(NodeName);
 		if (it == m_RequiredNodeMap.end()) {
 			log_error("Cannot find bone in the hierarchy " << NodeName.c_str());
 			assert(0);
@@ -50,7 +51,7 @@ void SkeletalModel::Load(std::string_view fileName, bool bFlipUVs) {
 
 	m_Directory = fileName.substr(0, fileName.find_last_of('/'));
 
-	m_GlobalInverseTransform = glm::inverse(toGlm(pScene->mRootNode->mTransformation));
+	m_GlobalInvTrans = glm::inverse(toGlm(pScene->mRootNode->mTransformation));
 
 	m_Meshes.resize(pScene->mNumMeshes);
 	m_Textures.resize(pScene->mNumMaterials);
@@ -317,7 +318,7 @@ void SkeletalModel::ReadNodeHierarchy(Node& node, const aiNode* pNode, const glm
 
 	if (m_BonesMap.find(NodeName) != m_BonesMap.end()) {
 		uint BoneIndex = m_BonesMap[NodeName];
-		m_Bones[BoneIndex].FinalTransform = m_GlobalInverseTransform * GlobalTransform * m_Bones[BoneIndex].Offset;
+		m_Bones[BoneIndex].FinalTransform = m_GlobalInvTrans * GlobalTransform * m_Bones[BoneIndex].Offset;
 	}
 
 	for (uint i = 0; i < pNode->mNumChildren; i++) {
@@ -394,13 +395,14 @@ void SkeletalModel::UpdateNodeHierarchyBlended(float animTimeA, float animTimeB,
 
 	if (m_BonesMap.find(pNode.Name) != m_BonesMap.end()) {
 		uint BoneIndex = m_BonesMap[pNode.Name];
-		m_Bones[BoneIndex].FinalTransform = m_GlobalInverseTransform * GlobalTransform * m_Bones[BoneIndex].Offset;
+		m_Bones[BoneIndex].FinalTransform = m_GlobalInvTrans * GlobalTransform * m_Bones[BoneIndex].Offset;
 	}
 
 	for (int i = 0; i < pNode.childrenCount; i++) {
 		const std::string& childName = pNode.children[i].Name;
 
-		std::map<std::string, NodeInfo>::iterator it = m_RequiredNodeMap.find(childName);
+		//std::map<std::string, NodeInfo>::iterator it = m_RequiredNodeMap.find(childName);
+		auto it = m_RequiredNodeMap.find(childName);
 		if (it == m_RequiredNodeMap.end()) {
 			log_error("Cannot find bone in the hierarchy " << childName.c_str());
 			assert(0);
@@ -467,13 +469,14 @@ void SkeletalModel::UpdateAnimHierarchy(float AnimTimeTicks, const Node* pNode, 
 
 	if (m_BonesMap.find(NodeName) != m_BonesMap.end()) {
 		uint BoneIndex = m_BonesMap[NodeName];
-		m_Bones[BoneIndex].FinalTransform = m_GlobalInverseTransform * GlobalTransform * m_Bones[BoneIndex].Offset;
+		m_Bones[BoneIndex].FinalTransform = m_GlobalInvTrans * GlobalTransform * m_Bones[BoneIndex].Offset;
 	}
 
 	for (int i = 0; i < pNode->childrenCount; i++) {
 		const std::string& childName = pNode->children[i].Name;
 
-		std::map<std::string, NodeInfo>::iterator it = m_RequiredNodeMap.find(childName);
+		//std::map<std::string, NodeInfo>::iterator it = m_RequiredNodeMap.find(childName);
+		auto it = m_RequiredNodeMap.find(childName);
 		if (it == m_RequiredNodeMap.end()) {
 			log_error("Cannot find bone in the hierarchy " << childName.c_str());
 			assert(0);

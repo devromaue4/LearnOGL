@@ -13,6 +13,8 @@ private:
 	glm::vec3 m_target = glm::vec3(0, 0, 1);
 	glm::vec3 m_up = glm::vec3(0, 1, 0);
 
+	glm::mat4 m_View = glm::mat4(1);
+
 	float m_speed = 0.1f;
 	float Sensitivity = 0.05f;
 
@@ -131,7 +133,10 @@ public:
 	}
 
 	//my::mat4 GetMatrix() { return my::lookAtRH(m_pos, m_pos + m_target, m_up); }
-	glm::mat4 GetMatrix() { return glm::lookAtRH(m_pos, m_pos + m_target, m_up); }
+	const glm::mat4& GetMatrix() {
+		m_View = glm::lookAtRH(m_pos, m_pos + m_target, m_up);
+		return m_View;
+	}
 
 	// left-handed z+ pint to the screen
 	glm::mat4 GetMatrixLH() {

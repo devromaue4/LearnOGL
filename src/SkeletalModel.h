@@ -40,7 +40,6 @@ struct WeightedVertex {
 struct Bone {
 	std::string BoneName;
 	glm::mat4 FinalTransform;
-	//glm::mat4 Transform;
 	glm::mat4 Offset = glm::mat4(1.0f);
 };
 
@@ -53,7 +52,7 @@ class SkeletalModel {
 	std::map<std::string, uint>		m_BonesMap;
 	std::vector<std::shared_ptr<Texture>> m_Textures;
 
-	glm::mat4 m_GlobalInverseTransform = glm::mat4(1.0f);
+	glm::mat4 m_GlobalInvTrans = glm::mat4(1.0f);
 
 	std::string m_Directory;
 
@@ -83,9 +82,9 @@ public:
 	std::map<std::string, NodeInfo> m_RequiredNodeMap;
 
 public:
+	void Load(std::string_view fileName, bool bFlipUVs = false);
 	void InitReqNodeMap(const aiNode* pNode);
 	void MarkReqNodesForBone(const aiBone* pBone);
-	void Load(std::string_view fileName, bool bFlipUVs = false);
 	void calcVertices(const aiScene* pScene, uint& numVertices, uint& numIndices);
 	void loadGeoData(const aiScene* pScene);
 	void NormalizeWeights();
@@ -95,7 +94,8 @@ public:
 	void loadAnimData(const aiScene* scene);
 	void ReadNodeHierarchy(Node& node, const aiNode* pNode, const glm::mat4& mParentTransform);
 	void UpdateAnimBlended(float TimeInSec, uint animA, uint animB, float BlendFactor);
-	void UpdateNodeHierarchyBlended(float animTimeA, float animTimeB, const Node& pNode, const glm::mat4& parentTrans, const MyAnimation& pAnimA, const MyAnimation& pAnimB, float blendFactor);
+	void UpdateNodeHierarchyBlended(float animTimeA, float animTimeB, const Node& pNode,
+		const glm::mat4& parentTrans, const MyAnimation& pAnimA, const MyAnimation& pAnimB, float blendFactor);
 
 	float CalcAnimTimeTicks(float TimeInSec, unsigned int AnimIndex);
 	float GetScaleFactor(double firstPos, double nextPos, float animTime);
