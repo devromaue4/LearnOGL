@@ -20,23 +20,31 @@
 
 // global variables
 //int WIDTH = 800, HEIGHT = 600;
-int WIDTH = 1024, HEIGHT = 720;
+//int WIDTH = 1024, HEIGHT = 720;
+int WIDTH = 1280, HEIGHT = 720;
 //int WIDTH = 1920, HEIGHT = 1080;
 
+bool gFullScreen = false;
+
 std::shared_ptr<Shader> gShaderBase;
+std::shared_ptr<Texture> gTex0, gTex1;
 //Texture *gTex0, *gTex1;
 //GLint gScaleLocation = -1, gUColorTris = -1; // -1 means error
 
 //Camera gCamera(WIDTH, HEIGHT, my::vec3(0, 30, 100));
 //CameraOGLDEV GameCamera(WIDTH, HEIGHT, glm::vec3(-30,70,250), glm::vec3(0.0f, 0.0f, -1));
-CameraOGLDEV GameCamera(WIDTH, HEIGHT, glm::vec3(0,0,30), glm::vec3(0.0f, 0.0f, -1));
+CameraOGLDEV GameCamera(WIDTH, HEIGHT, glm::vec3(0,20,50), glm::vec3(0.0f, 0.0f, -1));
 //CameraOGLDEV GameCamera(WIDTH, HEIGHT, glm::vec3(0,0,10), glm::vec3(0.0f, 0.0f, -1));
 
 glm::mat4 gmProj;
 
 std::shared_ptr<StaticModel> pMyStaticModel;
+std::shared_ptr<StaticModel> SM_Room;
+std::shared_ptr<StaticModel> SM_Sphere;
 //std::shared_ptr<SkeletalModel> pMySkelModel;
 std::shared_ptr<SBox> gBox;
+
+glm::vec3 lightDir(30.0f, 20, 5.0f);
 
 float blendFactor = 0.0f;
 // stores how much we're seeing of either texture
@@ -51,10 +59,12 @@ double StartTimeMillis = 0;
 //GLuint g_boneLocation[MAX_BONES];
 
 void LoadTextures() {
-	//gTex0 = new Texture("../media_files/textures/container.jpg", false, GL_TEXTURE1); gTex0->Load();
+	//gTex0 = std::make_shared<Texture>("../media_files/textures/brick.png", GL_TEXTURE0); gTex0->Load();
+	gTex0 = std::make_shared<Texture>("../media_files/textures/wall.jpg", GL_TEXTURE0); gTex0->Load();
+	//gTex0 = std::make_shared<Texture>("../media_files/textures/Cobble2.tga", GL_TEXTURE0); gTex0->Load();
 	//gTex0->setTexUnit(*gShaderBase,"texture_specular1", 1);
 	//gTex1 = new Texture("../media_files/textures/awesomeface.png", true, GL_TEXTURE1, GL_RGBA);  gTex1->Load();
-	//gTex1->setTexUnit(*gShaderBase, "texture_specular1", 1); 
+	//gTex1->setTexUnit(*gShaderBase, "texture_specular1", 1);
 }
 
 void CompileShaders() {
@@ -62,7 +72,6 @@ void CompileShaders() {
 	//gShaderBase = std::make_shared<Shader>("../media_files/shaders/skintest.vert", "../media_files/shaders/skintest.frag");
 	gShaderBase = std::make_shared<Shader>("../media_files/shaders/dir_light.vert", "../media_files/shaders/dir_light.frag");
 	//gScaleLocation = glGetUniformLocation(gShaderBase->m_ID, "gScale"); //if (gScaleLocation == -1) throw glsl_error("failed getting uniform variable!");
-	//gUColorTris = glGetUniformLocation(g_pShaderBase->m_ID, "ourColor"); if (gUColorTris == -1) throw glsl_error("failed getting uniform variable!");
 }
 
 void InitGeo() {
@@ -75,9 +84,13 @@ void InitGeo() {
 
 	gBox = std::make_shared<SBox>(3.f);
 
+	//scene.addModel(name, pos);
 	pMyStaticModel = std::make_shared<StaticModel>();
-	//pMyStaticModel->Load("../media_files/models/vis_bones/box.fbx");
-	pMyStaticModel->Load("../media_files/models/vis_bones/sphere.fbx");
+	SM_Room = std::make_shared<StaticModel>();
+	pMyStaticModel->Load("../media_files/models/misc/sub-meshes.fbx");
+	SM_Room->Load("../media_files/models/misc/room.fbx");
+	SM_Sphere = std::make_shared<StaticModel>();
+	SM_Sphere->Load("../media_files/models/misc/sphere.fbx");
 	
 	//pMySkelModel = std::make_shared<SkeletalModel>();
 	//pMySkelModel->Load("../media_files/skeletalmeshes/Vanguard/Vanguard_Walking_in_place.fbx");
@@ -85,8 +98,8 @@ void InitGeo() {
 	//pMySkelModel->Load("../media_files/skeletalmeshes/boblampclean/boblampclean.md5mesh");
 	//pMySkelModel->Load("../media_files/skeletalmeshes/vampire/dancing_vampire.dae");
 
+	//GameCamera.SetSpeedMove(1.2f);
 	GameCamera.SetSpeedMove(1.2f);
-	//GameCamera.SetSpeedMove(.2f);
 
 	//gShaderBase->setInt("gDisplayBoneIndex", DisplayBoneIndex);
 	//for (uint i = 0; i < MAX_BONES; i++) {
@@ -103,14 +116,16 @@ void InitGeo() {
 
 void Render() {
 	glClearColor(0.12f, .18f, .2f, 1);
+	//glClearColor(0.1f, .1f, .1f, 1);
+	//glClearColor(0, 0, 0, 1);
 	glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 
 	float currentFrame = (float)glfwGetTime();
 	deltaTime = currentFrame - lastFrame;
 	lastFrame = currentFrame;
 
-	double CurrentTimeMillis = glfwGetTime();
-	double AnimationTimeSec = (CurrentTimeMillis - StartTimeMillis) / 1.0;
+	//double CurrentTimeMillis = glfwGetTime();
+	//double AnimationTimeSec = (CurrentTimeMillis - StartTimeMillis) / 1.0;
 
 	gShaderBase->Use();
 	
@@ -134,37 +149,21 @@ void Render() {
 	//	gShaderBase->setMat4("gBones[" + std::to_string(i) + "]", bones[i].FinalTransform);
 	//pMySkelModel->Render();
 
+	gShaderBase->setVec3("camPos", GameCamera.GetPosition());
+	gShaderBase->setVec3("lightDir", lightDir);
+
 	pMyStaticModel->Render();
 
-	mModel[3][0] = 15; // mModel[3][1] = 0; mModel[3][2] = 0;
+	gTex0->Bind();
+	SM_Room->Render();
+
+	mModel[3][0] = 25; mModel[3][1] = 10; mModel[3][2] = -10;
+	gShaderBase->setMat4("mModel", mModel);
+	SM_Sphere->Render();
+
+	mModel[3][0] = lightDir.x; mModel[3][1] = lightDir.y; mModel[3][2] = lightDir.z;
+	//mModel = glm::translate(mModel, lightDir);
 	gBox->Render(gmProj, mView, mModel);
-
-	//static float rot = 0;
-	//rot += 1.5f;
-
-	////glm::mat4 mRoot = glm::rotate(glm::mat4(1), glm::radians(0.0f), glm::vec3(0, 0, 1.0f));
-	//glm::mat4 mRoot = glm::rotate(glm::mat4(1), glm::radians(rot), glm::vec3(0, 0, 1.0f));
-	////glm::mat4 mRoot = glm::rotate(glm::mat4(1), glm::radians(90.0f), glm::vec3(0, 0, 1.0f));
-	////glm::mat4 mRoot(1.0f);
-	//glm::mat4 mJoin1_Offset = glm::translate(glm::mat4(1), glm::vec3(3.092f, 0 ,0));
-	//mJoin1_Offset = glm::rotate(mJoin1_Offset, glm::radians(-rot), glm::vec3(0, 0, 1.0f));
-	//glm::mat4 mJoin2_Offset = glm::translate(glm::mat4(1), glm::vec3(3.107, 0, 0));
-	//glm::mat4 mJoin3_Offset = glm::translate(glm::mat4(1), glm::vec3(3.107, 0.5f, 0));
-
-	//gShaderBase->setMat4("mModel", mRoot);
-	//pStaticModel->Render();
-
-	//glm::mat4 Global = mRoot * mJoin1_Offset;
-	//gShaderBase->setMat4("mModel", Global);
-	//pStaticModel->Render();
-
-	//Global = Global * mJoin2_Offset;
-	//gShaderBase->setMat4("mModel", Global);
-	//pStaticModel->Render();
-
-	//Global = Global * mJoin3_Offset;
-	//gShaderBase->setMat4("mModel", Global);
-	//pStaticModel->Render();
 
 	//glUniform1f(gScaleLocation, scale);
 	//gShaderBase->setFloat("gScale", scale);
@@ -195,16 +194,21 @@ GLFWwindow* InitWindow() {
 	glfwWindowHint(GLFW_CONTEXT_VERSION_MINOR, 3);
 	glfwWindowHint(GLFW_OPENGL_PROFILE, GLFW_OPENGL_CORE_PROFILE);
 
-	GLFWwindow* pWnd = glfwCreateWindow(WIDTH, HEIGHT, "OpenGL: [ Represent Bones Transformations ]", nullptr, nullptr);
+	GLFWwindow* pWnd = nullptr;
+	if(!gFullScreen)
+		pWnd = glfwCreateWindow(WIDTH, HEIGHT, "OpenGL: [ Lighting ]", nullptr, nullptr);
+	else {
+		GLFWmonitor* primMonitor = glfwGetPrimaryMonitor();
+		const GLFWvidmode* mode = glfwGetVideoMode(primMonitor);
+		glfwWindowHint(GLFW_RED_BITS, mode->redBits);
+		glfwWindowHint(GLFW_GREEN_BITS, mode->greenBits);
+		glfwWindowHint(GLFW_BLUE_BITS, mode->blueBits);
+		glfwWindowHint(GLFW_REFRESH_RATE, mode->refreshRate);
 
-	//GLFWmonitor* primMonitor = glfwGetPrimaryMonitor();
-	//const GLFWvidmode* mode = glfwGetVideoMode(primMonitor);
-	//glfwWindowHint(GLFW_RED_BITS, mode->redBits);
-	//glfwWindowHint(GLFW_GREEN_BITS, mode->greenBits);
-	//glfwWindowHint(GLFW_BLUE_BITS, mode->blueBits);
-	//glfwWindowHint(GLFW_REFRESH_RATE, mode->refreshRate);
-	//// window mode: if monitor = null, else fullscreen
-	//GLFWwindow* pWnd = glfwCreateWindow(mode->width, mode->height, "OpenGL: [ ... ]", primMonitor, nullptr);
+		WIDTH = mode->width, HEIGHT = mode->height;
+		// window mode: if monitor = null, else fullscreen
+		pWnd = glfwCreateWindow(mode->width, mode->height, "OpenGL: [ ... ]", primMonitor, nullptr);
+	}
 
 	if (!pWnd) throw glfw_error("failed to create GLFW Window!");
 
@@ -255,12 +259,14 @@ void processInput(GLFWwindow* wnd) {
 	//	glfwSetCursorPos(wnd, (WIDTH / 2), (HEIGHT / 2));
 	//}
 	
-	if (glfwGetKey(wnd, GLFW_KEY_MINUS) == GLFW_PRESS) {
-		blendFactor -= 0.005f; if (blendFactor < 0.0f) blendFactor = 0.0f;
-	}
-	if (glfwGetKey(wnd, GLFW_KEY_EQUAL) == GLFW_PRESS) {
-		blendFactor += 0.005f; if (blendFactor > 1.0f) blendFactor = 1.0f;
-	}
+	//if (glfwGetKey(wnd, GLFW_KEY_MINUS) == GLFW_PRESS)
+	//	blendFactor -= 0.005f; if (blendFactor < 0.0f) blendFactor = 0.0f;
+	//if (glfwGetKey(wnd, GLFW_KEY_EQUAL) == GLFW_PRESS)
+	//	blendFactor += 0.005f; if (blendFactor > 1.0f) blendFactor = 1.0f;
+
+	float lightSpeed = 0.3f;
+	if (glfwGetKey(wnd, GLFW_KEY_MINUS) == GLFW_PRESS) lightDir.y += lightSpeed;
+	if (glfwGetKey(wnd, GLFW_KEY_EQUAL) == GLFW_PRESS) lightDir.y -= lightSpeed;
 
 	//if (glfwGetKey(wnd, GLFW_KEY_MINUS) == GLFW_PRESS) GameCamera.OnKeyboard(GLFW_KEY_MINUS);
 	//if (glfwGetKey(wnd, GLFW_KEY_EQUAL) == GLFW_PRESS) GameCamera.OnKeyboard(GLFW_KEY_EQUAL);
@@ -270,6 +276,12 @@ void processInput(GLFWwindow* wnd) {
 	if (glfwGetKey(wnd, GLFW_KEY_D) == GLFW_PRESS) GameCamera.OnKeyboard(GLFW_KEY_D);
 	if (glfwGetKey(wnd, GLFW_KEY_PAGE_UP) == GLFW_PRESS) GameCamera.OnKeyboard(GLFW_KEY_PAGE_UP);
 	if (glfwGetKey(wnd, GLFW_KEY_PAGE_DOWN) == GLFW_PRESS) GameCamera.OnKeyboard(GLFW_KEY_PAGE_DOWN);
+
+	if (glfwGetKey(wnd, GLFW_KEY_UP) == GLFW_PRESS) lightDir.z -= lightSpeed;
+	if (glfwGetKey(wnd, GLFW_KEY_DOWN) == GLFW_PRESS) lightDir.z += lightSpeed;
+	if (glfwGetKey(wnd, GLFW_KEY_LEFT) == GLFW_PRESS) lightDir.x -= lightSpeed;
+	if (glfwGetKey(wnd, GLFW_KEY_RIGHT) == GLFW_PRESS) lightDir.x += lightSpeed;
+	
 
 	//if (glfwGetKey(wnd, GLFW_KEY_SPACE) == GLFW_PRESS) {
 	//	DisplayBoneIndex++;

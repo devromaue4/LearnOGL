@@ -124,6 +124,11 @@ void Shader::setFloat(const std::string& name, float value) {
 	glUniform1f(m_uniformLocations[name], value);
 }
 
+void Shader::setVec3(const std::string& name, const glm::vec3& value) {
+	if (m_uniformLocations.find(name) == m_uniformLocations.end())
+		m_uniformLocations[name] = glGetUniformLocation(m_ID, name.c_str());
+	glUniform3fv(m_uniformLocations[name], 1, &value[0]);
+}
 void Shader::setVec4(const std::string& name, const glm::vec4& value) {
 	if (m_uniformLocations.find(name) == m_uniformLocations.end())
 		m_uniformLocations[name] = glGetUniformLocation(m_ID, name.c_str());

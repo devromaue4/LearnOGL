@@ -33,16 +33,10 @@
     <None Include="src\mymath.inl">
       <Filter>core</Filter>
     </None>
-    <None Include="media_files\shaders\shader.fs">
+    <None Include="media_files\shaders\dir_light.frag">
       <Filter>shaders</Filter>
     </None>
-    <None Include="media_files\shaders\shader.vs">
-      <Filter>shaders</Filter>
-    </None>
-    <None Include="media_files\shaders\skintest.frag">
-      <Filter>shaders</Filter>
-    </None>
-    <None Include="media_files\shaders\skintest.vert">
+    <None Include="media_files\shaders\dir_light.vert">
       <Filter>shaders</Filter>
     </None>
   </ItemGroup>

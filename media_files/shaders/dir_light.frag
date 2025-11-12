@@ -1,17 +1,34 @@
-// #version 460 core
-#version 330 core
+#version 460 core
+// #version 330 core
 
 in vec3 NormalO;
 in vec2 TexCoordO;
-in vec4 ColorO;
+in vec3 crntPos;
+
 out vec4 FragColor;
+
+uniform vec3 lightDir;
+uniform vec3 camPos;
 
 uniform sampler2D texture_diffuse1;
 
 void main() {
-	// FragColor = texture(texture_diffuse1, TexCoordO);// * vec4(1,0,0,1); // only texture
-	// FragColor = texture(texture_diffuse1, TexCoordO) * dot(NormalO, vec3(-1, -1, .0)) * 1.7 * vec4(0.65, 0.6, 0.01, 1.0); // texture & light
+	float ambient = 0.2f;
+	vec3 lightDir = normalize(lightDir - crntPos);
+	float diffLight = max(dot(NormalO, lightDir), 0.0f);
+
+	float specLight = 0.5f;
+	vec3 vewDir = normalize(camPos - crntPos);
+	vec3 reflectDir = reflect(-lightDir, NormalO);
+	float specAmount = pow(max(dot(vewDir, reflectDir), 0.0f), 8);
+	float specular = specAmount * specLight;
+
+	vec4 lightClr = vec4(0.0f, 0.42f, 0.18f, 1.0f);
+	vec4 toylClr = vec4(1.0f, 0.5f, 0.31f, 1.0f);
+	vec4 resClr = lightClr * toylClr;
+	// FragColor = resClr * (diffLight + ambient + specular);
+	FragColor = texture(texture_diffuse1, TexCoordO);
+	// FragColor = texture(texture_diffuse1, TexCoordO) * resClr * (diffLight + ambient + specular);
+	// FragColor = texture(texture_diffuse1, TexCoordO) * vec4(1,1,1,1) * (diffLight + ambient + specular);
 	// FragColor = dot(NormalO, vec3(-1, -1, .0)) * 1.7 * vec4(0.65, 0.6, 0.01, 1.0); // only light
-	// FragColor = vec4(1, 0.6, 0.01, 1.0); // only light
-	FragColor = ColorO;
 }
