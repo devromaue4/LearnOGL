@@ -128,26 +128,14 @@ bool BasicMesh::InitMaterials(const aiScene* pScene, const std::string& fileName
 					p = p.substr(2, p.size() - 2);
 
 				string FullPath = Dir + "/" + p;
-
-				//optimize
-				//bool skipLoad = false;
-				//for (uint t = 0; t < gTextureStorage.size(); t++) {
-				//	if (gTextureStorage[t]->m_fileName == FullPath) {
-				//		m_Textures[i] = gTextureStorage[t];
-				//		skipLoad = true;
-				//	}
-				//}
-				
-				// optimize
-				//if(!skipLoad) {
-					m_Textures[i] = new Texture(FullPath.c_str(), 0, GL_RGB, GL_UNSIGNED_BYTE, GL_TEXTURE_2D);
-					if (!m_Textures[i]->Load()) {
-						cout << "Error loading texture " << FullPath.c_str() << endl;
-						safe_delete(m_Textures[i]);
-						m_Textures[i] = nullptr;
-						Ret = false;
-					}
-				//}
+			
+				m_Textures[i] = new Texture(FullPath.c_str(), 0, GL_RGB, GL_UNSIGNED_BYTE, GL_TEXTURE_2D);
+				if (!m_Textures[i]->Load()) {
+					cout << "Error loading texture " << FullPath.c_str() << endl;
+					safe_delete(m_Textures[i]);
+					m_Textures[i] = nullptr;
+					Ret = false;
+				}
 			}
 		}
 	}

@@ -4,7 +4,6 @@
 #define STB_IMAGE_IMPLEMENTATION
 #include "stb_image.h"
 
-//std::vector<Texture*> gTextureStorage;
 std::map<std::string, GLuint> gGlobalTexStorage;
 
 Texture::Texture() {
@@ -24,12 +23,15 @@ Texture::Texture(const char* filePath, GLenum slot, GLenum format, GLenum pixelT
 }
 
 GLuint Texture::Load() {
+	if (m_TexType != GL_TEXTURE_2D) {
+		log("Texture target is not GL_TEXTURE_2D! Support is not implemented!");
+		return 0;
+	}
 
 	////////// skip if texture already loaded //////
 	std::string_view texName = m_fileName;
 	size_t sz = texName.find_last_of('\\') + 1;
 	if(sz > 0) texName = texName.substr(sz, sz);
-
 	sz = texName.find_last_of('/') + 1;
 	if(sz > 0) texName = texName.substr(sz, sz);
 
@@ -40,10 +42,13 @@ GLuint Texture::Load() {
 	}
 	/////////////////////////////////////////////////
 
-	int width, height, nrChannels;
+	int width, height, nChannels;
 	stbi_set_flip_vertically_on_load(true);
-	unsigned char* data = stbi_load(m_fileName.c_str(), &width, &height, &nrChannels, 0);
-	if (!data) throw std::exception("failed to load texture!");
+	unsigned char* data = stbi_load(m_fileName.c_str(), &width, &height, &nChannels, 0);
+	if (!data) {
+		log_error(stbi_failure_reason());
+		throw std::exception("failed to load texture!");
+	} 
 
 	glGenTextures(1, &m_ID);
 	//glActiveTexture(m_TexUnit);
@@ -68,27 +73,29 @@ GLuint Texture::Load() {
 	glTexParameteri(m_TexType, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
 
 	GLenum format = m_format;
-	if (nrChannels == 1)
-		format = GL_RED;
-	else if (nrChannels == 3)
-		format = GL_RGB;
-	else if (nrChannels == 4)
-		format = GL_RGBA;
+	if (nChannels == 1) format = GL_RED;
+	else if (nChannels == 3) format = GL_RGB;
+	else if (nChannels == 4) format = GL_RGBA;
 
 	glTexImage2D(m_TexType, 0, format, width, height, 0, format, m_pixelType, data);
 	glGenerateMipmap(m_TexType);
 	glBindTexture(m_TexType, 0);
+
 	stbi_image_free(data);
 
 	log("Loaded texture: " << m_fileName);
 
-	//gTextureStorage.push_back(this);
 	gGlobalTexStorage[texName.data()] = m_ID;
 
-	return true;
+	return m_ID;
 }
 
-bool Texture::Load(uint bufferSize, void* pData) {
+GLuint Texture::Load(uint bufferSize, void* pData) {
+	if (m_TexType != GL_TEXTURE_2D) {
+		log("Texture target is not GL_TEXTURE_2D! Support is not implemented!");
+		return 0;
+	}
+
 	int width, height, nrChannels;
 	stbi_set_flip_vertically_on_load(true);
 	ubyte* image_data = stbi_load_from_memory((const stbi_uc*)pData, bufferSize, &width, &height, &nrChannels, 0);
@@ -108,12 +115,9 @@ bool Texture::Load(uint bufferSize, void* pData) {
 	glTexParameteri(m_TexType, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
 
 	GLenum format = m_format;
-	if (nrChannels == 1)
-		format = GL_RED;
-	else if (nrChannels == 3)
-		format = GL_RGB;
-	else if (nrChannels == 4)
-		format = GL_RGBA;
+	if (nrChannels == 1) format = GL_RED;
+	else if (nrChannels == 3) format = GL_RGB;
+	else if (nrChannels == 4) format = GL_RGBA;
 
 	glTexImage2D(m_TexType, 0, format, width, height, 0, format, m_pixelType, image_data);
 	glGenerateMipmap(m_TexType);
@@ -123,9 +127,7 @@ bool Texture::Load(uint bufferSize, void* pData) {
 
 	log("Loaded texture from memory: " << width << "x" << height << " channels: " << nrChannels);
 
-	//gTextureStorage.push_back(this);
-
-	return true;
+	return m_ID;
 }
 
 void Texture::setTexUnit(Shader& shader, const char* uniform, GLuint unit) {

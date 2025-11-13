@@ -15,9 +15,16 @@ uniform mat4 mProj;
 void main() {
 
 	crntPos = vec3(mModel * vec4(Pos, 1.0));
-	gl_Position = mProj * mView * vec4(crntPos, 1.0);
+	// vec3 NormalL = vec3(mModel * vec4(Normal, 0.0f));
+	vec3 normalOut = normalize(mat3(mModel) * Normal);
+	// vec3 NormalL = vec3(mat3(mModel) * Normal);
+	// vec3 NormalL = mat3(transpose(inverse(mModel))) * Normal;
+	// vec3 NormalL = mat3(transpose(inverse(mModel))) * Normal;
 
-	NormalO = normalize(Normal);
+	// gl_Position = mProj * mView * vec4(crntPos, 1.0);
+	gl_Position = mProj * mView * mModel * vec4(Pos, 1.0);
+
+	NormalO = normalOut;
 	TexCoordO = TexCoord;
 
 }

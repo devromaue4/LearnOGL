@@ -1,5 +1,11 @@
 #include "StaticModel.h"
 
+void StaticModel::clear() {
+	if (m_EBO != 0) { glDeleteBuffers(1, &m_EBO); m_EBO = 0; }
+	if (m_VBO != 0) { glDeleteBuffers(1, &m_VBO); m_VBO = 0; }
+	if (m_VAO != 0) { glDeleteVertexArrays(1, &m_VAO); m_VAO = 0; }
+}
+
 void StaticModel::Load(std::string_view fileName, bool bFlipUVs) {
 	clear();
 
@@ -30,11 +36,7 @@ void StaticModel::Load(std::string_view fileName, bool bFlipUVs) {
 	m_Indices.reserve(numIndices);
 
 	loadGeoData(pScene);
-
-	//ReadNodeHierarchy(m_RootNode, pScene->mRootNode, glm::mat4(1.0f));
-
 	loadMaterials(pScene);
-
 	buildBuffers();
 
 	importer.FreeScene();
@@ -93,7 +95,6 @@ void StaticModel::loadDiffuseTexture(const aiScene* pScene, const aiMaterial* pM
 		if (pMaterial->GetTexture(aiTextureType_DIFFUSE, 0, &path) == AI_SUCCESS) {
 			const aiTexture* pAiTexture = pScene->GetEmbeddedTexture(path.data);
 			if (pAiTexture) {
-				//m_Textures[index] = new Texture;
 				//m_Textures[index] = std::shared_ptr<Texture>(new Texture);
 				m_Textures[index] = std::make_shared<Texture>();
 				if (!m_Textures[index]->Load(pAiTexture->mWidth, pAiTexture->pcData))
@@ -109,12 +110,10 @@ void StaticModel::loadDiffuseTexture(const aiScene* pScene, const aiMaterial* pM
 
 				std::string fullPath = m_Directory + "/" + p;
 
-				//m_Textures[index] = new Texture(fullPath.c_str());
 				//m_Textures[index] = std::shared_ptr<Texture>(new Texture(fullPath.c_str()));
 				m_Textures[index] = std::make_shared<Texture>(fullPath.c_str());
 				if (!m_Textures[index]->Load()) {
 					log_error("loading texture " << fullPath);
-					//safe_delete(m_Textures[index]);
 					m_Textures[index] = nullptr;
 					return;
 				}
@@ -144,6 +143,11 @@ void StaticModel::buildBuffers() {
 	glVertexAttribPointer(2, 2, GL_FLOAT, GL_FALSE, stride, (const void*)offsetof(SVertex, texCoord));
 
 	glBindVertexArray(0);
+	glDisableVertexAttribArray(0);
+	glDisableVertexAttribArray(1);
+	glDisableVertexAttribArray(2);
+	glBindBuffer(GL_ARRAY_BUFFER, 0);
+	glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, 0);
 }
 
 void StaticModel::Render() {

@@ -13,7 +13,8 @@ private:
 	glm::vec3 m_target = glm::vec3(0, 0, 1);
 	glm::vec3 m_up = glm::vec3(0, 1, 0);
 
-	glm::mat4 m_View = glm::mat4(1);
+	glm::mat4 m_mView = glm::mat4(1);
+	glm::mat4 m_mProj = glm::mat4(1);
 
 	float m_speed = 0.1f;
 	float Sensitivity = 0.05f;
@@ -36,6 +37,12 @@ public:
 		m_up = glm::normalize(m_up);
 		mouseLastX = (float)w / 2;
 		mouseLastY = (float)h / 2;
+
+		m_mProj = glm::perspective(glm::radians(45.0f), (float)w / h, .1f, 1000.0f);
+	}
+
+	void SetProjParams(float fAspect = 1.0f, float fovy = 45.0f, float zNear = 0.1f, float zFar = 1000.0f) {
+		m_mProj = glm::perspective(glm::radians(fovy), fAspect, zNear, zFar);
 	}
 
 	const glm::vec3& GetPosition() const { return m_pos; }
@@ -137,8 +144,11 @@ public:
 
 	//my::mat4 GetMatrix() { return my::lookAtRH(m_pos, m_pos + m_target, m_up); }
 	const glm::mat4& GetMatrix() {
-		m_View = glm::lookAtRH(m_pos, m_pos + m_target, m_up);
-		return m_View;
+		m_mView = glm::lookAtRH(m_pos, m_pos + m_target, m_up);
+		return m_mView;
+	}
+	const glm::mat4& GetProjMatrix() {
+		return m_mProj;
 	}
 
 	// left-handed z+ pint to the screen

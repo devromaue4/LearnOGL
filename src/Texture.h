@@ -18,7 +18,7 @@ public:
 	~Texture() { Delete(); }
 
 	GLuint Load();
-	bool Load(uint bufferSize, void* pData);
+	GLuint Load(uint bufferSize, void* pData);
 	void setTexUnit(class Shader& shader, const char* uniform, GLuint unit);
 	void Bind();
 	void Bind(GLenum texUnit);
