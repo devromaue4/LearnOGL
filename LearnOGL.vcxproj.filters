@@ -28,6 +28,9 @@
     <Filter Include="Model\skeletal\ogldev">
       <UniqueIdentifier>{298b9bef-2f70-4f8b-a0a2-6b73489c8f28}</UniqueIdentifier>
     </Filter>
+    <Filter Include="Lights_Matirials">
+      <UniqueIdentifier>{33efd322-fce6-4dfe-b797-eaa9ccb94754}</UniqueIdentifier>
+    </Filter>
   </ItemGroup>
   <ItemGroup>
     <None Include="src\mymath.inl">

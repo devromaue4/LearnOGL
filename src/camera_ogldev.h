@@ -46,7 +46,7 @@ public:
 	}
 
 	const glm::vec3& GetPosition() const { return m_pos; }
-	//const glm::vec3& GetPosition() const { return m_pos + m_target; }
+	//glm::vec3 GetPosTarget() const { return m_pos + m_target; }
 
 	void SetPosition(float x, float y, float z) { m_pos.x = x; m_pos.y = y; m_pos.z = z; }
 	void SetSpeedMove(float speed) { m_speed = speed; }

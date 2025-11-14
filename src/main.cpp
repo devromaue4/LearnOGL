@@ -42,7 +42,7 @@ std::shared_ptr<StaticModel> SM_Sphere;
 //std::shared_ptr<SkeletalModel> pMySkelModel;
 std::shared_ptr<SBox> gBox;
 
-glm::vec3 lightDir(15.0f, 10, 0.0f);
+glm::vec3 lightDir(25.0f, 10, 0.0f);
 
 float blendFactor = 0.0f;
 float deltaTime = 0;
@@ -79,10 +79,10 @@ void InitGeo() {
 	//scene.addModel(name, pos);
 	gBox = std::make_shared<SBox>(3.f);
 	SM_Barrel = std::make_shared<StaticModel>();
-	//pMyStaticModel = std::make_shared<StaticModel>();
+	pMyStaticModel = std::make_shared<StaticModel>();
 	//SM_Room = std::make_shared<StaticModel>();
 	//SM_Sphere = std::make_shared<StaticModel>();
-	//pMyStaticModel->Load("../media_files/models/misc/bunny.fbx");
+	pMyStaticModel->Load("../media_files/models/misc/bunny.fbx");
 	//SM_Room->Load("../media_files/models/misc/room.fbx");
 	//SM_Sphere->Load("../media_files/models/misc/sphere.fbx");
 	SM_Barrel->Load("../media_files/models/wine_barrel/wine_barrel_01.fbx");
@@ -120,10 +120,10 @@ void Render() {
 	//double AnimationTimeSec = (CurrentTimeMillis - StartTimeMillis) / 1.0;
 
 	glm::mat4 mModel(1.0f);
-	//mModel = glm::translate(mModel, glm::vec3(-18, 0, 0));
-	//mModel = glm::rotate(mModel, glm::radians(-90.0f), glm::vec3(1, 0, 0));
-	//float scaleBunny = 8.0f;
-	//mModel = glm::scale(mModel, glm::vec3(scaleBunny, scaleBunny, scaleBunny));
+	mModel = glm::translate(mModel, glm::vec3(-18, 0, 0));
+	mModel = glm::rotate(mModel, glm::radians(-90.0f), glm::vec3(1, 0, 0));
+	float scaleBunny = 8.0f;
+	mModel = glm::scale(mModel, glm::vec3(scaleBunny, scaleBunny, scaleBunny));
 	const glm::mat4& mView = GameCamera.GetMatrix();
 	const glm::mat4& mProj = GameCamera.GetProjMatrix();
 
@@ -150,9 +150,9 @@ void Render() {
 	gShaderBase->setMat4("mProj", mProj);
 
 	// bunny
-	//pMyStaticModel->Render();
+	pMyStaticModel->Render();
 	// reset
-	//mModel = glm::mat4(1);
+	mModel = glm::mat4(1);
 
 	//gShaderBase->setMat4("mModel", mModel);
 	//SM_Room->Render();
@@ -168,8 +168,8 @@ void Render() {
 	static float rot = 0;
 	rot += 0.5f;
 	float scaleModel = 0.25f;
-	mModel = glm::translate(mModel, glm::vec3(15, 0, 0));
-	mModel = glm::rotate(mModel, glm::radians(rot), glm::vec3(0, 1, 0));
+	//mModel = glm::translate(mModel, glm::vec3(15, 0, 0));
+	mModel = glm::rotate(mModel, glm::radians(rot), glm::vec3(0, 1.0f, 0));
 	mModel = glm::scale(mModel, glm::vec3(scaleModel, scaleModel, scaleModel));
 	gShaderBase->setMat4("mModel", mModel);
 	SM_Barrel->Render();
