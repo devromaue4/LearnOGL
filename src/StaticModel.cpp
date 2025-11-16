@@ -1,4 +1,5 @@
 #include "StaticModel.h"
+#include <filesystem>
 
 void StaticModel::clear() {
 	if (m_EBO != 0) { glDeleteBuffers(1, &m_EBO); m_EBO = 0; }
@@ -20,7 +21,9 @@ void StaticModel::Load(std::string_view fileName, bool bFlipUVs) {
 	Assimp::Importer importer;
 	const aiScene* pScene = importer.ReadFile(fileName.data(), flags);
 	if (!pScene || pScene->mFlags & AI_SCENE_FLAGS_INCOMPLETE || !pScene->mRootNode) {
-		log(importer.GetErrorString());
+		if(!util::verifyPath(fileName.data()))
+			log_error("Can't find file: " << fileName.data());
+		else log_error(importer.GetErrorString());
 		throw std::exception("StaticModel::Load!");
 	}
 
@@ -60,10 +63,10 @@ void StaticModel::loadGeoData(const aiScene* pScene) {
 	for (uint iMesh = 0; iMesh < pScene->mNumMeshes; iMesh++) {
 		const aiMesh* pMesh = pScene->mMeshes[iMesh];
 		for (uint iVert = 0; iVert < pMesh->mNumVertices; iVert++) {
-			myVert.pos = toGlm(pMesh->mVertices[iVert]);
+			myVert.pos = util::toGlm(pMesh->mVertices[iVert]);
 
 			if (pMesh->HasNormals())
-				myVert.normal = toGlm(pMesh->mNormals[iVert]);
+				myVert.normal = util::toGlm(pMesh->mNormals[iVert]);
 			else myVert.normal = glm::vec3(.0f, 1.f, .0f);
 
 			if (pMesh->HasTextureCoords(0)) {
@@ -120,6 +123,16 @@ void StaticModel::loadDiffuseTexture(const aiScene* pScene, const aiMaterial* pM
 			}
 		}
 	}
+
+	if (pMaterial->GetTextureCount(aiTextureType_NORMALS) > 0) {
+		log("Normal textures are not implemented yet!!!");
+	}
+	if (pMaterial->GetTextureCount(aiTextureType_SPECULAR) > 0) {
+		log("Specular textures are not implemented yet!!!");
+	}
+	if (pMaterial->GetTextureCount(aiTextureType_REFLECTION) > 0) {
+		log("Reflection textures are not implemented yet!!!");
+	}
 }
 
 void StaticModel::buildBuffers() {
@@ -164,3 +177,26 @@ void StaticModel::Render() {
 
 	glBindVertexArray(0);
 }
+
+// used only by instancing
+//void StaticModel::Render(uint NumInstances, const glm::mat4* WVPMats, const glm::mat4* WorldMats) {
+//
+//	// !!!! not inmplemented yet !!!!
+//	//glBindBuffer(GL_ARRAY_BUFFER, buffers_WVP_MAT);
+//	//glBufferData(GL_ARRAY_BUFFER, sizeof(glm::mat4) * NumInstances, WVPMats, GL_DYNAMIC_DRAW);
+//	//glBindBuffer(GL_ARRAY_BUFFER, buffers_WORLD_MAT);
+//	//glBufferData(GL_ARRAY_BUFFER, sizeof(glm::mat4) * NumInstances, worldMat, GL_DYNAMIC_DRAW);
+//
+//	glBindVertexArray(m_VAO);
+//
+//	for (uint i = 0; i < m_Meshes.size(); i++) {
+//		uint MatIndex = m_Meshes[i].MaterialIndex;
+//		assert(MatIndex < m_Textures.size());
+//		if (m_Textures.size())
+//			if (m_Textures[MatIndex]) m_Textures[MatIndex]->Bind();
+//
+//		glDrawElementsInstancedBaseVertex(GL_TRIANGLES, m_Meshes[i].NumIndices, GL_UNSIGNED_INT, (void*)(sizeof(uint) * m_Meshes[i].BaseIndex), NumInstances, m_Meshes[i].BaseVertex);
+//	}
+//
+//	glBindVertexArray(0);
+//}

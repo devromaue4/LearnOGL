@@ -51,7 +51,7 @@ void SkeletalModel::Load(std::string_view fileName, bool bFlipUVs) {
 
 	m_Directory = fileName.substr(0, fileName.find_last_of('/'));
 
-	m_GlobalInvTrans = glm::inverse(toGlm(pScene->mRootNode->mTransformation));
+	m_GlobalInvTrans = glm::inverse(util::toGlm(pScene->mRootNode->mTransformation));
 
 	m_Meshes.resize(pScene->mNumMeshes);
 	m_Textures.resize(pScene->mNumMaterials);
@@ -100,10 +100,10 @@ void SkeletalModel::loadGeoData(const aiScene* pScene) {
 	for (uint iMesh = 0; iMesh < pScene->mNumMeshes; iMesh++) {
 		const aiMesh* pMesh = pScene->mMeshes[iMesh];
 		for (uint iVert = 0; iVert < pMesh->mNumVertices; iVert++) {
-			myVert.pos = toGlm(pMesh->mVertices[iVert]);
+			myVert.pos = util::toGlm(pMesh->mVertices[iVert]);
 
 			if (pMesh->HasNormals())
-				myVert.normal = toGlm(pMesh->mNormals[iVert]);
+				myVert.normal = util::toGlm(pMesh->mNormals[iVert]);
 			else myVert.normal = glm::vec3(.0f, 1.f, .0f);
 
 			if (pMesh->HasTextureCoords(0)) {
@@ -129,7 +129,7 @@ void SkeletalModel::loadGeoData(const aiScene* pScene) {
 				m_BonesMap[BoneName] = BoneIndex;
 
 				myBone.BoneName = BoneName;
-				myBone.Offset = toGlm(pBone->mOffsetMatrix);
+				myBone.Offset = util::toGlm(pBone->mOffsetMatrix);
 				m_Bones.push_back(myBone); // realloc everytime not efficient
 
 				MarkReqNodesForBone(pBone);
@@ -293,17 +293,17 @@ void SkeletalModel::loadAnimData(const aiScene* scene) {
 			key.Name = str;// .substr(0, str.find_first_of('_'));
 
 			for (uint iPosKey = 0; iPosKey < pNodeAnim->mNumPositionKeys; iPosKey++)
-				key.PosKeys.push_back(KeyPos(toGlm(pNodeAnim->mPositionKeys[iPosKey].mValue), pNodeAnim->mPositionKeys[iPosKey].mTime));
+				key.PosKeys.push_back(KeyPos(util::toGlm(pNodeAnim->mPositionKeys[iPosKey].mValue), pNodeAnim->mPositionKeys[iPosKey].mTime));
 
 			key.RotKeys.reserve(pNodeAnim->mNumRotationKeys);
 
 			for (uint iRotKey = 0; iRotKey < pNodeAnim->mNumRotationKeys; iRotKey++)
-				key.RotKeys.push_back(KeyRot(toGlm(pNodeAnim->mRotationKeys[iRotKey].mValue), pNodeAnim->mRotationKeys[iRotKey].mTime));
+				key.RotKeys.push_back(KeyRot(util::toGlm(pNodeAnim->mRotationKeys[iRotKey].mValue), pNodeAnim->mRotationKeys[iRotKey].mTime));
 
 			key.ScalKeys.reserve(pNodeAnim->mNumScalingKeys);
 
 			for (uint iScalKey = 0; iScalKey < pNodeAnim->mNumScalingKeys; iScalKey++)
-				key.ScalKeys.push_back(KeyScal(toGlm(pNodeAnim->mScalingKeys[iScalKey].mValue), pNodeAnim->mScalingKeys[iScalKey].mTime));
+				key.ScalKeys.push_back(KeyScal(util::toGlm(pNodeAnim->mScalingKeys[iScalKey].mValue), pNodeAnim->mScalingKeys[iScalKey].mTime));
 
 			animation.m_Keys.push_back(key);
 		}
@@ -313,13 +313,13 @@ void SkeletalModel::loadAnimData(const aiScene* scene) {
 }
 
 void SkeletalModel::ReadNodeHierarchy(Node& node, const aiNode* pNode, const glm::mat4& mParentTransform) {
-	glm::mat4 GlobalTransform = mParentTransform * toGlm(pNode->mTransformation);
+	glm::mat4 GlobalTransform = mParentTransform * util::toGlm(pNode->mTransformation);
 
 	const char* NodeName = pNode->mName.C_Str();
 	
 	//log("NodeName: " << NodeName);
 	node.Name = pNode->mName.data;
-	node.InvBindTransform = toGlm(pNode->mTransformation);
+	node.InvBindTransform = util::toGlm(pNode->mTransformation);
 	node.childrenCount = pNode->mNumChildren;
 	//numNodes++;
 

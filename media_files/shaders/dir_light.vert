@@ -12,25 +12,11 @@ uniform mat4 mModel;
 uniform mat4 mView;
 uniform mat4 mProj;
 
-// void main() {
-	// crntPos = vec3(mModel * vec4(Pos, 1.0));
-	// vec3 NormalL = vec3(mModel * vec4(Normal, 0.0f));
-	// vec3 normalOut = normalize(mat3(mModel) * Normal);
-	// vec3 NormalL = vec3(mat3(mModel) * Normal);
-	// vec3 NormalL = mat3(transpose(inverse(mModel))) * Normal;
-	// vec3 NormalL = mat3(transpose(inverse(mModel))) * Normal;
-
-	// gl_Position = mProj * mView * vec4(crntPos, 1.0);
-	// gl_Position = mProj * mView * mModel * vec4(Pos, 1.0);
-
-	// NormalO = normalOut;
-	// TexCoordO = TexCoord;
-// }
-
 void main() {
-	gl_Position = mProj * mView * mModel * vec4(Pos, 1.0f);
-	TexCoordO = TexCoord;
+	gl_Position = mProj * mView * mModel * vec4(Pos, 1.0);
+	modelPos = vec3(mModel * vec4(Pos, 1.0));
 	// NormalO = normalize(vec3(mModel * vec4(Normal, 1.0f)));
-	modelPos = vec3(mModel * vec4(Pos, 1.0f));
-	NormalO = normalize(mat3(mModel) * Normal);
+	NormalO = normalize(transpose(inverse(mat3(mModel))) * Normal);
+	//NormalO = mat3(mModel) * Normal;
+	TexCoordO = TexCoord;
 }

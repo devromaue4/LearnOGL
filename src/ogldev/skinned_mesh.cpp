@@ -1,8 +1,6 @@
 #include "skinned_mesh.h"
 #include "myutil.h"
 
-using namespace std;
-
 #define SCOLOR_TEXTURE_UNIT			GL_TEXTURE0
 #define SCOLOR_TEXTURE_UNIT_INDEX	0
 //#define SHADOW_TEXTURE_UNIT			GL_TEXTURE1
@@ -43,7 +41,7 @@ bool SkinnedMesh::LoadMesh(const std::string& fileName) {
 		Ret = InitFromScene(m_pScene, fileName);
 	}
 	else {
-		cout << "Error parsing: " << fileName << " : " << m_Importer.GetErrorString() << endl;
+		log("Error parsing: " << fileName << " : " << m_Importer.GetErrorString());
 		throw std::exception("failed to LoadMesh!");
 	}
 
@@ -171,9 +169,9 @@ void SkinnedMesh::Render() {
 }
 
 bool SkinnedMesh::InitMaterials(const aiScene* pScene, const std::string& fileName) {
-	string::size_type SlashIndex = fileName.find_last_of("/");
-	string Dir;
-	if (SlashIndex == string::npos)
+	std::string::size_type SlashIndex = fileName.find_last_of("/");
+	std::string Dir;
+	if (SlashIndex == std::string::npos)
 		Dir = ".";
 	else if (SlashIndex == 0)
 		Dir = "/";
@@ -208,14 +206,14 @@ void SkinnedMesh::LoadDiffuseTexture(const std::string& Dir, const aiMaterial* p
 					log("Error loading Embedded texture");
 			}
 			else {
-				string p(Path.data);
+				std::string p(Path.data);
 				if (p.substr(0, 2) == ".\\")
 					p = p.substr(2, p.size() - 2);
 
 				//int sz = p.find_last_of('/') + 1;
 				//p = p.substr(sz, sz);
 			
-				string FullPath = Dir + "/" + p;
+				std::string FullPath = Dir + "/" + p;
 				m_Materials[index] = new Texture(FullPath.c_str());
 				if (!m_Materials[index]->Load()) {
 					log("Error loading texture " << FullPath.c_str());
@@ -257,7 +255,7 @@ void SkinnedMesh::LoadSingleBone(uint MeshIndex, const aiBone* pBone) {
 
 int SkinnedMesh::GetBoneId(const aiBone* pBone) {
 	int boneIndex = 0;
-	string BoneName(pBone->mName.C_Str());
+	std::string BoneName(pBone->mName.C_Str());
 
 	if (m_BoneNameToIndexMap.find(BoneName) == m_BoneNameToIndexMap.end()) {
 		// allocate an index for new bone
@@ -285,7 +283,7 @@ void SkinnedMesh::GetBoneTransforms(float TimeInSeconds, std::vector<glm::mat4>&
 }
 
 void SkinnedMesh::ReadNodeHierarchy(float AnimationTimeTicks, const aiNode* pNode, const glm::mat4& ParentTransform, int AnimIndex) {
-	string NodeName(pNode->mName.data);
+	std::string NodeName(pNode->mName.data);
 
 	const aiAnimation* pAnimation = m_pScene->mAnimations[AnimIndex];
 
@@ -335,11 +333,11 @@ void SkinnedMesh::ReadNodeHierarchy(float AnimationTimeTicks, const aiNode* pNod
 		ReadNodeHierarchy(AnimationTimeTicks, pNode->mChildren[i], GlobalTransformation, AnimIndex);
 }
 
-const aiNodeAnim* SkinnedMesh::FindNodeAnim(const aiAnimation* pAnimation, const string NodeName) {
+const aiNodeAnim* SkinnedMesh::FindNodeAnim(const aiAnimation* pAnimation, const std::string NodeName) {
 	for (uint i = 0; i < pAnimation->mNumChannels; i++) {
 		const aiNodeAnim* pNodeAnim = pAnimation->mChannels[i];
 
-		if (string(pNodeAnim->mNodeName.data) == NodeName)
+		if (std::string(pNodeAnim->mNodeName.data) == NodeName)
 			return pNodeAnim;
 	}
 

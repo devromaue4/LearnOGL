@@ -1,0 +1,12 @@
+newmtl wine_barrel_01_LidSG
+illum 4
+Kd 0.00 0.00 0.00
+Ka 0.00 0.00 0.00
+Tf 1.00 1.00 1.00
+Ni 1.00
+Ks 0.20 0.20 0.20
+Ns 98.00
+map_Kd textures/wine_barrel_01_diff_4k.jpg
+map_Kn textures/wine_barrel_01_nor_gl_4k.exr
+map_Ks textures/wine_barrel_01_rough_4k.jpg
+refl textures/wine_barrel_01_metal_4k.exr

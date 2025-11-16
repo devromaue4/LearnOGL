@@ -1,8 +1,6 @@
 #pragma once
 #include "core.h"
 
-using namespace std;
-
 struct MVertex {
 	glm::vec3 Position;
 	glm::vec3 Normal;
@@ -15,18 +13,18 @@ struct MVertex {
 
 struct MTexture {
 	uint	id;
-	string	type;
-	string	path;
+	std::string	type;
+	std::string	path;
 };
 
 class MMesh {
 public:
 	// mesh data
-	vector<MVertex>		m_vertices;
-	vector<uint>		m_indices;
-	vector<MTexture>	m_textures;
+	std::vector<MVertex>		m_vertices;
+	std::vector<uint>		m_indices;
+	std::vector<MTexture>	m_textures;
 
-	MMesh(vector<MVertex> vertices, vector<uint> indices, vector<MTexture> textures);
+	MMesh(std::vector<MVertex> vertices, std::vector<uint> indices, std::vector<MTexture> textures);
 
 	void Draw(const class Shader& shader);
 

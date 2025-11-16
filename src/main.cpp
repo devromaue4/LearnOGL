@@ -9,6 +9,9 @@
 #endif
 
 #include <chrono>
+#include <thread>
+#include <mutex>
+using namespace std::chrono_literals;
 
 #include "shader.h"
 //#include "camera.h"
@@ -17,6 +20,8 @@
 #include "SkeletalModel.h"
 #include "StaticModel.h"
 #include "geometry.h"
+#include "light.h"
+#include "material.h"
 
 #pragma warning( disable : 4100 ) // unreferenced parameter
 
@@ -42,7 +47,13 @@ std::shared_ptr<StaticModel> SM_Sphere;
 //std::shared_ptr<SkeletalModel> pMySkelModel;
 std::shared_ptr<SBox> gBox;
 
+BaseLight gLight;
+Material gMaterial;
+
 glm::vec3 lightDir(25.0f, 10, 0.0f);
+
+glm::mat4 mModel(1.0f);
+glm::mat4 mIdentity(1.0f);
 
 float blendFactor = 0.0f;
 float deltaTime = 0;
@@ -81,11 +92,12 @@ void InitGeo() {
 	SM_Barrel = std::make_shared<StaticModel>();
 	pMyStaticModel = std::make_shared<StaticModel>();
 	//SM_Room = std::make_shared<StaticModel>();
-	//SM_Sphere = std::make_shared<StaticModel>();
+	SM_Sphere = std::make_shared<StaticModel>();
 	pMyStaticModel->Load("../media_files/models/misc/bunny.fbx");
 	//SM_Room->Load("../media_files/models/misc/room.fbx");
-	//SM_Sphere->Load("../media_files/models/misc/sphere.fbx");
-	SM_Barrel->Load("../media_files/models/wine_barrel/wine_barrel_01.fbx");
+	SM_Sphere->Load("../media_files/models/misc/sphere.fbx");
+	//SM_Barrel->Load("../media_files/models/wine_barrel/wine_barrel_01.fbx");
+	SM_Barrel->Load("../media_files/models/wine_barrel/barrel_01.obj");
 	
 	//pMySkelModel = std::make_shared<SkeletalModel>();
 	//pMySkelModel->Load("../media_files/skeletalmeshes/iclone_7_raptoid_mascot_-_free_download.glb");
@@ -118,8 +130,7 @@ void Render() {
 
 	//double CurrentTimeMillis = glfwGetTime();
 	//double AnimationTimeSec = (CurrentTimeMillis - StartTimeMillis) / 1.0;
-
-	glm::mat4 mModel(1.0f);
+	
 	mModel = glm::translate(mModel, glm::vec3(-18, 0, 0));
 	mModel = glm::rotate(mModel, glm::radians(-90.0f), glm::vec3(1, 0, 0));
 	float scaleBunny = 8.0f;
@@ -145,6 +156,14 @@ void Render() {
 	gShaderBase->Use();
 	gShaderBase->setVec3("camPos", GameCamera.GetPosition());
 	gShaderBase->setVec3("lightDir", lightDir);
+
+	gLight.AmbientIntesity = 0.2f;
+	gMaterial.AmbientColor = glm::vec3(1.0f, 0.5f, 0.31f);
+	gLight.Color = glm::vec3(1.0f, 0.0f, 1.0f);
+	gShaderBase->setVec3("gMaterial.AmbientColor", gMaterial.AmbientColor);
+	gShaderBase->setVec3("gLight.Color", gLight.Color);
+	gShaderBase->setFloat("gLight.AmbientIntensity", gLight.AmbientIntesity);
+
 	gShaderBase->setMat4("mModel", mModel);
 	gShaderBase->setMat4("mView", mView);
 	gShaderBase->setMat4("mProj", mProj);
@@ -152,20 +171,24 @@ void Render() {
 	// bunny
 	pMyStaticModel->Render();
 	// reset
-	mModel = glm::mat4(1);
+	//mModel = glm::mat4(1);
+	//mModel = mIdentity;
+	mModel = std::move(mIdentity);
 
 	//gShaderBase->setMat4("mModel", mModel);
 	//SM_Room->Render();
 
 	//mModel[3][0] = 25; mModel[3][1] = 10; mModel[3][2] = -10;
-	//mModel = glm::translate(mModel, glm::vec3(25, 10, -10));
-	//gShaderBase->setMat4("mModel", mModel);
-	//SM_Sphere->Render();
+	mModel = glm::translate(mModel, glm::vec3(25, 10, -10));
+	gShaderBase->setMat4("mModel", mModel);
+	SM_Sphere->Render();
 	// reset
 	//mModel = glm::mat4(1);
+	//mModel = mIdentity;
+	mModel = std::move(mIdentity);
 
 	// barrel
-	static float rot = 0;
+	static float rot = 0;;
 	rot += 0.5f;
 	float scaleModel = 0.25f;
 	//mModel = glm::translate(mModel, glm::vec3(15, 0, 0));
@@ -174,8 +197,21 @@ void Render() {
 	gShaderBase->setMat4("mModel", mModel);
 	SM_Barrel->Render();
 
+	// reset
+	//mModel = glm::mat4(1);
+	//mModel = mIdentity;
+	mModel = std::move(mIdentity);
+
 	// light box
 	gBox->Render(mProj, mView, glm::translate(glm::mat4(1), lightDir));
+
+	//std::this_thread::sleep_for(5ms);
+	//std::this_thread::sleep_for(20ms);
+
+	//std::mutex m_PlayerDataMutex; 
+	//m_PlayerDataMutex.lock();
+	//m_PlayerData = ;
+	//m_PlayerDataMutex.unlock();
 }
 
 void framebuffer_size_callback(GLFWwindow* wnd, int width, int height) {
@@ -328,7 +364,11 @@ int main(int argc, char* argv[]) try {
 
 	while (!glfwWindowShouldClose(Wnd.get())) {
 		processInput(Wnd.get());
+		auto start = std::chrono::high_resolution_clock::now();
 		Render();
+		auto end = std::chrono::high_resolution_clock::now();
+		auto duration = std::chrono::duration<double, std::milli>(end - start);
+		log("Render() took: " << duration.count() << " ms");
 
 		glfwPollEvents();
 		glfwSwapBuffers(Wnd.get());

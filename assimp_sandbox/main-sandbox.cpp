@@ -15,8 +15,6 @@
 
 #pragma comment (lib, "assimp-vc143-mt.lib")
 
-using namespace std;
-
 #define array_num_elems(a)		(sizeof(a)/sizeof(a[0]))
 
 #define MAX_NUM_BONES_PER_VERTEX 4
@@ -46,7 +44,7 @@ struct VertexBoneData {
 
 std::vector<VertexBoneData>	vertex_to_bones;
 std::vector<int>			mesh_base_vertex;
-std::map<string, uint>		bone_name_to_index_map;
+std::map<std::string, uint>	bone_name_to_index_map;
 
 static int space_count = 0;
 

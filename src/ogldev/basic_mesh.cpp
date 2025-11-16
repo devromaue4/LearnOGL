@@ -1,7 +1,5 @@
 #include "basic_mesh.h"
 
-using namespace std;
-
 BasicMesh::~BasicMesh() {
 	Clear();
 }
@@ -33,7 +31,7 @@ bool BasicMesh::LoadMesh(const std::string& fileName) {
 	if (pScene)
 		Ret = InitFromScene(pScene, fileName);
 	else {
-		cout << "Error parsing: " << fileName << " : " << importer.GetErrorString() << endl;
+		log("Error parsing: " << fileName << " : " << importer.GetErrorString());
 		throw std::exception("failed to LoadMesh!");
 	}
 
@@ -107,9 +105,9 @@ void BasicMesh::InitSingleMesh(const aiMesh* paiMesh) {
 }
 
 bool BasicMesh::InitMaterials(const aiScene* pScene, const std::string& fileName) {
-	string::size_type SlashIndex = fileName.find_last_of("/");
-	string Dir;
-	if (SlashIndex == string::npos)
+	std::string::size_type SlashIndex = fileName.find_last_of("/");
+	std::string Dir;
+	if (SlashIndex == std::string::npos)
 		Dir = ".";
 	else if (SlashIndex == 0)
 		Dir = "/";
@@ -123,15 +121,15 @@ bool BasicMesh::InitMaterials(const aiScene* pScene, const std::string& fileName
 		if (pMaterial->GetTextureCount(aiTextureType_DIFFUSE) > 0) {
 			aiString Path;
 			if (pMaterial->GetTexture(aiTextureType_DIFFUSE, 0, &Path) == AI_SUCCESS) {
-				string p(Path.data);
+				std::string p(Path.data);
 				if (p.substr(0, 2) == ".\\")
 					p = p.substr(2, p.size() - 2);
 
-				string FullPath = Dir + "/" + p;
+				std::string FullPath = Dir + "/" + p;
 			
 				m_Textures[i] = new Texture(FullPath.c_str(), 0, GL_RGB, GL_UNSIGNED_BYTE, GL_TEXTURE_2D);
 				if (!m_Textures[i]->Load()) {
-					cout << "Error loading texture " << FullPath.c_str() << endl;
+					log("Error loading texture " << FullPath.c_str());
 					safe_delete(m_Textures[i]);
 					m_Textures[i] = nullptr;
 					Ret = false;

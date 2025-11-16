@@ -7,6 +7,9 @@
 
 class Shader {
 	std::unordered_map<std::string, int> m_uniformLocations;
+
+	std::string m_vertFile, m_fragFile;
+
 public:
 	GLuint m_ID;
 

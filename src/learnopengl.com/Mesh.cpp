@@ -1,7 +1,7 @@
 #include "Mesh.h"
 #include "shader.h"
 
-MMesh::MMesh(vector<MVertex> vertices, vector<uint> indices, vector<MTexture> textures) {
+MMesh::MMesh(std::vector<MVertex> vertices, std::vector<uint> indices, std::vector<MTexture> textures) {
 	m_vertices = vertices;
 	m_indices = indices;
 	m_textures = textures;
@@ -52,8 +52,8 @@ void MMesh::Draw(const Shader& shader) {
 		glActiveTexture(GL_TEXTURE0 + i); // activate proper texture unit before binding
         // retrieve texture number (the N in diffuse_textureN)
 
-		string number;
-		string name = m_textures[i].type;
+		std::string number;
+		std::string name = m_textures[i].type;
 		if (name == "texture_diffuse")
 			number = std::to_string(duffuseNr++);
 		else if(name == "texture_specular")

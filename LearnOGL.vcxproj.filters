@@ -142,5 +142,11 @@
     <ClInclude Include="src\learnopengl.com\Model.h">
       <Filter>Model\skeletal\learnopengl.com</Filter>
     </ClInclude>
+    <ClInclude Include="src\light.h">
+      <Filter>Lights_Matirials</Filter>
+    </ClInclude>
+    <ClInclude Include="src\material.h">
+      <Filter>Lights_Matirials</Filter>
+    </ClInclude>
   </ItemGroup>
 </Project>

@@ -1,8 +1,6 @@
 #include "shader.h"
 #include "myutil.h"
 
-using namespace std;
-
 // base shaders
 const char* vertShaderSrc = "#version 330 core\n"
 "layout (location = 0) in vec3 aPos;\n"
@@ -53,16 +51,30 @@ Shader::Shader(const char* vertFile, const char* fragFile) {
 	m_ID = glCreateProgram();
 	if (!m_ID) throw glfw_error("creating shader program\n");
 
+	m_vertFile = vertFile; 
+	m_fragFile = fragFile;
+
 	std::string vs, fs;
-	if (!ReadFile(vertFile, vs)) { cout << vertFile << endl; throw glfw_error("can't open shader file!"); }
+	if (!util::ReadFile(vertFile, vs)) {
+		if (!util::verifyPath(vertFile)) log_error("Can't find file: " << vertFile);
+		else log_error(vertFile);
+		throw glfw_error("Shader::Shader");
+	}
+
 	AddShader(m_ID, vs.c_str(), GL_VERTEX_SHADER);
-	if (!ReadFile(fragFile, fs)) { cout << vertFile << endl; throw glfw_error("can't open shader file!"); }
+
+	if (!util::ReadFile(fragFile, fs)) {
+		if (!util::verifyPath(fragFile)) log_error("Can't find file: " << fragFile);
+		else log_error(fragFile);
+		throw glfw_error("Shader::Shader");
+	}
+
 	AddShader(m_ID, fs.c_str(), GL_FRAGMENT_SHADER);
 
 	glLinkProgram(m_ID); CheckLinkShader(m_ID);
 
-	std::cout << "Loaded shader: " << vertFile << std::endl;
-	std::cout << "Loaded shader: " << fragFile << std::endl;
+	log("Loaded shader: " << vertFile);
+	log("Loaded shader: " << fragFile);
 }
 
 void Shader::AddShader(GLuint shaderProgram, const char* shaderText, GLenum shaderType) {
@@ -75,8 +87,8 @@ void Shader::AddShader(GLuint shaderProgram, const char* shaderText, GLenum shad
 	GLint succes;
 	glGetShaderiv(ShaderObj, GL_COMPILE_STATUS, &succes);
 	if (!succes) {
-		if(shaderType == GL_VERTEX_SHADER) cout << "VERTEX SHADER:" << endl;
-		else cout << "FRAGMENT SHADER:" << endl;
+		if(shaderType == GL_VERTEX_SHADER) log("VERTEX SHADER: " << m_vertFile);
+		else log("FRAGMENT SHADER: " << m_fragFile);
 		throw glsl_compile_error("Failed to compile shader", ShaderObj);
 	}
 
