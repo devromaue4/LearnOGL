@@ -10,14 +10,13 @@
 
 #include <chrono>
 #include <thread>
-#include <mutex>
 using namespace std::chrono_literals;
 
 #include "shader.h"
 //#include "camera.h"
 #include "camera_ogldev.h"
 //#include "skinned_mesh.h"
-#include "SkeletalModel.h"
+//#include "SkeletalModel.h"
 #include "StaticModel.h"
 #include "geometry.h"
 #include "light.h"
@@ -29,31 +28,31 @@ using namespace std::chrono_literals;
 int WIDTH = 1280, HEIGHT = 720;
 
 bool gFullScreen = false;
+bool gWireframe = false;
 
 std::shared_ptr<Shader> gShaderBase;
 //std::shared_ptr<Shader> gSkinning;
-std::shared_ptr<Texture> gTex0, gTex1;
+//std::shared_ptr<Texture> gTex0, gTex1;
 //GLint gScaleLocation = -1, gUColorTris = -1; // -1 means error
 
 //Camera gCamera(WIDTH, HEIGHT, my::vec3(0, 30, 100));
 //CameraOGLDEV GameCamera(WIDTH, HEIGHT, glm::vec3(-30,70,250), glm::vec3(0.0f, 0.0f, -1));
-CameraOGLDEV GameCamera(WIDTH, HEIGHT, glm::vec3(0,20,50), glm::vec3(0.0f, 0.0f, -1));
-//CameraOGLDEV GameCamera(WIDTH, HEIGHT, glm::vec3(0,0,10), glm::vec3(0.0f, 0.0f, -1));
+CameraOGLDEV GameCamera(WIDTH, HEIGHT, glm::vec3(0,10,50), glm::vec3(0.0f, 0.0f, -1));
 
 std::shared_ptr<StaticModel> pMyStaticModel;
 std::shared_ptr<StaticModel> SM_Barrel;
 std::shared_ptr<StaticModel> SM_Room;
 std::shared_ptr<StaticModel> SM_Sphere;
+std::shared_ptr<StaticModel> SM_Box;
 //std::shared_ptr<SkeletalModel> pMySkelModel;
 std::shared_ptr<SBox> gBox;
 
-BaseLight gLight;
+DirectLight gLight;
 Material gMaterial;
 
-glm::vec3 lightDir(25.0f, 10, 0.0f);
+glm::vec3 glightDir(25.0f, 10, 0.0f);
 
 glm::mat4 mModel(1.0f);
-glm::mat4 mIdentity(1.0f);
 
 float blendFactor = 0.0f;
 float deltaTime = 0;
@@ -93,11 +92,14 @@ void InitGeo() {
 	pMyStaticModel = std::make_shared<StaticModel>();
 	//SM_Room = std::make_shared<StaticModel>();
 	SM_Sphere = std::make_shared<StaticModel>();
+	SM_Box = std::make_shared<StaticModel>();
 	pMyStaticModel->Load("../media_files/models/misc/bunny.fbx");
 	//SM_Room->Load("../media_files/models/misc/room.fbx");
 	SM_Sphere->Load("../media_files/models/misc/sphere.fbx");
 	//SM_Barrel->Load("../media_files/models/wine_barrel/wine_barrel_01.fbx");
-	SM_Barrel->Load("../media_files/models/wine_barrel/barrel_01.obj");
+	//SM_Barrel->Load("../media_files/models/wine_barrel/barrel_01.obj");
+	SM_Barrel->Load("../media_files/models/antique_ceramic_vase/antique_ceramic_vase_01.fbx");
+	SM_Box->Load("../media_files/models/misc/box.fbx");
 	
 	//pMySkelModel = std::make_shared<SkeletalModel>();
 	//pMySkelModel->Load("../media_files/skeletalmeshes/iclone_7_raptoid_mascot_-_free_download.glb");
@@ -155,14 +157,18 @@ void Render() {
 	
 	gShaderBase->Use();
 	gShaderBase->setVec3("camPos", GameCamera.GetPosition());
-	gShaderBase->setVec3("lightDir", lightDir);
+	gShaderBase->setVec3("gDirLight.Direction", glightDir);
 
-	gLight.AmbientIntesity = 0.2f;
-	gMaterial.AmbientColor = glm::vec3(1.0f, 0.5f, 0.31f);
-	gLight.Color = glm::vec3(1.0f, 0.0f, 1.0f);
+	gLight.m_AmbientIntesity = .1f;
+	gLight.DiffuseIntesity = 1.0f;
+	gMaterial.AmbientColor = glm::vec3(1.0f, 1.0f, 1.f);
+	gMaterial.DiffuseColor = glm::vec3(1.0f, 1.0f, 1.f);
+	gLight.m_Color = glm::vec3(1.0f, 1.0f, 1.0f);
 	gShaderBase->setVec3("gMaterial.AmbientColor", gMaterial.AmbientColor);
-	gShaderBase->setVec3("gLight.Color", gLight.Color);
-	gShaderBase->setFloat("gLight.AmbientIntensity", gLight.AmbientIntesity);
+	gShaderBase->setVec3("gMaterial.DiffuseColor", gMaterial.DiffuseColor);
+	gShaderBase->setVec3("gDirLight.Color", gLight.m_Color);
+	gShaderBase->setFloat("gDirLight.AmbientIntensity", gLight.m_AmbientIntesity);
+	gShaderBase->setFloat("gDirLight.DiffuseIntensity", gLight.DiffuseIntesity);
 
 	gShaderBase->setMat4("mModel", mModel);
 	gShaderBase->setMat4("mView", mView);
@@ -170,27 +176,36 @@ void Render() {
 
 	// bunny
 	pMyStaticModel->Render();
+
+	// reset
+	mModel = glm::mat4(1);
+
+	// box
+	//static float rot = 0;;
+	//rot += 0.5f;
+	//mModel = glm::rotate(mModel, glm::radians(rot), glm::vec3(0, 1.0f, 0));
+	//mModel = glm::scale(mModel, glm::vec3(10, 10, 10));
+	//gShaderBase->setMat4("mModel", mModel);
+	//SM_Box->Render();
+
 	// reset
 	//mModel = glm::mat4(1);
-	//mModel = mIdentity;
-	mModel = std::move(mIdentity);
 
 	//gShaderBase->setMat4("mModel", mModel);
 	//SM_Room->Render();
 
-	//mModel[3][0] = 25; mModel[3][1] = 10; mModel[3][2] = -10;
+	// sphere
 	mModel = glm::translate(mModel, glm::vec3(25, 10, -10));
 	gShaderBase->setMat4("mModel", mModel);
 	SM_Sphere->Render();
+
 	// reset
-	//mModel = glm::mat4(1);
-	//mModel = mIdentity;
-	mModel = std::move(mIdentity);
+	mModel = glm::mat4(1);
 
 	// barrel
 	static float rot = 0;;
 	rot += 0.5f;
-	float scaleModel = 0.25f;
+	float scaleModel = .5f;
 	//mModel = glm::translate(mModel, glm::vec3(15, 0, 0));
 	mModel = glm::rotate(mModel, glm::radians(rot), glm::vec3(0, 1.0f, 0));
 	mModel = glm::scale(mModel, glm::vec3(scaleModel, scaleModel, scaleModel));
@@ -198,20 +213,13 @@ void Render() {
 	SM_Barrel->Render();
 
 	// reset
-	//mModel = glm::mat4(1);
-	//mModel = mIdentity;
-	mModel = std::move(mIdentity);
+	mModel = glm::mat4(1);
 
 	// light box
-	gBox->Render(mProj, mView, glm::translate(glm::mat4(1), lightDir));
+	gBox->Render(mProj, mView, glm::translate(glm::mat4(1), glightDir));
 
 	//std::this_thread::sleep_for(5ms);
 	//std::this_thread::sleep_for(20ms);
-
-	//std::mutex m_PlayerDataMutex; 
-	//m_PlayerDataMutex.lock();
-	//m_PlayerData = ;
-	//m_PlayerDataMutex.unlock();
 }
 
 void framebuffer_size_callback(GLFWwindow* wnd, int width, int height) {
@@ -228,6 +236,20 @@ void scroll_callback(GLFWwindow* window, double xoffset, double yoffset) {
 void mouse_callback(GLFWwindow* window, double xposIn, double yposIn) {
 	//gCamera.processMouse((float)xposIn, (float)yposIn);
 	GameCamera.OnMouse((float)xposIn, (float)yposIn);
+}
+
+void keyboard_callback(GLFWwindow* window, int key, int scancode, int action, int mods) {
+	if (action == GLFW_PRESS) {
+		switch (key)
+		{
+		case GLFW_KEY_F:
+			gWireframe = !gWireframe;
+			glPolygonMode(GL_FRONT_AND_BACK, gWireframe ? GL_LINE : GL_FILL); // wireframe mode on
+			break;
+		default:
+			break;
+		}
+	}
 }
 
 void Cleanup() {}
@@ -252,7 +274,10 @@ GLFWwindow* InitWindow() {
 		// window mode: if monitor = null, else fullscreen
 		pWnd = glfwCreateWindow(mode->width, mode->height, "OpenGL: [ ... ]", primMonitor, nullptr);
 	}
-	else pWnd = glfwCreateWindow(WIDTH, HEIGHT, "OpenGL: [ Lighting ]", nullptr, nullptr);
+	else {
+		pWnd = glfwCreateWindow(WIDTH, HEIGHT, "OpenGL: [ Lighting ]", nullptr, nullptr);
+		glfwSetWindowPos(pWnd, 300, 180);
+	}
 
 	if (!pWnd) throw glfw_error("failed to create GLFW Window!");
 
@@ -263,8 +288,12 @@ GLFWwindow* InitWindow() {
 	glfwSetFramebufferSizeCallback(pWnd, framebuffer_size_callback);
 	glfwSetCursorPosCallback(pWnd, mouse_callback);
 	glfwSetScrollCallback(pWnd, scroll_callback);
+	glfwSetKeyCallback(pWnd, keyboard_callback);
 
 	if(!gladLoadGL()) throw glfw_error("Failed to initialize GLAD!");
+
+	// set vsync true
+	glfwSwapInterval(1);
 
 	glViewport(0, 0, WIDTH, HEIGHT);
 
@@ -279,6 +308,7 @@ void processInput(GLFWwindow* wnd) {
 	lastFrame = curFrame;
 
 	if (glfwGetKey(wnd, GLFW_KEY_ESCAPE) == GLFW_PRESS) glfwSetWindowShouldClose(wnd, true);
+
 
 	//if (glfwGetKey(wnd, GLFW_KEY_Q) == GLFW_PRESS) {
 	//	mixValue += 0.01f; // change this value accordingly (might be too slow or too fast based on system hardware)
@@ -309,8 +339,8 @@ void processInput(GLFWwindow* wnd) {
 	//	blendFactor += 0.005f; if (blendFactor > 1.0f) blendFactor = 1.0f;
 
 	float lightSpeed = 0.3f;
-	if (glfwGetKey(wnd, GLFW_KEY_MINUS) == GLFW_PRESS) lightDir.y += lightSpeed;
-	if (glfwGetKey(wnd, GLFW_KEY_EQUAL) == GLFW_PRESS) lightDir.y -= lightSpeed;
+	if (glfwGetKey(wnd, GLFW_KEY_MINUS) == GLFW_PRESS) glightDir.y += lightSpeed;
+	if (glfwGetKey(wnd, GLFW_KEY_EQUAL) == GLFW_PRESS) glightDir.y -= lightSpeed;
 
 	//if (glfwGetKey(wnd, GLFW_KEY_MINUS) == GLFW_PRESS) GameCamera.OnKeyboard(GLFW_KEY_MINUS);
 	//if (glfwGetKey(wnd, GLFW_KEY_EQUAL) == GLFW_PRESS) GameCamera.OnKeyboard(GLFW_KEY_EQUAL);
@@ -321,10 +351,10 @@ void processInput(GLFWwindow* wnd) {
 	if (glfwGetKey(wnd, GLFW_KEY_PAGE_UP) == GLFW_PRESS) GameCamera.OnKeyboard(GLFW_KEY_PAGE_UP);
 	if (glfwGetKey(wnd, GLFW_KEY_PAGE_DOWN) == GLFW_PRESS) GameCamera.OnKeyboard(GLFW_KEY_PAGE_DOWN);
 
-	if (glfwGetKey(wnd, GLFW_KEY_UP) == GLFW_PRESS) lightDir.z -= lightSpeed;
-	if (glfwGetKey(wnd, GLFW_KEY_DOWN) == GLFW_PRESS) lightDir.z += lightSpeed;
-	if (glfwGetKey(wnd, GLFW_KEY_LEFT) == GLFW_PRESS) lightDir.x -= lightSpeed;
-	if (glfwGetKey(wnd, GLFW_KEY_RIGHT) == GLFW_PRESS) lightDir.x += lightSpeed;
+	if (glfwGetKey(wnd, GLFW_KEY_UP) == GLFW_PRESS) glightDir.z -= lightSpeed;
+	if (glfwGetKey(wnd, GLFW_KEY_DOWN) == GLFW_PRESS) glightDir.z += lightSpeed;
+	if (glfwGetKey(wnd, GLFW_KEY_LEFT) == GLFW_PRESS) glightDir.x -= lightSpeed;
+	if (glfwGetKey(wnd, GLFW_KEY_RIGHT) == GLFW_PRESS) glightDir.x += lightSpeed;
 	
 
 	//if (glfwGetKey(wnd, GLFW_KEY_SPACE) == GLFW_PRESS) {
@@ -340,6 +370,11 @@ int main(int argc, char* argv[]) try {
 	_CrtSetDbgFlag(_CRTDBG_ALLOC_MEM_DF | _CRTDBG_LEAK_CHECK_DF);
 #endif
 
+	if (argc > 1) {
+		std::string cmdLine(argv[1]);
+		if (cmdLine.find("-f") != std::string::npos) gFullScreen = true;
+	}
+
 	std::cout << ".............. start opengl app ..............\n";
 
 	auto ShutDownApp = [](GLFWwindow* w) { Cleanup(); glfwDestroyWindow(w); glfwTerminate(); /*system("pause");*/ };
@@ -351,24 +386,22 @@ int main(int argc, char* argv[]) try {
 
 	glViewport(0, 0, WIDTH, HEIGHT);
 
+	auto start = std::chrono::high_resolution_clock::now();
 	CompileShaders();
 	LoadTextures();
-
-	// Measuring Function Execution Time
-	//auto start = std::chrono::high_resolution_clock::now();
 	InitGeo();
-	//auto end = std::chrono::high_resolution_clock::now();
+	auto end = std::chrono::high_resolution_clock::now();
 	//auto duration = std::chrono::duration_cast<std::chrono::microseconds>(end - start);
-	//auto duration = std::chrono::duration<double, std::milli>(end - start); // high_res
-	//log("InitGeo took: " << ms.count() << " ms");
+	auto duration = std::chrono::duration<double, std::milli>(end - start); // high_res
+	log("Loading took: " << duration.count() << " ms");
 
 	while (!glfwWindowShouldClose(Wnd.get())) {
 		processInput(Wnd.get());
-		auto start = std::chrono::high_resolution_clock::now();
+		start = std::chrono::high_resolution_clock::now();
 		Render();
-		auto end = std::chrono::high_resolution_clock::now();
-		auto duration = std::chrono::duration<double, std::milli>(end - start);
-		log("Render() took: " << duration.count() << " ms");
+		end = std::chrono::high_resolution_clock::now();
+		duration = std::chrono::duration<double, std::milli>(end - start);
+		log("Render: " << duration.count() << " ms");
 
 		glfwPollEvents();
 		glfwSwapBuffers(Wnd.get());

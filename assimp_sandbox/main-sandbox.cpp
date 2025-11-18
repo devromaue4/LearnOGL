@@ -62,7 +62,7 @@ void print_assimp_matrix(const aiMatrix4x4& m) {
 
 int get_bone_id(const aiBone* pBone) {
 	int bone_id = 0;
-	string bone_name(pBone->mName.C_Str());
+	std::string bone_name(pBone->mName.C_Str());
 	if (bone_name_to_index_map.find(bone_name) == bone_name_to_index_map.end()) {
 		// allocate an index for new bone
 		bone_id = (int)bone_name_to_index_map.size();
