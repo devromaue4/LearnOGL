@@ -47,6 +47,7 @@ struct glsl_compile_error : glsl_error {
 
 #define log(s) std::cout << s << '\n'
 #define log_error(s) std::cerr << "Error: " << s << '\n'
+#define log_warning(s) std::cerr << "warning: " << s << '\n'
 
 #define safe_delete_array(p)	{ if(p) { delete [] p; } }
 #define safe_delete(p)			{ if(p) { delete p; } }

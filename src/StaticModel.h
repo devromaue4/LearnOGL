@@ -1,6 +1,7 @@
 #pragma once
 #include "myutil.h"
 #include "Texture.h"
+#include "material.h"
 
 struct SVertex {
 	glm::vec3 pos = glm::vec3(0);
@@ -21,7 +22,8 @@ class StaticModel {
 	std::vector<SVertex>			m_Vertices;
 	std::vector<uint>				m_Indices;
 	std::vector<MeshIndexedData>	m_Meshes;
-	std::vector<std::shared_ptr<Texture>> m_Textures;
+	//std::vector<std::shared_ptr<Texture>> m_Textures;
+	std::vector<Material> m_Materials;
 
 	std::string m_Directory;
 
@@ -35,6 +37,7 @@ public:
 	void loadGeoData(const aiScene* pScene);
 	void loadMaterials(const aiScene* pScene);
 	void loadDiffuseTexture(const aiScene* pScene, const aiMaterial* pMaterial, int index);
+	void loadSpecularTexture(const aiScene* pScene, const aiMaterial* pMaterial, int index);
 	void buildBuffers();
 	void Render();
 };

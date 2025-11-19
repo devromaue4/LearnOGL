@@ -30,7 +30,7 @@ void StaticModel::Load(std::string_view fileName, bool bFlipUVs) {
 	m_Directory = fileName.substr(0, fileName.find_last_of('/'));
 
 	m_Meshes.resize(pScene->mNumMeshes);
-	m_Textures.resize(pScene->mNumMaterials);
+	m_Materials.resize(pScene->mNumMaterials);
 
 	uint numVertices = 0, numIndices = 0;
 	calcVertices(pScene, numVertices, numIndices);
@@ -86,22 +86,23 @@ void StaticModel::loadGeoData(const aiScene* pScene) {
 }
 
 void StaticModel::loadMaterials(const aiScene* pScene) {
-	for (uint i = 0; i < pScene->mNumMaterials; i++)
+	for (uint i = 0; i < pScene->mNumMaterials; i++) {
 		loadDiffuseTexture(pScene, pScene->mMaterials[i], i);
+		loadSpecularTexture(pScene, pScene->mMaterials[i], i);
+	}
 }
 
 void StaticModel::loadDiffuseTexture(const aiScene* pScene, const aiMaterial* pMaterial, int index) {
-	m_Textures[index] = nullptr;
+	m_Materials[index].texDiffuse = nullptr;
 
 	if (pMaterial->GetTextureCount(aiTextureType_DIFFUSE) > 0) {
 		aiString path;
 		if (pMaterial->GetTexture(aiTextureType_DIFFUSE, 0, &path) == AI_SUCCESS) {
 			const aiTexture* pAiTexture = pScene->GetEmbeddedTexture(path.data);
 			if (pAiTexture) {
-				//m_Textures[index] = std::shared_ptr<Texture>(new Texture);
-				m_Textures[index] = std::make_shared<Texture>();
-				if (!m_Textures[index]->Load(pAiTexture->mWidth, pAiTexture->pcData))
-					log("Error loading Embedded texture");
+				m_Materials[index].texDiffuse = std::make_shared<Texture>();
+				if (!m_Materials[index].texDiffuse->Load(pAiTexture->mWidth, pAiTexture->pcData))
+					log_error("loading Embedded texture!");
 			}
 			else {
 				std::string p(path.data);
@@ -113,11 +114,10 @@ void StaticModel::loadDiffuseTexture(const aiScene* pScene, const aiMaterial* pM
 
 				std::string fullPath = m_Directory + "/" + p;
 
-				//m_Textures[index] = std::shared_ptr<Texture>(new Texture(fullPath.c_str()));
-				m_Textures[index] = std::make_shared<Texture>(fullPath.c_str());
-				if (!m_Textures[index]->Load()) {
+				m_Materials[index].texDiffuse = std::make_shared<Texture>(fullPath.c_str());
+				if (!m_Materials[index].texDiffuse->Load()) {
 					log_error("loading texture " << fullPath);
-					m_Textures[index] = nullptr;
+					m_Materials[index].texDiffuse = nullptr;
 					return;
 				}
 			}
@@ -132,6 +132,31 @@ void StaticModel::loadDiffuseTexture(const aiScene* pScene, const aiMaterial* pM
 	}
 	if (pMaterial->GetTextureCount(aiTextureType_REFLECTION) > 0) {
 		log("Reflection textures are not implemented yet!!!");
+	}
+}
+
+void StaticModel::loadSpecularTexture(const aiScene* pScene, const aiMaterial* pMaterial, int index) {
+	m_Materials[index].texSpecular = nullptr;
+
+	if (pMaterial->GetTextureCount(aiTextureType_SHININESS) > 0) {
+		aiString path;
+		if (pMaterial->GetTexture(aiTextureType_SHININESS, 0, &path) == AI_SUCCESS) {
+			const aiTexture* pAiTexture = pScene->GetEmbeddedTexture(path.data);
+			if (pAiTexture) {
+				m_Materials[index].texSpecular = std::make_shared<Texture>();
+				if (!m_Materials[index].texSpecular->Load(pAiTexture->mWidth, pAiTexture->pcData))
+					log_error("loading Embedded texture!");
+			}
+			else {
+				std::string fullPath = m_Directory + "/" + path.data;
+				m_Materials[index].texSpecular = std::make_shared<Texture>(fullPath.c_str());// , GL_TEXTURE6);
+				if (!m_Materials[index].texSpecular->Load()) {
+					log_error("loading texture " << fullPath);
+					m_Materials[index].texSpecular = nullptr;
+					return;
+				}
+			}
+		}
 	}
 }
 
@@ -168,9 +193,11 @@ void StaticModel::Render() {
 
 	for (uint i = 0; i < m_Meshes.size(); i++) {
 		uint MatIndex = m_Meshes[i].MaterialIndex;
-		assert(MatIndex < m_Textures.size());
-		if (m_Textures.size())
-			if (m_Textures[MatIndex]) m_Textures[MatIndex]->Bind();
+		assert(MatIndex < m_Materials.size());
+		if (m_Materials.size()) {
+			if (m_Materials[MatIndex].texDiffuse) m_Materials[MatIndex].texDiffuse->Bind();
+			if (m_Materials[MatIndex].texSpecular) m_Materials[MatIndex].texSpecular->Bind(GL_TEXTURE6);
+		}
 
 		glDrawElementsBaseVertex(GL_TRIANGLES, m_Meshes[i].NumIndices, GL_UNSIGNED_INT, (void*)(sizeof(uint) * m_Meshes[i].BaseIndex), m_Meshes[i].BaseVertex);
 	}

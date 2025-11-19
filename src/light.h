@@ -15,8 +15,6 @@ public:
 	float DiffuseIntesity = 0.0f;
 
 	void calcLocalDir(const glm::mat4& world) {
-		//.......... try to do int manualy mat4 to mat3x3 ..........
-
 		glm::mat3 world3;// = world;
 		world3[0][0] = world[0][0]; world3[0][1] = world[0][1]; world3[0][2] = world[0][2];
 		world3[1][0] = world[1][0]; world3[1][1] = world[1][1]; world3[1][2] = world[1][2];

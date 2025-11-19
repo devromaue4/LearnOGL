@@ -6,21 +6,21 @@
 
 std::map<std::string, GLuint> gGlobalTexStorage;
 
-Texture::Texture() {
-	m_TexType = GL_TEXTURE_2D;
-	m_TexUnit = GL_TEXTURE0;
-	m_pixelType = GL_UNSIGNED_BYTE;
-	m_format = GL_RGB;
-	m_fileName = "";
-}
+Texture::Texture() :
+	m_ID(0),
+	m_TexType(GL_TEXTURE_2D),
+	m_TexUnit(GL_TEXTURE0),
+	m_pixelType(GL_UNSIGNED_BYTE),
+	m_format(GL_RGB),
+	m_fileName(""){}
 
-Texture::Texture(const char* filePath, GLenum slot, GLenum format, GLenum pixelType, GLenum texType) {
-	m_TexType = texType;
-	m_TexUnit = slot;
-	m_pixelType = pixelType;
-	m_format = format;
-	m_fileName = filePath;
-}
+Texture::Texture(const char* filePath, GLenum slot, GLenum format, GLenum pixelType, GLenum texType) :
+	m_ID(0),
+	m_TexType(texType),
+	m_TexUnit(slot),
+	m_pixelType(pixelType),
+	m_format(format),
+	m_fileName(filePath) {}
 
 GLuint Texture::Load() {
 	if (m_TexType != GL_TEXTURE_2D) {
@@ -44,7 +44,7 @@ GLuint Texture::Load() {
 
 	int width, height, nChannels;
 	stbi_set_flip_vertically_on_load(true);
-	unsigned char* data = stbi_load(m_fileName.c_str(), &width, &height, &nChannels, 0);
+	u8* data = stbi_load(m_fileName.c_str(), &width, &height, &nChannels, 0);
 	if (!data) {
 		log_error(stbi_failure_reason());
 		throw std::exception("failed to load texture!");
@@ -74,6 +74,8 @@ GLuint Texture::Load() {
 
 	GLenum format = m_format;
 	if (nChannels == 1) format = GL_RED;
+	//if (nChannels == 1) format = GL_GREEN;
+	//if (nChannels == 1) format = GL_BLUE;
 	else if (nChannels == 3) format = GL_RGB;
 	else if (nChannels == 4) format = GL_RGBA;
 
@@ -98,7 +100,7 @@ GLuint Texture::Load(uint bufferSize, void* pData) {
 
 	int width, height, nrChannels;
 	stbi_set_flip_vertically_on_load(true);
-	ubyte* image_data = stbi_load_from_memory((const stbi_uc*)pData, bufferSize, &width, &height, &nrChannels, 0);
+	u8* image_data = stbi_load_from_memory((const stbi_uc*)pData, bufferSize, &width, &height, &nrChannels, 0);
 	if (!image_data) { 
 		log(stbi_failure_reason());
 		throw std::exception("failed to load texture!");

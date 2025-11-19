@@ -3,6 +3,7 @@
 
 in vec3 NormalO;
 in vec2 TexCoordO;
+in vec3 localPosO;
 in vec3 modelPos;
 
 out vec4 FragColor;
@@ -11,10 +12,14 @@ out vec4 FragColor;
 uniform vec3 camPos;
 
 layout(binding = 0) uniform sampler2D texture_diffuse1;
+layout(binding = 6) uniform sampler2D texture_specular1;
+// uniform sampler2D texture_diffuse1;
+// uniform sampler2D texture_specular1;
 
 struct Material {
 	vec3 AmbientColor;
 	vec3 DiffuseColor;
+	vec3 SpecularColor;
 };
 
 struct DirectLight {
@@ -58,28 +63,6 @@ uniform Material gMaterial;
 // }
 
 void main() {
-	// vec4 ambient = vec4(1.0, 1.0, 1.0, 1.0);
-	// float diffuse = max(dot(NormalO, normalize(lightDir)), 0.2);
-	// float diffuse = dot(NormalO, normalize(lightDir - modelPos));
-
-	// spec light
-	// float specLight = 0.5f;
-	// vec3 vewDir = normalize(camPos - modelPos);
-	// vec3 reflectDir = reflect(normalize(-lightDir), NormalO);
-	// float specAmount = pow(max(dot(vewDir, reflectDir), 0.0f), 8);
-	// float specular = specAmount * specLight;
-
-	// FragColor = texture(texture_diffuse1, TexCoordO) * ambient * diffuse;// + specAmount;
-	// FragColor = ambient + diffuse + specAmount;
-
-	// FragColor = texture(texture_diffuse1, TexCoordO) * vec4(gMaterial.AmbientColor, 1.0f) * vec4(gLight.Color, 1.0f) * gLight.AmbientIntensity;
-
-	// float dot = dot(normalize(-lightDir), NormalO);
-	// FragColor = texture(texture_diffuse1, TexCoordO) * 
-	// 			vec4(gMaterial.AmbientColor, 1.0f) * 
-	// 			vec4(gLight.Color, 1.0f) * 
-	// 			gLight.AmbientIntensity * dot;
-
 	vec4 AmbientColor = vec4(gDirLight.Color, 1.0f) * 
 						gDirLight.AmbientIntensity * 
 						vec4(gMaterial.AmbientColor, 1.0f);
@@ -88,9 +71,17 @@ void main() {
 	vec3 lightDir = normalize(gDirLight.Direction);
 	
 	float diff_fact = max(dot(normal, lightDir), 0.0);
-	// float dot = max(dot(normalize(NormalO), normalize(-lightDir + modelPos)), 0.1);
 	vec4 DiffuseColor = vec4(gDirLight.Color, 1.0f) * gDirLight.DiffuseIntensity *
 					vec4(gMaterial.DiffuseColor, 1.0) * diff_fact;
+
+	// vec3 pixelToCamera = normalize(camPos - localPosO);
+	vec3 pixelToCamera = normalize(camPos - modelPos);
+	vec3 lightReflect = reflect(-lightDir, normal);
+	float spec_fact = max(dot(pixelToCamera, lightReflect), 0.0);
+	float specExp = texture(texture_specular1, TexCoordO).r * 255.0;
+	spec_fact = pow(spec_fact, specExp);
+	// spec_fact = pow(spec_fact, 50);
+	vec4 SpecularColor = vec4(gDirLight.Color, 1.0f) * vec4(gMaterial.SpecularColor, 1.0) * spec_fact;
 
 	//////////////////////////////////////////////////////////////////
 	// my solution
@@ -100,12 +91,10 @@ void main() {
 	// vec3 reflect = reflect(-lightDir, normal);
 	// // float specular = pow(max(dot(viewDir, reflect), 0.0), 100.0);
 	// float specular = pow(max(dot(viewDir, reflect), 0.0), 50.0);
+	// float specular = pow(max(dot(viewDir, reflect), 0.0), texture(texture_specular1, TexCoordO).r * 255.0);
 	//////////////////////////////////////////////////////////////////
 
-	// FragColor = (AmbientColor + DiffuseColor + specular);
-	FragColor = texture(texture_diffuse1, TexCoordO) * (AmbientColor + DiffuseColor);
-	// FragColor = (AmbientColor + DiffuseColor);
-	// FragColor = DiffuseColor;
+	FragColor = texture(texture_diffuse1, TexCoordO) * (AmbientColor + DiffuseColor + SpecularColor);
 
 	// cherno tuts
 	// float intensity = max(dot(normalize(NormalO), normalize(lightDir)), 0.15);

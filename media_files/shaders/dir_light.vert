@@ -6,6 +6,7 @@ layout (location = 2) in vec2 TexCoord;
 out vec3 NormalO;
 out vec2 TexCoordO;
 out vec3 modelPos;
+out vec3 localPosO;
 
 // uniform mat4 mPVM;
 uniform mat4 mModel;
@@ -22,4 +23,5 @@ void main() {
 	// NormalO = mat3(mModel) * Normal; // for uniform scale
 	// NormalO = Normal;
 	TexCoordO = TexCoord;
+	localPosO = Pos;
 }

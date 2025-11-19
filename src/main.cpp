@@ -39,13 +39,13 @@ std::shared_ptr<Shader> gShaderBase;
 //CameraOGLDEV GameCamera(WIDTH, HEIGHT, glm::vec3(-30,70,250), glm::vec3(0.0f, 0.0f, -1));
 CameraOGLDEV GameCamera(WIDTH, HEIGHT, glm::vec3(0,10,50), glm::vec3(0.0f, 0.0f, -1));
 
-std::shared_ptr<StaticModel> pMyStaticModel;
+std::shared_ptr<StaticModel> SM_Bunny;
 std::shared_ptr<StaticModel> SM_Barrel;
 std::shared_ptr<StaticModel> SM_Room;
 std::shared_ptr<StaticModel> SM_Sphere;
 std::shared_ptr<StaticModel> SM_Box;
-//std::shared_ptr<SkeletalModel> pMySkelModel;
 std::shared_ptr<SBox> gBox;
+//std::shared_ptr<SkeletalModel> pMySkelModel;
 
 DirectLight gLight;
 Material gMaterial;
@@ -54,7 +54,7 @@ glm::vec3 glightDir(25.0f, 10, 0.0f);
 
 glm::mat4 mModel(1.0f);
 
-float blendFactor = 0.0f;
+//float blendFactor = 0.0f; // for blend animations
 float deltaTime = 0;
 float lastFrame = 0;
 double StartTimeMillis = 0;
@@ -89,12 +89,12 @@ void InitGeo() {
 	//scene.addModel(name, pos);
 	gBox = std::make_shared<SBox>(3.f);
 	SM_Barrel = std::make_shared<StaticModel>();
-	pMyStaticModel = std::make_shared<StaticModel>();
-	//SM_Room = std::make_shared<StaticModel>();
+	SM_Bunny = std::make_shared<StaticModel>();
+	SM_Room = std::make_shared<StaticModel>();
 	SM_Sphere = std::make_shared<StaticModel>();
 	SM_Box = std::make_shared<StaticModel>();
-	pMyStaticModel->Load("../media_files/models/misc/bunny.fbx");
-	//SM_Room->Load("../media_files/models/misc/room.fbx");
+	SM_Bunny->Load("../media_files/models/misc/bunny.fbx");
+	SM_Room->Load("../media_files/models/misc/room.fbx");
 	SM_Sphere->Load("../media_files/models/misc/sphere.fbx");
 	//SM_Barrel->Load("../media_files/models/wine_barrel/wine_barrel_01.fbx");
 	//SM_Barrel->Load("../media_files/models/wine_barrel/barrel_01.obj");
@@ -163,9 +163,11 @@ void Render() {
 	gLight.DiffuseIntesity = 1.0f;
 	gMaterial.AmbientColor = glm::vec3(1.0f, 1.0f, 1.f);
 	gMaterial.DiffuseColor = glm::vec3(1.0f, 1.0f, 1.f);
+	gMaterial.SpecularColor = glm::vec3(1.0f, 1.0f, 1.f);
 	gLight.m_Color = glm::vec3(1.0f, 1.0f, 1.0f);
 	gShaderBase->setVec3("gMaterial.AmbientColor", gMaterial.AmbientColor);
 	gShaderBase->setVec3("gMaterial.DiffuseColor", gMaterial.DiffuseColor);
+	gShaderBase->setVec3("gMaterial.SpecularColor", gMaterial.SpecularColor);
 	gShaderBase->setVec3("gDirLight.Color", gLight.m_Color);
 	gShaderBase->setFloat("gDirLight.AmbientIntensity", gLight.m_AmbientIntesity);
 	gShaderBase->setFloat("gDirLight.DiffuseIntensity", gLight.DiffuseIntesity);
@@ -175,7 +177,7 @@ void Render() {
 	gShaderBase->setMat4("mProj", mProj);
 
 	// bunny
-	pMyStaticModel->Render();
+	SM_Bunny->Render();
 
 	// reset
 	mModel = glm::mat4(1);
@@ -397,11 +399,11 @@ int main(int argc, char* argv[]) try {
 
 	while (!glfwWindowShouldClose(Wnd.get())) {
 		processInput(Wnd.get());
-		start = std::chrono::high_resolution_clock::now();
+		//start = std::chrono::high_resolution_clock::now();
 		Render();
-		end = std::chrono::high_resolution_clock::now();
-		duration = std::chrono::duration<double, std::milli>(end - start);
-		log("Render: " << duration.count() << " ms");
+		//end = std::chrono::high_resolution_clock::now();
+		//duration = std::chrono::duration<double, std::milli>(end - start);
+		//log("Render: " << duration.count() << " ms");
 
 		glfwPollEvents();
 		glfwSwapBuffers(Wnd.get());
