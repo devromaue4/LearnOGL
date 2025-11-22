@@ -15,9 +15,9 @@ uniform mat4 mProj;
 
 void main() {
 	gl_Position = mProj * mView * mModel * vec4(Pos, 1.0);
-	modelPos = vec3(mModel * vec4(Pos, 1.0));
+	modelPos = vec3(mModel * vec4(Pos, 1.0)); // calc world pos
 	// modelPos = normalize(vec3(mModel * vec4(Pos, 1.0)));
-	// NormalO = normalize(vec3(mModel * vec4(Normal, 1.0f)));
+	// NormalO = normalize(vec3(mModel * vec4(Normal, 1.0f))); // for uniform scale
 	// NormalO = normalize(transpose(inverse(mat3(mModel))) * Normal); // for not-uniform scale
 	NormalO = transpose(inverse(mat3(mModel))) * Normal; // for not-uniform scale
 	// NormalO = mat3(mModel) * Normal; // for uniform scale

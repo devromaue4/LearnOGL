@@ -193,8 +193,8 @@ void Render() {
 	// reset
 	//mModel = glm::mat4(1);
 
-	//gShaderBase->setMat4("mModel", mModel);
-	//SM_Room->Render();
+	gShaderBase->setMat4("mModel", mModel);
+	SM_Room->Render();
 
 	// sphere
 	mModel = glm::translate(mModel, glm::vec3(25, 10, -10));
