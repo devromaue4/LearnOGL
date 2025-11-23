@@ -44,7 +44,8 @@ public:
 	}
 
 	const glm::mat4& getMat() {
-		mView = glm::lookAtRH(Pos, Pos + Forward, Up);
+		//mView = glm::lookAtRH(Pos, Pos + Forward, Up);
+		mView = glm::lookAt(Pos, Pos + Forward, Up);
 		return mView;
 	}
 	//my::mat4 getMat() { return my::lookAtLH(Pos, Pos + Forward, Up); }
@@ -58,7 +59,7 @@ public:
 		if (moveDir == RIGHT) Pos = Pos + Right * velocity;
 	}
 
-	void processMouse(float xposIn, float yposIn, GLboolean constrainPitch = true) {
+	void OnMouse(float xposIn, float yposIn, GLboolean constrainPitch = true) {
 		float xpos = (float)xposIn, ypos = (float)yposIn;
 
 		if (firstMouse) { // prevent jump mouse when first time capture the cursor

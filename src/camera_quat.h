@@ -43,13 +43,13 @@ public:
 		const glm::vec3& target,
 		const glm::vec3& up = glm::vec3(0, 1, 0));
 
-	void SetProjParams(float fAspect = 1.0f, float fovy = 45.0f, float zNear = 0.1f, float zFar = 1000.0f);
+	void setProj(float fAspect = 1.0f, float fovy = 45.0f, float zNear = 0.1f, float zFar = 1000.0f);
 
 	const glm::vec3& GetPosition() const { return m_pos; }
 	//glm::vec3 GetPosTarget() const { return m_pos + m_target; }
 	//my::mat4 GetMatrix() { return my::lookAtRH(m_pos, m_pos + m_target, m_up); }
-	const glm::mat4& GetMatrix();
-	const glm::mat4& GetProjMatrix() { return m_mProj; }
+	const glm::mat4& getMat();
+	const glm::mat4& getProj() { return m_mProj; }
 
 	void SetPosition(float x, float y, float z) { m_pos.x = x; m_pos.y = y; m_pos.z = z; }
 	void SetSpeedMove(float speed) { m_speed = speed; }

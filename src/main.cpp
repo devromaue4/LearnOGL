@@ -13,8 +13,8 @@
 using namespace std::chrono_literals;
 
 #include "shader.h"
-#include "camera_euler.h"
-//#include "camera_quat.h"
+//#include "camera_euler.h"
+#include "camera_quat.h"
 #include "StaticModel.h"
 #include "geometry.h"
 #include "light.h"
@@ -31,8 +31,8 @@ bool gUseTextures = true;
 std::shared_ptr<Shader> gShaderBase;
 //std::shared_ptr<Texture> gTex0, gTex1;
 
-CameraEuler GameCamera(WIDTH, HEIGHT, glm::vec3(0, 10.f, 50.f));
-//CameraQuat GameCamera(WIDTH, HEIGHT, glm::vec3(0,10,50), glm::vec3(0.0f, 0.0f, -1));
+//CameraEuler GameCamera(WIDTH, HEIGHT, glm::vec3(0, 10.f, 50.f));
+CameraQuat GameCamera(WIDTH, HEIGHT, glm::vec3(0,10,50), glm::vec3(0.0f, 0.0f, -1));
 
 std::shared_ptr<StaticModel> SM_Bunny;
 std::shared_ptr<StaticModel> SM_Barrel;
@@ -84,8 +84,8 @@ void InitGeo() {
 	//SM_Barrel->Load("../media_files/models/wine_barrel/wine_barrel_01.fbx");
 	SM_Barrel->Load("../media_files/models/antique_ceramic_vase/antique_ceramic_vase_01.fbx");
 
-	//GameCamera.SetSpeedMove(1.2f);
-	GameCamera.Speed = 50.2f;
+	GameCamera.SetSpeedMove(1.2f);
+	//GameCamera.Speed = 50.2f;
 
 	////////////////////////////////////////////////////////////////////
 	gPointLights[0].m_WorldPos = glm::vec3(12.f, 10.f, 0);
@@ -131,7 +131,7 @@ void Render() {
 	// --------------------------- static models -----------------------------------
 	
 	gShaderBase->Use();
-	gShaderBase->setVec3("gCamPos", GameCamera.Pos);
+	gShaderBase->setVec3("gCamPos", GameCamera.GetPosition());
 	gShaderBase->setVec3("gDirLight.Direction", glightDir);
 
 	gShaderBase->setBool("gUseTextures", gUseTextures);
@@ -220,8 +220,7 @@ void scroll_callback(GLFWwindow* window, double xoffset, double yoffset) {
 }
 
 void mouse_callback(GLFWwindow* window, double xposIn, double yposIn) {
-	GameCamera.processMouse((float)xposIn, (float)yposIn);
-	//GameCamera.OnMouse((float)xposIn, (float)yposIn);
+	GameCamera.OnMouse((float)xposIn, (float)yposIn);
 }
 
 void keyboard_callback(GLFWwindow* window, int key, int scancode, int action, int mods) {
@@ -248,19 +247,19 @@ void processInput(GLFWwindow* wnd) {
 
 	if (glfwGetKey(wnd, GLFW_KEY_ESCAPE) == GLFW_PRESS) glfwSetWindowShouldClose(wnd, true);
 
-	////if (glfwGetKey(wnd, GLFW_KEY_MINUS) == GLFW_PRESS) GameCamera.OnKeyboard(GLFW_KEY_MINUS);
-	////if (glfwGetKey(wnd, GLFW_KEY_EQUAL) == GLFW_PRESS) GameCamera.OnKeyboard(GLFW_KEY_EQUAL);
-	//if (glfwGetKey(wnd, GLFW_KEY_W) == GLFW_PRESS) GameCamera.OnKeyboard(GLFW_KEY_W);
-	//if (glfwGetKey(wnd, GLFW_KEY_S) == GLFW_PRESS) GameCamera.OnKeyboard(GLFW_KEY_S);
-	//if (glfwGetKey(wnd, GLFW_KEY_A) == GLFW_PRESS) GameCamera.OnKeyboard(GLFW_KEY_A);
-	//if (glfwGetKey(wnd, GLFW_KEY_D) == GLFW_PRESS) GameCamera.OnKeyboard(GLFW_KEY_D);
-	////if (glfwGetKey(wnd, GLFW_KEY_PAGE_UP) == GLFW_PRESS) GameCamera.OnKeyboard(GLFW_KEY_PAGE_UP);
-	////if (glfwGetKey(wnd, GLFW_KEY_PAGE_DOWN) == GLFW_PRESS) GameCamera.OnKeyboard(GLFW_KEY_PAGE_DOWN);
+	//if (glfwGetKey(wnd, GLFW_KEY_MINUS) == GLFW_PRESS) GameCamera.OnKeyboard(GLFW_KEY_MINUS);
+	//if (glfwGetKey(wnd, GLFW_KEY_EQUAL) == GLFW_PRESS) GameCamera.OnKeyboard(GLFW_KEY_EQUAL);
+	if (glfwGetKey(wnd, GLFW_KEY_W) == GLFW_PRESS) GameCamera.OnKeyboard(GLFW_KEY_W);
+	if (glfwGetKey(wnd, GLFW_KEY_S) == GLFW_PRESS) GameCamera.OnKeyboard(GLFW_KEY_S);
+	if (glfwGetKey(wnd, GLFW_KEY_A) == GLFW_PRESS) GameCamera.OnKeyboard(GLFW_KEY_A);
+	if (glfwGetKey(wnd, GLFW_KEY_D) == GLFW_PRESS) GameCamera.OnKeyboard(GLFW_KEY_D);
+	//if (glfwGetKey(wnd, GLFW_KEY_PAGE_UP) == GLFW_PRESS) GameCamera.OnKeyboard(GLFW_KEY_PAGE_UP);
+	//if (glfwGetKey(wnd, GLFW_KEY_PAGE_DOWN) == GLFW_PRESS) GameCamera.OnKeyboard(GLFW_KEY_PAGE_DOWN);
 
-	if (glfwGetKey(wnd, GLFW_KEY_W) == GLFW_PRESS) GameCamera.processKeyboard(FORWARD, deltaTime);
-	if (glfwGetKey(wnd, GLFW_KEY_S) == GLFW_PRESS) GameCamera.processKeyboard(BACKWARD, deltaTime);
-	if (glfwGetKey(wnd, GLFW_KEY_A) == GLFW_PRESS) GameCamera.processKeyboard(LEFT, deltaTime);
-	if (glfwGetKey(wnd, GLFW_KEY_D) == GLFW_PRESS) GameCamera.processKeyboard(RIGHT, deltaTime);
+	//if (glfwGetKey(wnd, GLFW_KEY_W) == GLFW_PRESS) GameCamera.processKeyboard(FORWARD, deltaTime);
+	//if (glfwGetKey(wnd, GLFW_KEY_S) == GLFW_PRESS) GameCamera.processKeyboard(BACKWARD, deltaTime);
+	//if (glfwGetKey(wnd, GLFW_KEY_A) == GLFW_PRESS) GameCamera.processKeyboard(LEFT, deltaTime);
+	//if (glfwGetKey(wnd, GLFW_KEY_D) == GLFW_PRESS) GameCamera.processKeyboard(RIGHT, deltaTime);
 	//if (glfwGetKey(wnd, GLFW_KEY_LEFT_SHIFT) == GLFW_PRESS) gCamera.Speed = 5.0f;
 	//if (glfwGetKey(wnd, GLFW_KEY_LEFT_SHIFT) == GLFW_RELEASE) gCamera.Speed = 2.5f;
 

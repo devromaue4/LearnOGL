@@ -13,11 +13,11 @@ CameraQuat::CameraQuat(int w, int h,
 	m_mProj = glm::perspective(glm::radians(45.0f), (float)w / h, .1f, 1000.0f);
 }
 
-void CameraQuat::SetProjParams(float fAspect, float fovy, float zNear, float zFar) {
+void CameraQuat::setProj(float fAspect, float fovy, float zNear, float zFar) {
 	m_mProj = glm::perspective(glm::radians(fovy), fAspect, zNear, zFar);
 }
 
-const glm::mat4& CameraQuat::GetMatrix() {
+const glm::mat4& CameraQuat::getMat() {
 	//m_mView = glm::lookAtRH(m_pos, m_pos + m_target, m_up);
 	m_mView = glm::lookAt(m_pos, m_pos + m_target, m_up);
 	return m_mView;

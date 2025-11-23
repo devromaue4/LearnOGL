@@ -141,11 +141,11 @@ void Shader::setVec3(const std::string& name, const glm::vec3& value) {
 		m_uniformLocations[name] = glGetUniformLocation(m_ID, name.c_str());
 	glUniform3fv(m_uniformLocations[name], 1, &value[0]);
 }
-void Shader::setVec3(const std::string& name, const my::vec3& value) {
-	if (m_uniformLocations.find(name) == m_uniformLocations.end())
-		m_uniformLocations[name] = glGetUniformLocation(m_ID, name.c_str());
-	glUniform3fv(m_uniformLocations[name], 1, &value.x);
-}
+//void Shader::setVec3(const std::string& name, const my::vec3& value) {
+//	if (m_uniformLocations.find(name) == m_uniformLocations.end())
+//		m_uniformLocations[name] = glGetUniformLocation(m_ID, name.c_str());
+//	glUniform3fv(m_uniformLocations[name], 1, &value.x);
+//}
 void Shader::setVec4(const std::string& name, const glm::vec4& value) {
 	if (m_uniformLocations.find(name) == m_uniformLocations.end())
 		m_uniformLocations[name] = glGetUniformLocation(m_ID, name.c_str());
@@ -162,11 +162,11 @@ void Shader::setMat4(const std::string& name, const glm::mat4& value) {
 	glUniformMatrix4fv(m_uniformLocations[name], 1, GL_FALSE, &value[0][0]);
 }
 
-void Shader::setMat4(const std::string& name, const my::mat4& value) {
-	if (m_uniformLocations.find(name) == m_uniformLocations.end())
-		m_uniformLocations[name] = glGetUniformLocation(m_ID, name.c_str());	
-	glUniformMatrix4fv(m_uniformLocations[name], 1, GL_FALSE, &value.m[0][0]);
-}
+//void Shader::setMat4(const std::string& name, const my::mat4& value) {
+//	if (m_uniformLocations.find(name) == m_uniformLocations.end())
+//		m_uniformLocations[name] = glGetUniformLocation(m_ID, name.c_str());	
+//	glUniformMatrix4fv(m_uniformLocations[name], 1, GL_FALSE, &value.m[0][0]);
+//}
 
 //void Shader::setMat4(const std::string& name, const glm::mat4* value) const {
 //	glUniformMatrix4fv(glGetUniformLocation(m_ID, name.c_str()), 1, GL_FALSE, value_ptr(*value));
