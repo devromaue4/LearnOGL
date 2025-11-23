@@ -31,7 +31,7 @@ bool gUseTextures = true;
 std::shared_ptr<Shader> gShaderBase;
 //std::shared_ptr<Texture> gTex0, gTex1;
 
-CameraEuler GameCamera(WIDTH, HEIGHT, my::vec3(0, 10.f, 50.f));
+CameraEuler GameCamera(WIDTH, HEIGHT, glm::vec3(0, 10.f, 50.f));
 //CameraQuat GameCamera(WIDTH, HEIGHT, glm::vec3(0,10,50), glm::vec3(0.0f, 0.0f, -1));
 
 std::shared_ptr<StaticModel> SM_Bunny;
@@ -46,7 +46,7 @@ DirectLight gLight;
 PointLight gPointLights[MAX_POINT_LIGHTS];
 Material gMaterial;
 
-my::vec3 glightDir(25.0f, 10, 0.0f);
+glm::vec3 glightDir(25.0f, 10, 0.0f);
 
 glm::mat4 mModel(1.0f);
 
@@ -88,9 +88,9 @@ void InitGeo() {
 	GameCamera.Speed = 50.2f;
 
 	////////////////////////////////////////////////////////////////////
-	gPointLights[0].m_WorldPos = my::vec3(12.f, 10.f, 0);
-	gPointLights[1].m_WorldPos = my::vec3(-10.f, 10.f, 15.f);
-	gPointLights[2].m_WorldPos = my::vec3(-10.f, 10.f, -15.f);
+	gPointLights[0].m_WorldPos = glm::vec3(12.f, 10.f, 0);
+	gPointLights[1].m_WorldPos = glm::vec3(-10.f, 10.f, 15.f);
+	gPointLights[2].m_WorldPos = glm::vec3(-10.f, 10.f, -15.f);
 	// pont lights
 	gPointLights[0].m_DiffuseIntesity = 1.0f;
 	gPointLights[0].m_Color = glm::vec3(1.0f, 1.f, 0.f);
@@ -125,8 +125,8 @@ void Render() {
 	mModel = glm::rotate(mModel, glm::radians(-90.0f), glm::vec3(1, 0, 0));
 	float scaleBunny = 8.0f;
 	mModel = glm::scale(mModel, glm::vec3(scaleBunny, scaleBunny, scaleBunny));
-	const my::mat4& mView = GameCamera.getMat();
-	const my::mat4& mProj = GameCamera.getProj();
+	const glm::mat4& mView = GameCamera.getMat();
+	const glm::mat4& mProj = GameCamera.getProj();
 
 	// --------------------------- static models -----------------------------------
 	
@@ -200,10 +200,10 @@ void Render() {
 	mModel = glm::mat4(1);
 
 	// light box
-	gBox->Render(mProj, mView, my::translate(my::mat4(1), glightDir));
-	gBox->Render(mProj, mView, my::translate(my::mat4(1), gPointLights[0].m_WorldPos));
-	gBox->Render(mProj, mView, my::translate(my::mat4(1), gPointLights[1].m_WorldPos));
-	gBox->Render(mProj, mView, my::translate(my::mat4(1), gPointLights[2].m_WorldPos));
+	gBox->Render(mProj, mView, glm::translate(glm::mat4(1), glightDir));
+	gBox->Render(mProj, mView, glm::translate(glm::mat4(1), gPointLights[0].m_WorldPos));
+	gBox->Render(mProj, mView, glm::translate(glm::mat4(1), gPointLights[1].m_WorldPos));
+	gBox->Render(mProj, mView, glm::translate(glm::mat4(1), gPointLights[2].m_WorldPos));
 
 	//std::this_thread::sleep_for(5ms);
 }

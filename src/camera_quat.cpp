@@ -18,7 +18,8 @@ void CameraQuat::SetProjParams(float fAspect, float fovy, float zNear, float zFa
 }
 
 const glm::mat4& CameraQuat::GetMatrix() {
-	m_mView = glm::lookAtRH(m_pos, m_pos + m_target, m_up);
+	//m_mView = glm::lookAtRH(m_pos, m_pos + m_target, m_up);
+	m_mView = glm::lookAt(m_pos, m_pos + m_target, m_up);
 	return m_mView;
 }
 

@@ -41,8 +41,7 @@ struct LightAttenuation {
 
 class PointLight : public BaseLight {
 public:
-	//glm::vec3 m_WorldPos = glm::vec3(0.0f);
-	my::vec3 m_WorldPos = my::vec3(0.0f, 0, 0);
+	glm::vec3 m_WorldPos = glm::vec3(0.0f);
 
 	LightAttenuation Attenuation;
 
