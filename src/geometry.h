@@ -89,4 +89,14 @@ public:
 		glDrawElements(GL_TRIANGLES, 36, GL_UNSIGNED_INT, (const void*)0);
 		glBindVertexArray(0);
 	}
+	void Render(const my::mat4& p, const my::mat4& v, const my::mat4& m) {
+		m_ShaderBase->Use();
+		m_ShaderBase->setMat4("mModel", m);
+		m_ShaderBase->setMat4("mView", v);
+		m_ShaderBase->setMat4("mProj", p);
+
+		glBindVertexArray(m_VAO);
+		glDrawElements(GL_TRIANGLES, 36, GL_UNSIGNED_INT, (const void*)0);
+		glBindVertexArray(0);
+	}
 };

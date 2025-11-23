@@ -13,8 +13,8 @@
 using namespace std::chrono_literals;
 
 #include "shader.h"
-//#include "camera.h"
-#include "camera_ogldev.h"
+#include "camera_euler.h"
+//#include "camera_quat.h"
 #include "StaticModel.h"
 #include "geometry.h"
 #include "light.h"
@@ -30,10 +30,9 @@ bool gUseTextures = true;
 
 std::shared_ptr<Shader> gShaderBase;
 //std::shared_ptr<Texture> gTex0, gTex1;
-//GLint gScaleLocation = -1, gUColorTris = -1; // -1 means error
 
-//Camera gCamera(WIDTH, HEIGHT, my::vec3(0, 30, 100));
-CameraOGLDEV GameCamera(WIDTH, HEIGHT, glm::vec3(0,10,50), glm::vec3(0.0f, 0.0f, -1));
+CameraEuler GameCamera(WIDTH, HEIGHT, my::vec3(0, 10.f, 50.f));
+//CameraQuat GameCamera(WIDTH, HEIGHT, glm::vec3(0,10,50), glm::vec3(0.0f, 0.0f, -1));
 
 std::shared_ptr<StaticModel> SM_Bunny;
 std::shared_ptr<StaticModel> SM_Barrel;
@@ -47,7 +46,7 @@ DirectLight gLight;
 PointLight gPointLights[MAX_POINT_LIGHTS];
 Material gMaterial;
 
-glm::vec3 glightDir(25.0f, 10, 0.0f);
+my::vec3 glightDir(25.0f, 10, 0.0f);
 
 glm::mat4 mModel(1.0f);
 
@@ -83,15 +82,15 @@ void InitGeo() {
 	SM_Room->Load("../media_files/models/misc/room.fbx");
 	SM_Sphere->Load("../media_files/models/misc/sphere.fbx");
 	//SM_Barrel->Load("../media_files/models/wine_barrel/wine_barrel_01.fbx");
-	//SM_Barrel->Load("../media_files/models/wine_barrel/barrel_01.obj");
 	SM_Barrel->Load("../media_files/models/antique_ceramic_vase/antique_ceramic_vase_01.fbx");
 
-	GameCamera.SetSpeedMove(1.2f);
+	//GameCamera.SetSpeedMove(1.2f);
+	GameCamera.Speed = 50.2f;
 
 	////////////////////////////////////////////////////////////////////
-	gPointLights[0].m_WorldPos = glm::vec3(12.f, 10.f, 0);
-	gPointLights[1].m_WorldPos = glm::vec3(-10.f, 10.f, 15.f);
-	gPointLights[2].m_WorldPos = glm::vec3(-10.f, 10.f, -15.f);
+	gPointLights[0].m_WorldPos = my::vec3(12.f, 10.f, 0);
+	gPointLights[1].m_WorldPos = my::vec3(-10.f, 10.f, 15.f);
+	gPointLights[2].m_WorldPos = my::vec3(-10.f, 10.f, -15.f);
 	// pont lights
 	gPointLights[0].m_DiffuseIntesity = 1.0f;
 	gPointLights[0].m_Color = glm::vec3(1.0f, 1.f, 0.f);
@@ -114,9 +113,8 @@ void InitGeo() {
 }
 
 void Render() {
-	glClearColor(0.12f, .18f, .2f, 1);
-	//glClearColor(0.1f, .1f, .1f, 1);
-	//glClearColor(0, 0, 0, 1);
+	//glClearColor(0.12f, .18f, .2f, 1);
+	glClearColor(0, 0, 0, 1);
 	glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 
 	float currentFrame = (float)glfwGetTime();
@@ -127,13 +125,13 @@ void Render() {
 	mModel = glm::rotate(mModel, glm::radians(-90.0f), glm::vec3(1, 0, 0));
 	float scaleBunny = 8.0f;
 	mModel = glm::scale(mModel, glm::vec3(scaleBunny, scaleBunny, scaleBunny));
-	const glm::mat4& mView = GameCamera.GetMatrix();
-	const glm::mat4& mProj = GameCamera.GetProjMatrix();
+	const my::mat4& mView = GameCamera.getMat();
+	const my::mat4& mProj = GameCamera.getProj();
 
 	// --------------------------- static models -----------------------------------
 	
 	gShaderBase->Use();
-	gShaderBase->setVec3("gCamPos", GameCamera.GetPosition());
+	gShaderBase->setVec3("gCamPos", GameCamera.Pos);
 	gShaderBase->setVec3("gDirLight.Direction", glightDir);
 
 	gShaderBase->setBool("gUseTextures", gUseTextures);
@@ -202,10 +200,10 @@ void Render() {
 	mModel = glm::mat4(1);
 
 	// light box
-	gBox->Render(mProj, mView, glm::translate(glm::mat4(1), glightDir));
-	gBox->Render(mProj, mView, glm::translate(glm::mat4(1), gPointLights[0].m_WorldPos));
-	gBox->Render(mProj, mView, glm::translate(glm::mat4(1), gPointLights[1].m_WorldPos));
-	gBox->Render(mProj, mView, glm::translate(glm::mat4(1), gPointLights[2].m_WorldPos));
+	gBox->Render(mProj, mView, my::translate(my::mat4(1), glightDir));
+	gBox->Render(mProj, mView, my::translate(my::mat4(1), gPointLights[0].m_WorldPos));
+	gBox->Render(mProj, mView, my::translate(my::mat4(1), gPointLights[1].m_WorldPos));
+	gBox->Render(mProj, mView, my::translate(my::mat4(1), gPointLights[2].m_WorldPos));
 
 	//std::this_thread::sleep_for(5ms);
 }
@@ -213,7 +211,7 @@ void Render() {
 void framebuffer_size_callback(GLFWwindow* wnd, int width, int height) {
 	WIDTH = width; HEIGHT = height;
 	if(WIDTH > 0 && HEIGHT > 0)
-		GameCamera.SetProjParams((float)WIDTH / HEIGHT);
+		GameCamera.setProj((float)WIDTH / HEIGHT);
 	glViewport(0, 0, width, height);
 }
 
@@ -222,8 +220,8 @@ void scroll_callback(GLFWwindow* window, double xoffset, double yoffset) {
 }
 
 void mouse_callback(GLFWwindow* window, double xposIn, double yposIn) {
-	//gCamera.processMouse((float)xposIn, (float)yposIn);
-	GameCamera.OnMouse((float)xposIn, (float)yposIn);
+	GameCamera.processMouse((float)xposIn, (float)yposIn);
+	//GameCamera.OnMouse((float)xposIn, (float)yposIn);
 }
 
 void keyboard_callback(GLFWwindow* window, int key, int scancode, int action, int mods) {
@@ -250,10 +248,19 @@ void processInput(GLFWwindow* wnd) {
 
 	if (glfwGetKey(wnd, GLFW_KEY_ESCAPE) == GLFW_PRESS) glfwSetWindowShouldClose(wnd, true);
 
-	//if (glfwGetKey(wnd, GLFW_KEY_W) == GLFW_PRESS) gCamera.processKeyboard(FORWARD, deltaTime);
-	//if (glfwGetKey(wnd, GLFW_KEY_S) == GLFW_PRESS) gCamera.processKeyboard(BACKWARD, deltaTime);
-	//if (glfwGetKey(wnd, GLFW_KEY_A) == GLFW_PRESS) gCamera.processKeyboard(LEFT, deltaTime);
-	//if (glfwGetKey(wnd, GLFW_KEY_D) == GLFW_PRESS) gCamera.processKeyboard(RIGHT, deltaTime);
+	////if (glfwGetKey(wnd, GLFW_KEY_MINUS) == GLFW_PRESS) GameCamera.OnKeyboard(GLFW_KEY_MINUS);
+	////if (glfwGetKey(wnd, GLFW_KEY_EQUAL) == GLFW_PRESS) GameCamera.OnKeyboard(GLFW_KEY_EQUAL);
+	//if (glfwGetKey(wnd, GLFW_KEY_W) == GLFW_PRESS) GameCamera.OnKeyboard(GLFW_KEY_W);
+	//if (glfwGetKey(wnd, GLFW_KEY_S) == GLFW_PRESS) GameCamera.OnKeyboard(GLFW_KEY_S);
+	//if (glfwGetKey(wnd, GLFW_KEY_A) == GLFW_PRESS) GameCamera.OnKeyboard(GLFW_KEY_A);
+	//if (glfwGetKey(wnd, GLFW_KEY_D) == GLFW_PRESS) GameCamera.OnKeyboard(GLFW_KEY_D);
+	////if (glfwGetKey(wnd, GLFW_KEY_PAGE_UP) == GLFW_PRESS) GameCamera.OnKeyboard(GLFW_KEY_PAGE_UP);
+	////if (glfwGetKey(wnd, GLFW_KEY_PAGE_DOWN) == GLFW_PRESS) GameCamera.OnKeyboard(GLFW_KEY_PAGE_DOWN);
+
+	if (glfwGetKey(wnd, GLFW_KEY_W) == GLFW_PRESS) GameCamera.processKeyboard(FORWARD, deltaTime);
+	if (glfwGetKey(wnd, GLFW_KEY_S) == GLFW_PRESS) GameCamera.processKeyboard(BACKWARD, deltaTime);
+	if (glfwGetKey(wnd, GLFW_KEY_A) == GLFW_PRESS) GameCamera.processKeyboard(LEFT, deltaTime);
+	if (glfwGetKey(wnd, GLFW_KEY_D) == GLFW_PRESS) GameCamera.processKeyboard(RIGHT, deltaTime);
 	//if (glfwGetKey(wnd, GLFW_KEY_LEFT_SHIFT) == GLFW_PRESS) gCamera.Speed = 5.0f;
 	//if (glfwGetKey(wnd, GLFW_KEY_LEFT_SHIFT) == GLFW_RELEASE) gCamera.Speed = 2.5f;
 
@@ -298,15 +305,6 @@ void processInput(GLFWwindow* wnd) {
 		if (gPointLights[1].Attenuation.Exp <= 0.0f) gPointLights[1].Attenuation.Exp = 0.0f;
 		log("Exp: " << gPointLights[1].Attenuation.Exp);
 	}
-
-	//if (glfwGetKey(wnd, GLFW_KEY_MINUS) == GLFW_PRESS) GameCamera.OnKeyboard(GLFW_KEY_MINUS);
-	//if (glfwGetKey(wnd, GLFW_KEY_EQUAL) == GLFW_PRESS) GameCamera.OnKeyboard(GLFW_KEY_EQUAL);
-	if (glfwGetKey(wnd, GLFW_KEY_W) == GLFW_PRESS) GameCamera.OnKeyboard(GLFW_KEY_W);
-	if (glfwGetKey(wnd, GLFW_KEY_S) == GLFW_PRESS) GameCamera.OnKeyboard(GLFW_KEY_S);
-	if (glfwGetKey(wnd, GLFW_KEY_A) == GLFW_PRESS) GameCamera.OnKeyboard(GLFW_KEY_A);
-	if (glfwGetKey(wnd, GLFW_KEY_D) == GLFW_PRESS) GameCamera.OnKeyboard(GLFW_KEY_D);
-	//if (glfwGetKey(wnd, GLFW_KEY_PAGE_UP) == GLFW_PRESS) GameCamera.OnKeyboard(GLFW_KEY_PAGE_UP);
-	//if (glfwGetKey(wnd, GLFW_KEY_PAGE_DOWN) == GLFW_PRESS) GameCamera.OnKeyboard(GLFW_KEY_PAGE_DOWN);
 
 	float lightStep = 0.3f;
 	//if (glfwGetKey(wnd, GLFW_KEY_UP) == GLFW_PRESS) glightDir.z -= lightStep;

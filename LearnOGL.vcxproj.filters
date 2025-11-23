@@ -83,6 +83,9 @@
     <ClCompile Include="src\StaticModel.cpp">
       <Filter>Model</Filter>
     </ClCompile>
+    <ClCompile Include="src\camera_quat.cpp">
+      <Filter>misc</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="src\shader.h">
@@ -103,16 +106,13 @@
     <ClInclude Include="src\world_transform.h">
       <Filter>misc</Filter>
     </ClInclude>
-    <ClInclude Include="src\camera_ogldev.h">
+    <ClInclude Include="src\camera_quat.h">
       <Filter>misc</Filter>
     </ClInclude>
     <ClInclude Include="src\geometry.h">
       <Filter>misc</Filter>
     </ClInclude>
     <ClInclude Include="src\types.h">
-      <Filter>core</Filter>
-    </ClInclude>
-    <ClInclude Include="src\camera.h">
       <Filter>core</Filter>
     </ClInclude>
     <ClInclude Include="src\AnimTest2.h">
@@ -147,6 +147,9 @@
     </ClInclude>
     <ClInclude Include="src\material.h">
       <Filter>Lights_Matirials</Filter>
+    </ClInclude>
+    <ClInclude Include="src\camera_euler.h">
+      <Filter>misc</Filter>
     </ClInclude>
   </ItemGroup>
 </Project>

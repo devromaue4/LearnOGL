@@ -9,13 +9,16 @@ enum EcamMovements {
 	RIGHT
 };
 
-class Camera {
+class CameraEuler {
 public:
 	my::vec3 Pos;
 	my::vec3 Forward;
 	my::vec3 Right;
 	my::vec3 Up;
 	my::vec3 WorldUp;
+
+	my::mat4 mView = my::mat4(1);
+	my::mat4 mProj = my::mat4(1);
 
 	float Yaw, Pitch;
 	float Speed = 2.5f;
@@ -26,16 +29,26 @@ public:
 	float mouseLastY;
 	bool firstMouse = true;
 
-	Camera(int Width, int Height, my::vec3 pos = my::vec3(0.0f, 0.0f, 0.0f), my::vec3 up = my::vec3(0.0f, 1.0f, 0.0f), float yaw = -90.0f, float pitch = 0.0f)
+	CameraEuler(int Width, int Height, my::vec3 pos = my::vec3(0.0f, 0.0f, 0.0f), my::vec3 up = my::vec3(0.0f, 1.0f, 0.0f), float yaw = -90.0f, float pitch = 0.0f)
 		: Pos(pos), Forward(my::vec3(0.0f, 0.0f, -1.0f)), WorldUp(up), Yaw(yaw), Pitch(pitch) {
 
 		mouseLastX = (float)Width / 2;
 		mouseLastY = (float)Height / 2;
 		calcVectors();
+
+		mProj = my::perspectiveRH(45.0f, (float)Width / Height, .1f, 1000.0f);
 	}
 
-	my::mat4 getMat() { return my::lookAtRH(Pos, Pos + Forward, Up); }
+	void setProj(float fAspect = 1.0f, float fovy = 45.0f, float zNear = 0.1f, float zFar = 1000.0f) {
+		mProj = my::perspectiveRH(fovy, fAspect, zNear, zFar);
+	}
+
+	const my::mat4& getMat() { 
+		mView = my::lookAtRH(Pos, Pos + Forward, Up);
+		return mView;
+	}
 	//my::mat4 getMat() { return my::lookAtLH(Pos, Pos + Forward, Up); }
+	const my::mat4& getProj() const { return mProj; }
 
 	void processKeyboard(EcamMovements moveDir, float deltaTime) {
 		float velocity =  Speed * deltaTime;

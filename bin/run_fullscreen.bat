@@ -1,1 +1,1 @@
-LearnOGL_Lights.exe -f
+LearnOGL.exe -f

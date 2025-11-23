@@ -23,6 +23,7 @@
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="External\OpenGL\src\glad.c" />
+    <ClCompile Include="src\camera_quat.cpp" />
     <ClCompile Include="src\core.cpp" />
     <ClCompile Include="src\learnopengl.com\Mesh.cpp">
       <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Release|x64'">true</ExcludedFromBuild>
@@ -73,8 +74,8 @@
       <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Release|x64'">true</ExcludedFromBuild>
     </ClInclude>
     <ClInclude Include="src\SkeletalModel.h" />
-    <ClInclude Include="src\camera.h" />
-    <ClInclude Include="src\camera_ogldev.h" />
+    <ClInclude Include="src\camera_euler.h" />
+    <ClInclude Include="src\camera_quat.h" />
     <ClInclude Include="src\core.h" />
     <ClInclude Include="src\geometry.h" />
     <ClInclude Include="src\myanimator.h" />
