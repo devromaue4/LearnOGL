@@ -1,0 +1,51 @@
+#include "SkeletalModel.h"
+
+// load skel mesh
+std::shared_ptr<SkeletalModel> pMySkelModel;
+pMySkelModel = std::make_shared<SkeletalModel>();
+pMySkelModel->Load("../media_files/skeletalmeshes/iclone_7_raptoid_mascot_-_free_download.glb");
+
+
+float blendFactor = 0.0f; // for blend animations
+double StartTimeMillis = 0;
+StartTimeMillis = glfwGetTime();
+
+// load shaders
+std::shared_ptr<Shader> gSkinning;
+gSkinning = std::make_shared<Shader>("../media_files/shaders/skintest.vert", "../media_files/shaders/skintest.frag");
+
+// load location variables
+//int DisplayBoneIndex;
+//const int MAX_BONES = 200;
+//GLuint g_boneLocation[MAX_BONES];
+//gSkinning->setInt("gDisplayBoneIndex", DisplayBoneIndex);
+//for (uint i = 0; i < MAX_BONES; i++) {
+//	char Name[128];
+//	memset(Name, 0, sizeof(Name));
+//	_snprintf_s(Name, sizeof(Name), "gBones[%d]", i);
+//	g_boneLocation[i] = glGetUniformLocation(gShaderBase->m_ID, Name);
+//}
+
+// render and update anim
+double CurrentTimeMillis = glfwGetTime();
+double AnimationTimeSec = (CurrentTimeMillis - StartTimeMillis) / 1.0;
+
+gSkinning->Use();
+gSkinning->setMat4("mModel", mModel);
+gSkinning->setMat4("mView", mView);
+gSkinning->setMat4("mProj", mProj);
+
+if(blendFactor > 0.0f) 
+	pMySkelModel->UpdateAnimBlended((float)AnimationTimeSec, 0, 3, blendFactor);
+else 
+	pMySkelModel->UpdateAnim((float)AnimationTimeSec, 0);
+const auto& bones = pMySkelModel->m_Bones;
+for (int i = 0; i < bones.size(); i++)
+	gSkinning->setMat4("gBones[" + std::to_string(i) + "]", bones[i].FinalTransform);
+pMySkelModel->Render();
+
+// input
+if (glfwGetKey(wnd, GLFW_KEY_MINUS) == GLFW_PRESS)
+	blendFactor -= 0.005f; if (blendFactor < 0.0f) blendFactor = 0.0f;
+if (glfwGetKey(wnd, GLFW_KEY_EQUAL) == GLFW_PRESS)
+	blendFactor += 0.005f; if (blendFactor > 1.0f) blendFactor = 1.0f;

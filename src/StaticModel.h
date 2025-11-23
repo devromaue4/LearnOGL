@@ -22,8 +22,7 @@ class StaticModel {
 	std::vector<SVertex>			m_Vertices;
 	std::vector<uint>				m_Indices;
 	std::vector<MeshIndexedData>	m_Meshes;
-	//std::vector<std::shared_ptr<Texture>> m_Textures;
-	std::vector<Material> m_Materials;
+	std::vector<Material>			m_Materials;
 
 	std::string m_Directory;
 

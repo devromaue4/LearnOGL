@@ -9,18 +9,15 @@
 #endif
 
 #include <chrono>
-#include <thread>
+//#include <thread>
 using namespace std::chrono_literals;
 
 #include "shader.h"
 //#include "camera.h"
 #include "camera_ogldev.h"
-//#include "skinned_mesh.h"
-//#include "SkeletalModel.h"
 #include "StaticModel.h"
 #include "geometry.h"
 #include "light.h"
-#include "material.h"
 
 #pragma warning( disable : 4100 ) // unreferenced parameter
 
@@ -32,12 +29,10 @@ bool gWireframe = false;
 bool gUseTextures = true;
 
 std::shared_ptr<Shader> gShaderBase;
-//std::shared_ptr<Shader> gSkinning;
 //std::shared_ptr<Texture> gTex0, gTex1;
 //GLint gScaleLocation = -1, gUColorTris = -1; // -1 means error
 
 //Camera gCamera(WIDTH, HEIGHT, my::vec3(0, 30, 100));
-//CameraOGLDEV GameCamera(WIDTH, HEIGHT, glm::vec3(-30,70,250), glm::vec3(0.0f, 0.0f, -1));
 CameraOGLDEV GameCamera(WIDTH, HEIGHT, glm::vec3(0,10,50), glm::vec3(0.0f, 0.0f, -1));
 
 std::shared_ptr<StaticModel> SM_Bunny;
@@ -45,7 +40,6 @@ std::shared_ptr<StaticModel> SM_Barrel;
 std::shared_ptr<StaticModel> SM_Room;
 std::shared_ptr<StaticModel> SM_Sphere;
 std::shared_ptr<SBox> gBox;
-//std::shared_ptr<SkeletalModel> pMySkelModel;
 
 constexpr int MAX_POINT_LIGHTS = 3;
 
@@ -57,14 +51,8 @@ glm::vec3 glightDir(25.0f, 10, 0.0f);
 
 glm::mat4 mModel(1.0f);
 
-//float blendFactor = 0.0f; // for blend animations
 float deltaTime = 0;
 float lastFrame = 0;
-double StartTimeMillis = 0;
-
-//int DisplayBoneIndex;
-//const int MAX_BONES = 200;
-//GLuint g_boneLocation[MAX_BONES];
 
 void LoadTextures() {
 	//gTex0 = std::make_shared<Texture>("../media_files/textures/brick.png"); gTex0->Load();
@@ -77,16 +65,12 @@ void LoadTextures() {
 
 void CompileShaders() {
 	gShaderBase = std::make_shared<Shader>("../media_files/shaders/light.vert", "../media_files/shaders/light.frag");
-	//gSkinning = std::make_shared<Shader>("../media_files/shaders/skintest.vert", "../media_files/shaders/skintest.frag");
 	//gScaleLocation = glGetUniformLocation(gShaderBase->m_ID, "gScale"); //if (gScaleLocation == -1) throw glsl_error("failed getting uniform variable!");
 }
 
 void InitGeo() {
 	glEnable(GL_CULL_FACE);
 	//glFrontFace(GL_CW);
-	//glCullFace(GL_FRONT);
-	//glPolygonMode(GL_FRONT_AND_BACK, GL_LINE); // wireframe mode on
-	//glPolygonMode(GL_FRONT_AND_BACK, GL_FILL); // wireframe mode off
 	glEnable(GL_DEPTH_TEST);
 
 	//scene.addModel(name, pos);
@@ -101,24 +85,8 @@ void InitGeo() {
 	//SM_Barrel->Load("../media_files/models/wine_barrel/wine_barrel_01.fbx");
 	//SM_Barrel->Load("../media_files/models/wine_barrel/barrel_01.obj");
 	SM_Barrel->Load("../media_files/models/antique_ceramic_vase/antique_ceramic_vase_01.fbx");
-	
-	//pMySkelModel = std::make_shared<SkeletalModel>();
-	//pMySkelModel->Load("../media_files/skeletalmeshes/iclone_7_raptoid_mascot_-_free_download.glb");
-	//pMySkelModel->Load("../media_files/skeletalmeshes/Vanguard/Vanguard_Walking_in_place.fbx");
-	//pMySkelModel->Load("../media_files/skeletalmeshes/boblampclean/boblampclean.md5mesh");
-	//pMySkelModel->Load("../media_files/skeletalmeshes/vampire/dancing_vampire.dae");
 
 	GameCamera.SetSpeedMove(1.2f);
-
-	//gShaderBase->setInt("gDisplayBoneIndex", DisplayBoneIndex);
-	//for (uint i = 0; i < MAX_BONES; i++) {
-	//	char Name[128];
-	//	memset(Name, 0, sizeof(Name));
-	//	_snprintf_s(Name, sizeof(Name), "gBones[%d]", i);
-	//	g_boneLocation[i] = glGetUniformLocation(gShaderBase->m_ID, Name);
-	//}
-
-	StartTimeMillis = glfwGetTime();
 
 	////////////////////////////////////////////////////////////////////
 	gPointLights[0].m_WorldPos = glm::vec3(12.f, 10.f, 0);
@@ -130,7 +98,7 @@ void InitGeo() {
 	gPointLights[0].Attenuation.Linear = 0.2f; // def
 	gPointLights[0].Attenuation.Exp = 0.f;
 
-	////////////////////////////////////////////////////////////////////
+	//////////////////////////////////////////////////////////////////////
 
 	gPointLights[1].m_DiffuseIntesity = 1.0f;
 	gPointLights[1].m_Color = glm::vec3(.0f, 1.f, 1.f);
@@ -146,17 +114,14 @@ void InitGeo() {
 }
 
 void Render() {
-	//glClearColor(0.12f, .18f, .2f, 1);
+	glClearColor(0.12f, .18f, .2f, 1);
 	//glClearColor(0.1f, .1f, .1f, 1);
-	glClearColor(0, 0, 0, 1);
+	//glClearColor(0, 0, 0, 1);
 	glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 
 	float currentFrame = (float)glfwGetTime();
 	deltaTime = currentFrame - lastFrame;
 	lastFrame = currentFrame;
-
-	//double CurrentTimeMillis = glfwGetTime();
-	//double AnimationTimeSec = (CurrentTimeMillis - StartTimeMillis) / 1.0;
 	
 	mModel = glm::translate(mModel, glm::vec3(-18, 0, 0));
 	mModel = glm::rotate(mModel, glm::radians(-90.0f), glm::vec3(1, 0, 0));
@@ -164,19 +129,6 @@ void Render() {
 	mModel = glm::scale(mModel, glm::vec3(scaleBunny, scaleBunny, scaleBunny));
 	const glm::mat4& mView = GameCamera.GetMatrix();
 	const glm::mat4& mProj = GameCamera.GetProjMatrix();
-
-	// ------------------------- skeletal model -------------------------------------
-	//gSkinning->Use();
-	//gSkinning->setMat4("mModel", mModel);
-	//gSkinning->setMat4("mView", mView);
-	//gSkinning->setMat4("mProj", mProj);
-
-	//if(blendFactor > 0.0f) pMySkelModel->UpdateAnimBlended((float)AnimationTimeSec, 0, 3, blendFactor);
-	//else pMySkelModel->UpdateAnim((float)AnimationTimeSec, 0);
-	//const auto& bones = pMySkelModel->m_Bones;
-	//for (int i = 0; i < bones.size(); i++)
-	//	gSkinning->setMat4("gBones[" + std::to_string(i) + "]", bones[i].FinalTransform);
-	//pMySkelModel->Render();
 
 	// --------------------------- static models -----------------------------------
 	
@@ -256,7 +208,6 @@ void Render() {
 	gBox->Render(mProj, mView, glm::translate(glm::mat4(1), gPointLights[2].m_WorldPos));
 
 	//std::this_thread::sleep_for(5ms);
-	//std::this_thread::sleep_for(20ms);
 }
 
 void framebuffer_size_callback(GLFWwindow* wnd, int width, int height) {
@@ -299,16 +250,6 @@ void processInput(GLFWwindow* wnd) {
 
 	if (glfwGetKey(wnd, GLFW_KEY_ESCAPE) == GLFW_PRESS) glfwSetWindowShouldClose(wnd, true);
 
-
-	//if (glfwGetKey(wnd, GLFW_KEY_Q) == GLFW_PRESS) {
-	//	mixValue += 0.01f; // change this value accordingly (might be too slow or too fast based on system hardware)
-	//	if (mixValue >= 1.0f) mixValue = 1.0f;
-	//}
-	//if (glfwGetKey(wnd, GLFW_KEY_E) == GLFW_PRESS) {
-	//	mixValue -= 0.01f;
-	//	if (mixValue <= 0.0f) mixValue = 0.0f;
-	//}
-
 	//if (glfwGetKey(wnd, GLFW_KEY_W) == GLFW_PRESS) gCamera.processKeyboard(FORWARD, deltaTime);
 	//if (glfwGetKey(wnd, GLFW_KEY_S) == GLFW_PRESS) gCamera.processKeyboard(BACKWARD, deltaTime);
 	//if (glfwGetKey(wnd, GLFW_KEY_A) == GLFW_PRESS) gCamera.processKeyboard(LEFT, deltaTime);
@@ -322,11 +263,6 @@ void processInput(GLFWwindow* wnd) {
 	//	glfwGetCursorPos(wnd, &mouseX, &mouseY);
 	//	glfwSetCursorPos(wnd, (WIDTH / 2), (HEIGHT / 2));
 	//}
-
-	//if (glfwGetKey(wnd, GLFW_KEY_MINUS) == GLFW_PRESS)
-	//	blendFactor -= 0.005f; if (blendFactor < 0.0f) blendFactor = 0.0f;
-	//if (glfwGetKey(wnd, GLFW_KEY_EQUAL) == GLFW_PRESS)
-	//	blendFactor += 0.005f; if (blendFactor > 1.0f) blendFactor = 1.0f;
 
 	float atten_step = 0.01f;
 	float atten_exp_step = 0.001f;
@@ -379,7 +315,7 @@ void processInput(GLFWwindow* wnd) {
 	//if (glfwGetKey(wnd, GLFW_KEY_RIGHT) == GLFW_PRESS) glightDir.x += lightStep;
 	//if (glfwGetKey(wnd, GLFW_KEY_MINUS) == GLFW_PRESS) glightDir.y += lightStep;
 	//if (glfwGetKey(wnd, GLFW_KEY_EQUAL) == GLFW_PRESS) glightDir.y -= lightStep;
-	// 
+	 
 	if (glfwGetKey(wnd, GLFW_KEY_UP) == GLFW_PRESS) gPointLights[1].m_WorldPos.z -= lightStep;
 	if (glfwGetKey(wnd, GLFW_KEY_DOWN) == GLFW_PRESS) gPointLights[1].m_WorldPos.z += lightStep;
 	if (glfwGetKey(wnd, GLFW_KEY_LEFT) == GLFW_PRESS) gPointLights[1].m_WorldPos.x -= lightStep;
@@ -417,7 +353,7 @@ GLFWwindow* InitWindow() {
 		pWnd = glfwCreateWindow(mode->width, mode->height, "OpenGL: [ ... ]", primMonitor, nullptr);
 	}
 	else {
-		pWnd = glfwCreateWindow(WIDTH, HEIGHT, "Lighting: [ Directional, Point ]", nullptr, nullptr);
+		pWnd = glfwCreateWindow(WIDTH, HEIGHT, "Lighting: [ Multiple Point Lights ]", nullptr, nullptr);
 		glfwSetWindowPos(pWnd, 300, 180);
 	}
 
