@@ -29,6 +29,7 @@ int WIDTH = 1280, HEIGHT = 720;
 
 bool gFullScreen = false;
 bool gWireframe = false;
+bool gUseTextures = true;
 
 std::shared_ptr<Shader> gShaderBase;
 //std::shared_ptr<Shader> gSkinning;
@@ -46,7 +47,7 @@ std::shared_ptr<StaticModel> SM_Sphere;
 std::shared_ptr<SBox> gBox;
 //std::shared_ptr<SkeletalModel> pMySkelModel;
 
-constexpr int MAX_POINT_LIGHTS = 2;
+constexpr int MAX_POINT_LIGHTS = 3;
 
 DirectLight gLight;
 PointLight gPointLights[MAX_POINT_LIGHTS];
@@ -120,6 +121,9 @@ void InitGeo() {
 	StartTimeMillis = glfwGetTime();
 
 	////////////////////////////////////////////////////////////////////
+	gPointLights[0].m_WorldPos = glm::vec3(12.f, 10.f, 0);
+	gPointLights[1].m_WorldPos = glm::vec3(-10.f, 10.f, 15.f);
+	gPointLights[2].m_WorldPos = glm::vec3(-10.f, 10.f, -15.f);
 	// pont lights
 	gPointLights[0].m_DiffuseIntesity = 1.0f;
 	gPointLights[0].m_Color = glm::vec3(1.0f, 1.f, 0.f);
@@ -133,6 +137,11 @@ void InitGeo() {
 	gPointLights[1].Attenuation.Linear = 0.0f; // def
 	//gPointLights[1].Attenuation.Exp = 0.2f; // def
 	gPointLights[1].Attenuation.Exp = 0.02f;
+	////////////////////////////////////////////////////////////////////
+	gPointLights[2].m_DiffuseIntesity = 1.0f;
+	gPointLights[2].m_Color = glm::vec3(1.0f, 0.f, 1.f);
+	gPointLights[2].Attenuation.Linear = 0.2f; // def
+	gPointLights[2].Attenuation.Exp = 0.0f;
 	////////////////////////////////////////////////////////////////////
 }
 
@@ -175,9 +184,11 @@ void Render() {
 	gShaderBase->setVec3("gCamPos", GameCamera.GetPosition());
 	gShaderBase->setVec3("gDirLight.Direction", glightDir);
 
+	gShaderBase->setBool("gUseTextures", gUseTextures);
+
 	// direction light
 	gLight.m_AmbientIntesity = .1f;
-	gLight.m_DiffuseIntesity = 1.0f;
+	gLight.m_DiffuseIntesity = .2f;
 	gMaterial.AmbientColor = glm::vec3(1.0f, 1.0f, 1.f);
 	gMaterial.DiffuseColor = glm::vec3(1.0f, 1.0f, 1.f);
 	gMaterial.SpecularColor = glm::vec3(1.0f, 1.0f, 1.f);
@@ -189,29 +200,19 @@ void Render() {
 	gShaderBase->setFloat("gDirLight.Base.AmbientIntensity", gLight.m_AmbientIntesity);
 	gShaderBase->setFloat("gDirLight.Base.DiffuseIntensity", gLight.m_DiffuseIntesity);
 
+	////////////////////////////////////////////////////////////////////
 	// set point lights
-	gShaderBase->setInt("gNumPointLights", 2);
+	gShaderBase->setInt("gNumPointLights", MAX_POINT_LIGHTS);
 
-	gPointLights[0].m_WorldPos = glm::vec3(12.f, 10.f, 0);
-	gShaderBase->setVec3("gPointLights[0].Base.Color", gPointLights[0].m_Color);
-	gShaderBase->setFloat("gPointLights[0].Base.AmbientIntensity", gPointLights[0].m_AmbientIntesity);
-	gShaderBase->setFloat("gPointLights[0].Base.DiffuseIntensity", gPointLights[0].m_DiffuseIntesity);
-
-	gShaderBase->setVec3("gPointLights[0].LocalPos", gPointLights[0].m_WorldPos);
-	gShaderBase->setFloat("gPointLights[0].Atten.Constant", gPointLights[0].Attenuation.Constant);
-	gShaderBase->setFloat("gPointLights[0].Atten.Linear", gPointLights[0].Attenuation.Linear);
-	gShaderBase->setFloat("gPointLights[0].Atten.Exp", gPointLights[0].Attenuation.Exp);
-
-	// second
-	gPointLights[1].m_WorldPos = glm::vec3(-10.f, 10.f, 15.f);
-	gShaderBase->setVec3("gPointLights[1].Base.Color", gPointLights[1].m_Color);
-	gShaderBase->setFloat("gPointLights[1].Base.AmbientIntensity", gPointLights[1].m_AmbientIntesity);
-	gShaderBase->setFloat("gPointLights[1].Base.DiffuseIntensity", gPointLights[1].m_DiffuseIntesity);
-
-	gShaderBase->setVec3("gPointLights[1].LocalPos", gPointLights[1].m_WorldPos);
-	gShaderBase->setFloat("gPointLights[1].Atten.Constant", gPointLights[1].Attenuation.Constant);
-	gShaderBase->setFloat("gPointLights[1].Atten.Linear", gPointLights[1].Attenuation.Linear);
-	gShaderBase->setFloat("gPointLights[1].Atten.Exp", gPointLights[1].Attenuation.Exp);
+	for (int i = 0; i < MAX_POINT_LIGHTS; i++) {
+		gShaderBase->setVec3("gPointLights[" + std::to_string(i) + "].Base.Color", gPointLights[i].m_Color);
+		gShaderBase->setFloat("gPointLights[" + std::to_string(i) + "].Base.AmbientIntensity", gPointLights[i].m_AmbientIntesity);
+		gShaderBase->setFloat("gPointLights[" + std::to_string(i) + "].Base.DiffuseIntensity", gPointLights[i].m_DiffuseIntesity);
+		gShaderBase->setVec3("gPointLights[" + std::to_string(i) + "].LocalPos", gPointLights[i].m_WorldPos);
+		gShaderBase->setFloat("gPointLights[" + std::to_string(i) + "].Atten.Constant", gPointLights[i].Attenuation.Constant);
+		gShaderBase->setFloat("gPointLights[" + std::to_string(i) + "].Atten.Linear", gPointLights[i].Attenuation.Linear);
+		gShaderBase->setFloat("gPointLights[" + std::to_string(i) + "].Atten.Exp", gPointLights[i].Attenuation.Exp);
+	}
 	////////////////////////////////////////////////////////////////////
 
 	gShaderBase->setMat4("mModel", mModel);
@@ -252,6 +253,7 @@ void Render() {
 	gBox->Render(mProj, mView, glm::translate(glm::mat4(1), glightDir));
 	gBox->Render(mProj, mView, glm::translate(glm::mat4(1), gPointLights[0].m_WorldPos));
 	gBox->Render(mProj, mView, glm::translate(glm::mat4(1), gPointLights[1].m_WorldPos));
+	gBox->Render(mProj, mView, glm::translate(glm::mat4(1), gPointLights[2].m_WorldPos));
 
 	//std::this_thread::sleep_for(5ms);
 	//std::this_thread::sleep_for(20ms);
@@ -280,6 +282,9 @@ void keyboard_callback(GLFWwindow* window, int key, int scancode, int action, in
 		case GLFW_KEY_F:
 			gWireframe = !gWireframe;
 			glPolygonMode(GL_FRONT_AND_BACK, gWireframe ? GL_LINE : GL_FILL); // wireframe mode on
+			break;
+		case GLFW_KEY_T:
+			gUseTextures = !gUseTextures;
 			break;
 		default:
 			break;
@@ -323,11 +328,8 @@ void processInput(GLFWwindow* wnd) {
 	//if (glfwGetKey(wnd, GLFW_KEY_EQUAL) == GLFW_PRESS)
 	//	blendFactor += 0.005f; if (blendFactor > 1.0f) blendFactor = 1.0f;
 
-	float lightSpeed = 0.3f;
 	float atten_step = 0.01f;
 	float atten_exp_step = 0.001f;
-	//if (glfwGetKey(wnd, GLFW_KEY_MINUS) == GLFW_PRESS) glightDir.y += lightSpeed;
-	//if (glfwGetKey(wnd, GLFW_KEY_EQUAL) == GLFW_PRESS) glightDir.y -= lightSpeed;
 	if (glfwGetKey(wnd, GLFW_KEY_MINUS) == GLFW_PRESS) {
 		gPointLights[0].Attenuation.Linear -= atten_step;
 		gPointLights[1].Attenuation.Linear -= atten_step;
@@ -370,11 +372,20 @@ void processInput(GLFWwindow* wnd) {
 	//if (glfwGetKey(wnd, GLFW_KEY_PAGE_UP) == GLFW_PRESS) GameCamera.OnKeyboard(GLFW_KEY_PAGE_UP);
 	//if (glfwGetKey(wnd, GLFW_KEY_PAGE_DOWN) == GLFW_PRESS) GameCamera.OnKeyboard(GLFW_KEY_PAGE_DOWN);
 
-	if (glfwGetKey(wnd, GLFW_KEY_UP) == GLFW_PRESS) glightDir.z -= lightSpeed;
-	if (glfwGetKey(wnd, GLFW_KEY_DOWN) == GLFW_PRESS) glightDir.z += lightSpeed;
-	if (glfwGetKey(wnd, GLFW_KEY_LEFT) == GLFW_PRESS) glightDir.x -= lightSpeed;
-	if (glfwGetKey(wnd, GLFW_KEY_RIGHT) == GLFW_PRESS) glightDir.x += lightSpeed;
-
+	float lightStep = 0.3f;
+	//if (glfwGetKey(wnd, GLFW_KEY_UP) == GLFW_PRESS) glightDir.z -= lightStep;
+	//if (glfwGetKey(wnd, GLFW_KEY_DOWN) == GLFW_PRESS) glightDir.z += lightStep;
+	//if (glfwGetKey(wnd, GLFW_KEY_LEFT) == GLFW_PRESS) glightDir.x -= lightStep;
+	//if (glfwGetKey(wnd, GLFW_KEY_RIGHT) == GLFW_PRESS) glightDir.x += lightStep;
+	//if (glfwGetKey(wnd, GLFW_KEY_MINUS) == GLFW_PRESS) glightDir.y += lightStep;
+	//if (glfwGetKey(wnd, GLFW_KEY_EQUAL) == GLFW_PRESS) glightDir.y -= lightStep;
+	// 
+	if (glfwGetKey(wnd, GLFW_KEY_UP) == GLFW_PRESS) gPointLights[1].m_WorldPos.z -= lightStep;
+	if (glfwGetKey(wnd, GLFW_KEY_DOWN) == GLFW_PRESS) gPointLights[1].m_WorldPos.z += lightStep;
+	if (glfwGetKey(wnd, GLFW_KEY_LEFT) == GLFW_PRESS) gPointLights[1].m_WorldPos.x -= lightStep;
+	if (glfwGetKey(wnd, GLFW_KEY_RIGHT) == GLFW_PRESS) gPointLights[1].m_WorldPos.x += lightStep;
+	if (glfwGetKey(wnd, GLFW_KEY_MINUS) == GLFW_PRESS) gPointLights[1].m_WorldPos.y += lightStep;
+	if (glfwGetKey(wnd, GLFW_KEY_EQUAL) == GLFW_PRESS) gPointLights[1].m_WorldPos.y -= lightStep;
 
 	//if (glfwGetKey(wnd, GLFW_KEY_SPACE) == GLFW_PRESS) {
 	//	DisplayBoneIndex++;

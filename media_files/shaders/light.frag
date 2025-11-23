@@ -43,11 +43,12 @@ uniform vec3 gCamPos;
 layout(binding = 0) uniform sampler2D texture_diffuse1;
 layout(binding = 6) uniform sampler2D texture_specular1;
 
-const int MAX_POINT_LIGHTS = 2;
+const int MAX_POINT_LIGHTS = 3;
 uniform DirectLight gDirLight;
 uniform Material gMaterial;
 uniform int gNumPointLights;
 uniform PointLight gPointLights[MAX_POINT_LIGHTS];
+uniform bool gUseTextures = true;
 
 // void main() {
 	// float ambient = 0.2f;
@@ -132,9 +133,7 @@ void main() {
 	vec4 TotalLight = CalcLightInternal(gDirLight.Base, gDirLight.Direction, normal);
 	// vec4 TotalLight = vec4(0); // dir light off
 
-	// for(int i = 0; i < gNumPointLights; i++) TotalLight += CalcPointLight(i, normal);
-	TotalLight += CalcPointLight(0, normal);
-	TotalLight += CalcPointLight(1, normal);
+	for(int i = 0; i < gNumPointLights; i++) TotalLight += CalcPointLight(i, normal);
 
-	FragColor = texture(texture_diffuse1, TexCoordO) * TotalLight;
+	FragColor = gUseTextures ? texture(texture_diffuse1, TexCoordO) * TotalLight : TotalLight;
 }
