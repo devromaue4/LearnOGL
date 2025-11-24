@@ -7,6 +7,9 @@
 #include <map>
 #include <string>
 
+#include <chrono>
+using namespace std::chrono_literals;
+
 #include <glad/glad.h>
 #include <GLFW/glfw3.h>
 

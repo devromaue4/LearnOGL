@@ -1,1 +1,1 @@
-LearnOGL.exe -f
+LearnOGL-SpotLight.exe -f

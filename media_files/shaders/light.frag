@@ -33,8 +33,14 @@ struct Attenuation {
 
 struct PointLight {
 	BaseLight Base;
-	vec3 LocalPos;
+	vec3 Pos;
 	Attenuation Atten;
+};
+
+struct SpotLight {
+	PointLight Base;
+	vec3 Direction;
+	float Cutoff;
 };
 
 // uniform vec3 lightDir;
@@ -44,10 +50,14 @@ layout(binding = 0) uniform sampler2D texture_diffuse1;
 layout(binding = 6) uniform sampler2D texture_specular1;
 
 const int MAX_POINT_LIGHTS = 3;
+const int MAX_SPOT_LIGHTS = 2;
+
 uniform DirectLight gDirLight;
 uniform Material gMaterial;
 uniform int gNumPointLights;
+uniform int gNumSpotLights;
 uniform PointLight gPointLights[MAX_POINT_LIGHTS];
+uniform SpotLight gSpotLights[MAX_SPOT_LIGHTS];
 uniform bool gUseTextures = true;
 
 // void main() {
@@ -91,8 +101,8 @@ vec4 CalcLightInternal(BaseLight Light, vec3 LightDirection, vec3 Normal) {
 	vec3 lightReflect = reflect(-lightDir, Normal);
 	float spec_fact = max(dot(pixelToCamera, lightReflect), 0.0);
 	float specExp = texture(texture_specular1, TexCoordO).r * 255.0;
-	spec_fact = pow(spec_fact, specExp);
-	// spec_fact = pow(spec_fact, 50);
+	spec_fact = pow(spec_fact, specExp); // use map
+	// spec_fact = pow(spec_fact, 50); // use const
 	vec4 SpecularColor = vec4(Light.Color, 1.0f) * vec4(gMaterial.SpecularColor, 1.0) * spec_fact;
 
 	//////////////////////////////////////////////////////////////////
@@ -107,33 +117,50 @@ vec4 CalcLightInternal(BaseLight Light, vec3 LightDirection, vec3 Normal) {
 	//////////////////////////////////////////////////////////////////
 
 	// FragColor = texture(texture_diffuse1, TexCoordO) * (AmbientColor + DiffuseColor + SpecularColor);
-	return (AmbientColor + DiffuseColor + SpecularColor);
+	// return (AmbientColor);
+	return (DiffuseColor + SpecularColor);
+	// return (AmbientColor);// + DiffuseColor + SpecularColor);
 
 	// cherno tuts
 	// float intensity = max(dot(normalize(NormalO), normalize(lightDir)), 0.15);
 	// out_color = texture(texture_diffuse1, TexCoordO) * intensity;
 }
 
-vec4 CalcPointLight(int index, vec3 Normal) {
-	// vec3 LightDir = modelPos - gPointLights[index].LocalPos;
-	vec3 LightDir = gPointLights[index].LocalPos - modelPos;
+vec4 CalcPointLight(PointLight pl, vec3 Normal) {
+	vec3 LightDir = pl.Pos - modelPos;
 	float Distance= length(LightDir);
 	LightDir = normalize(LightDir);
 
-	vec4 Color = CalcLightInternal(gPointLights[index].Base, LightDir, Normal);
-	float Attenuation = gPointLights[index].Atten.Constant + 
-						gPointLights[index].Atten.Linear * Distance + 
-						gPointLights[index].Atten.Exp * Distance * Distance;
+	vec4 Color = CalcLightInternal(pl.Base, LightDir, Normal);
+	float Attenuation = pl.Atten.Constant + 
+						pl.Atten.Linear * Distance + 
+						pl.Atten.Exp * Distance * Distance;
 
 	return Color / Attenuation;
 }
 
+vec4 CalcSpotLight(SpotLight sl, vec3 Normal) {
+	// vec3 LightToPixel = normalize(sl.Base.Pos - modelPos);
+	vec3 LightToPixel = normalize(modelPos - sl.Base.Pos);
+	float SpotFactor = dot(LightToPixel, sl.Direction);
+	// float SpotFactor = dot(sl.Direction, LightToPixel);
+
+	if(SpotFactor > sl.Cutoff) {
+		vec4 Color = CalcPointLight(sl.Base, Normal);
+		float SpotIntensity = (1.0 - (1.0 - SpotFactor) / (1.0 - sl.Cutoff));
+		return Color * SpotIntensity;
+	}
+	else 
+		return vec4(0,0,0,0);
+}
+
 void main() {
 	vec3 normal = normalize(NormalO);
-	vec4 TotalLight = CalcLightInternal(gDirLight.Base, gDirLight.Direction, normal);
+	vec4 TotalLight = CalcLightInternal(gDirLight.Base, gDirLight.Direction, normal); // dir light
 	// vec4 TotalLight = vec4(0); // dir light off
 
-	for(int i = 0; i < gNumPointLights; i++) TotalLight += CalcPointLight(i, normal);
+	for(int i = 0; i < gNumPointLights; i++) TotalLight += CalcPointLight(gPointLights[i], normal);
+	for(int i = 0; i < gNumSpotLights; i++) TotalLight += CalcSpotLight(gSpotLights[i], normal);
 
 	FragColor = gUseTextures ? texture(texture_diffuse1, TexCoordO) * TotalLight : TotalLight;
 }

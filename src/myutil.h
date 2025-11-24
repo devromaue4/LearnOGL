@@ -8,14 +8,47 @@
 
 #include <iomanip>
 
+//#define USE_WIN32_STUFF
+#ifdef USE_WIN32_STUFF
 //#ifdef _WIN32
-//	#pragma warning( disable : 4005 ) // 'APIENTRY': macro redefinition
-//	#include <windows.h> // for GetTickCount();
-//#endif
-//
+	#pragma warning( disable : 4005 ) // 'APIENTRY': macro redefinition
+	#include <windows.h> // for GetTickCount();
+#endif
+
 //unsigned long long GetCurrentTimeMillis();
 
 namespace util {
+
+	inline float constexpr BYTES_TO_KB(size_t x) { return x / 1024.f; }
+	inline float constexpr BYTES_TO_MB(size_t x) { return BYTES_TO_KB(x) / 1024.f; }
+	inline float constexpr BYTES_TO_GB(size_t x) { return BYTES_TO_MB(x) / 1024.f; }
+
+#ifdef USE_WIN32_STUFF
+	inline void printStackUsage() {
+		// This works on x64 (GS segmen) and x86 (FS segment)
+#ifdef _M_X64
+		NT_TIB* tib = (NT_TIB*)NtCurrentTeb();
+#else
+		NT_TIB* tib = (NT_TIB*)__readfsdword(0x18);
+#endif
+
+		void* stackBase = tib->StackBase;
+		void* stackLimit = tib->StackLimit;
+
+		// get current stack pointer
+		void* currentStackPtr = _AddressOfReturnAddress();
+
+		SIZE_T used = (SIZE_T)stackBase - (SIZE_T)currentStackPtr;
+		SIZE_T total = (SIZE_T)stackBase - (SIZE_T)stackLimit;
+
+		//log("Stack used: " << used << " bytes");
+		//log("Stack total: " << total << " bytes");
+
+		log("Stack used: " << BYTES_TO_MB(used) * 100 << " %");
+		log("Stack total: " << BYTES_TO_MB(total) << " MB\n");
+	}
+#endif
+
 	bool verifyPath(std::string_view path);
 
 	bool ReadFile(const char* fileName, std::string& outFile);

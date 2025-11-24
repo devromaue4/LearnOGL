@@ -8,7 +8,7 @@ out vec2 TexCoordO;
 out vec3 modelPos;
 out vec3 localPosO;
 
-// uniform mat4 mPVM;
+uniform mat4 mPVM;
 uniform mat4 mModel;
 uniform mat4 mView;
 uniform mat4 mProj;

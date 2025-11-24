@@ -8,9 +8,10 @@
 #include <crtdbg.h>
 #endif
 
-#include <chrono>
+//#define USE_WIN32_STUFF
+
 //#include <thread>
-using namespace std::chrono_literals;
+//#include <future> // async
 
 #include "shader.h"
 //#include "camera_euler.h"
@@ -22,7 +23,7 @@ using namespace std::chrono_literals;
 #pragma warning( disable : 4100 ) // unreferenced parameter
 
 // global variables
-int WIDTH = 1280, HEIGHT = 720;
+int WIDTH = 1600, HEIGHT = 900;
 
 bool gFullScreen = false;
 bool gWireframe = false;
@@ -41,9 +42,13 @@ std::shared_ptr<StaticModel> SM_Sphere;
 std::shared_ptr<SBox> gBox;
 
 constexpr int MAX_POINT_LIGHTS = 3;
+constexpr int MAX_SPOT_LIGHTS = 2;
 
 DirectLight gLight;
 PointLight gPointLights[MAX_POINT_LIGHTS];
+SpotLight gSpotLights[MAX_SPOT_LIGHTS];
+int numSpotLights = 2;
+bool bToggleFlashLight = true;
 Material gMaterial;
 
 glm::vec3 glightDir(25.0f, 10, 0.0f);
@@ -88,28 +93,45 @@ void InitGeo() {
 	//GameCamera.Speed = 50.2f;
 
 	////////////////////////////////////////////////////////////////////
+	// pont lights
 	gPointLights[0].m_WorldPos = glm::vec3(12.f, 10.f, 0);
 	gPointLights[1].m_WorldPos = glm::vec3(-10.f, 10.f, 15.f);
 	gPointLights[2].m_WorldPos = glm::vec3(-10.f, 10.f, -15.f);
-	// pont lights
+
 	gPointLights[0].m_DiffuseIntesity = 1.0f;
 	gPointLights[0].m_Color = glm::vec3(1.0f, 1.f, 0.f);
 	gPointLights[0].Attenuation.Linear = 0.2f; // def
 	gPointLights[0].Attenuation.Exp = 0.f;
-
-	//////////////////////////////////////////////////////////////////////
-
+	////////////////////////////////////////////////////////////////////////
+	// second
 	gPointLights[1].m_DiffuseIntesity = 1.0f;
 	gPointLights[1].m_Color = glm::vec3(.0f, 1.f, 1.f);
 	gPointLights[1].Attenuation.Linear = 0.0f; // def
 	//gPointLights[1].Attenuation.Exp = 0.2f; // def
 	gPointLights[1].Attenuation.Exp = 0.02f;
 	////////////////////////////////////////////////////////////////////
+	// 3
 	gPointLights[2].m_DiffuseIntesity = 1.0f;
 	gPointLights[2].m_Color = glm::vec3(1.0f, 0.f, 1.f);
 	gPointLights[2].Attenuation.Linear = 0.2f; // def
 	gPointLights[2].Attenuation.Exp = 0.0f;
 	////////////////////////////////////////////////////////////////////
+
+	////////////////////////////////////////////////////////////////////////
+	// spot lights
+	gSpotLights[0].m_WorldPos = glm::vec3(7.0f, 25.f, 0.f);
+	gSpotLights[0].m_WorldDir = glm::vec3(.0f, -1.f, 0.f);
+
+	gSpotLights[0].m_Color = glm::vec3(1.0f, 0.f, 0.f);
+	gSpotLights[0].m_DiffuseIntesity = 1.0f;
+	gSpotLights[0].Attenuation.Linear = 0.01f;
+	gSpotLights[0].Cutoff = 30.0f;
+	// second
+	gSpotLights[1].m_Color = glm::vec3(1.0f, 1.f, 1.f);
+	gSpotLights[1].m_DiffuseIntesity = 1.0f;
+	gSpotLights[1].Attenuation.Linear = 0.01f;
+	gSpotLights[1].Cutoff = 20.0f;
+	////////////////////////////////////////////////////////////////////////
 }
 
 void Render() {
@@ -152,18 +174,36 @@ void Render() {
 
 	////////////////////////////////////////////////////////////////////
 	// set point lights
-	gShaderBase->setInt("gNumPointLights", MAX_POINT_LIGHTS);
+	gShaderBase->setInt("gNumPointLights", 0);
 
-	for (int i = 0; i < MAX_POINT_LIGHTS; i++) {
+	for (int i = 0; i < 0; i++) {
 		gShaderBase->setVec3("gPointLights[" + std::to_string(i) + "].Base.Color", gPointLights[i].m_Color);
 		gShaderBase->setFloat("gPointLights[" + std::to_string(i) + "].Base.AmbientIntensity", gPointLights[i].m_AmbientIntesity);
 		gShaderBase->setFloat("gPointLights[" + std::to_string(i) + "].Base.DiffuseIntensity", gPointLights[i].m_DiffuseIntesity);
-		gShaderBase->setVec3("gPointLights[" + std::to_string(i) + "].LocalPos", gPointLights[i].m_WorldPos);
+		gShaderBase->setVec3("gPointLights[" + std::to_string(i) + "].Pos", gPointLights[i].m_WorldPos);
 		gShaderBase->setFloat("gPointLights[" + std::to_string(i) + "].Atten.Constant", gPointLights[i].Attenuation.Constant);
 		gShaderBase->setFloat("gPointLights[" + std::to_string(i) + "].Atten.Linear", gPointLights[i].Attenuation.Linear);
 		gShaderBase->setFloat("gPointLights[" + std::to_string(i) + "].Atten.Exp", gPointLights[i].Attenuation.Exp);
 	}
 	////////////////////////////////////////////////////////////////////
+
+	gSpotLights[1].m_WorldPos = GameCamera.GetPosition();
+	gSpotLights[1].m_WorldDir = GameCamera.GetLookAt();
+
+	gShaderBase->setInt("gNumSpotLights", MAX_SPOT_LIGHTS);
+
+	// spot lights
+	for (int i = 0; i < numSpotLights; i++) {
+		gShaderBase->setVec3("gSpotLights[" + std::to_string(i) + "].Base.Pos", gSpotLights[i].m_WorldPos);
+		gShaderBase->setVec3("gSpotLights[" + std::to_string(i) + "].Direction", glm::normalize(gSpotLights[i].m_WorldDir));
+		gShaderBase->setVec3("gSpotLights[" + std::to_string(i) + "].Base.Base.Color", gSpotLights[i].m_Color);
+		gShaderBase->setFloat("gSpotLights[" + std::to_string(i) + "].Base.Base.AmbientIntensity", gSpotLights[i].m_AmbientIntesity);
+		gShaderBase->setFloat("gSpotLights[" + std::to_string(i) + "].Base.Base.DiffuseIntensity", gSpotLights[i].m_DiffuseIntesity);
+		gShaderBase->setFloat("gSpotLights[" + std::to_string(i) + "].Base.Atten.Constant", gSpotLights[i].Attenuation.Constant);
+		gShaderBase->setFloat("gSpotLights[" + std::to_string(i) + "].Base.Atten.Linear", gSpotLights[i].Attenuation.Linear);
+		gShaderBase->setFloat("gSpotLights[" + std::to_string(i) + "].Base.Atten.Exp", gSpotLights[i].Attenuation.Exp);
+		gShaderBase->setFloat("gSpotLights[" + std::to_string(i) + "].Cutoff", cos(glm::radians(gSpotLights[i].Cutoff)));
+	}
 
 	gShaderBase->setMat4("mModel", mModel);
 	gShaderBase->setMat4("mView", mView);
@@ -200,10 +240,11 @@ void Render() {
 	mModel = glm::mat4(1);
 
 	// light box
+	gBox->Render(mProj, mView, glm::translate(glm::mat4(1), gSpotLights[0].m_WorldPos)); // spot light 0
 	gBox->Render(mProj, mView, glm::translate(glm::mat4(1), glightDir));
-	gBox->Render(mProj, mView, glm::translate(glm::mat4(1), gPointLights[0].m_WorldPos));
-	gBox->Render(mProj, mView, glm::translate(glm::mat4(1), gPointLights[1].m_WorldPos));
-	gBox->Render(mProj, mView, glm::translate(glm::mat4(1), gPointLights[2].m_WorldPos));
+	//gBox->Render(mProj, mView, glm::translate(glm::mat4(1), gPointLights[0].m_WorldPos));
+	//gBox->Render(mProj, mView, glm::translate(glm::mat4(1), gPointLights[1].m_WorldPos));
+	//gBox->Render(mProj, mView, glm::translate(glm::mat4(1), gPointLights[2].m_WorldPos));
 
 	//std::this_thread::sleep_for(5ms);
 }
@@ -234,6 +275,14 @@ void keyboard_callback(GLFWwindow* window, int key, int scancode, int action, in
 		case GLFW_KEY_T:
 			gUseTextures = !gUseTextures;
 			break;
+		case GLFW_KEY_E:
+			if (numSpotLights == 2) numSpotLights = 1;
+			else numSpotLights = 2;
+			break;
+		case GLFW_KEY_Q:
+			bToggleFlashLight = !bToggleFlashLight;
+			gSpotLights[1].m_Color = bToggleFlashLight ? glm::vec3(1.0f, 1.f, 1.f) : glm::vec3(0.0f, 0.f, 0.f);
+			break;
 		default:
 			break;
 		}
@@ -253,8 +302,8 @@ void processInput(GLFWwindow* wnd) {
 	if (glfwGetKey(wnd, GLFW_KEY_S) == GLFW_PRESS) GameCamera.OnKeyboard(GLFW_KEY_S);
 	if (glfwGetKey(wnd, GLFW_KEY_A) == GLFW_PRESS) GameCamera.OnKeyboard(GLFW_KEY_A);
 	if (glfwGetKey(wnd, GLFW_KEY_D) == GLFW_PRESS) GameCamera.OnKeyboard(GLFW_KEY_D);
-	//if (glfwGetKey(wnd, GLFW_KEY_PAGE_UP) == GLFW_PRESS) GameCamera.OnKeyboard(GLFW_KEY_PAGE_UP);
-	//if (glfwGetKey(wnd, GLFW_KEY_PAGE_DOWN) == GLFW_PRESS) GameCamera.OnKeyboard(GLFW_KEY_PAGE_DOWN);
+	if (glfwGetKey(wnd, GLFW_KEY_PAGE_UP) == GLFW_PRESS) GameCamera.OnKeyboard(GLFW_KEY_PAGE_UP);
+	if (glfwGetKey(wnd, GLFW_KEY_PAGE_DOWN) == GLFW_PRESS) GameCamera.OnKeyboard(GLFW_KEY_PAGE_DOWN);
 
 	//if (glfwGetKey(wnd, GLFW_KEY_W) == GLFW_PRESS) GameCamera.processKeyboard(FORWARD, deltaTime);
 	//if (glfwGetKey(wnd, GLFW_KEY_S) == GLFW_PRESS) GameCamera.processKeyboard(BACKWARD, deltaTime);
@@ -313,12 +362,12 @@ void processInput(GLFWwindow* wnd) {
 	//if (glfwGetKey(wnd, GLFW_KEY_MINUS) == GLFW_PRESS) glightDir.y += lightStep;
 	//if (glfwGetKey(wnd, GLFW_KEY_EQUAL) == GLFW_PRESS) glightDir.y -= lightStep;
 	 
-	if (glfwGetKey(wnd, GLFW_KEY_UP) == GLFW_PRESS) gPointLights[1].m_WorldPos.z -= lightStep;
-	if (glfwGetKey(wnd, GLFW_KEY_DOWN) == GLFW_PRESS) gPointLights[1].m_WorldPos.z += lightStep;
-	if (glfwGetKey(wnd, GLFW_KEY_LEFT) == GLFW_PRESS) gPointLights[1].m_WorldPos.x -= lightStep;
-	if (glfwGetKey(wnd, GLFW_KEY_RIGHT) == GLFW_PRESS) gPointLights[1].m_WorldPos.x += lightStep;
-	if (glfwGetKey(wnd, GLFW_KEY_MINUS) == GLFW_PRESS) gPointLights[1].m_WorldPos.y += lightStep;
-	if (glfwGetKey(wnd, GLFW_KEY_EQUAL) == GLFW_PRESS) gPointLights[1].m_WorldPos.y -= lightStep;
+	if (glfwGetKey(wnd, GLFW_KEY_UP) == GLFW_PRESS)		gSpotLights[0].m_WorldPos.z -= lightStep;
+	if (glfwGetKey(wnd, GLFW_KEY_DOWN) == GLFW_PRESS)	gSpotLights[0].m_WorldPos.z += lightStep;
+	if (glfwGetKey(wnd, GLFW_KEY_LEFT) == GLFW_PRESS)	gSpotLights[0].m_WorldPos.x -= lightStep;
+	if (glfwGetKey(wnd, GLFW_KEY_RIGHT) == GLFW_PRESS)	gSpotLights[0].m_WorldPos.x += lightStep;
+	if (glfwGetKey(wnd, GLFW_KEY_MINUS) == GLFW_PRESS)	gSpotLights[0].m_WorldPos.y += lightStep;
+	if (glfwGetKey(wnd, GLFW_KEY_EQUAL) == GLFW_PRESS)	gSpotLights[0].m_WorldPos.y -= lightStep;
 
 	//if (glfwGetKey(wnd, GLFW_KEY_SPACE) == GLFW_PRESS) {
 	//	DisplayBoneIndex++;
@@ -350,8 +399,8 @@ GLFWwindow* InitWindow() {
 		pWnd = glfwCreateWindow(mode->width, mode->height, "OpenGL: [ ... ]", primMonitor, nullptr);
 	}
 	else {
-		pWnd = glfwCreateWindow(WIDTH, HEIGHT, "Lighting: [ Multiple Point Lights ]", nullptr, nullptr);
-		glfwSetWindowPos(pWnd, 300, 180);
+		pWnd = glfwCreateWindow(WIDTH, HEIGHT, "Lighting: [ Spot Lights ]", nullptr, nullptr);
+		glfwSetWindowPos(pWnd, 150, 90);
 	}
 
 	if (!pWnd) throw glfw_error("failed to create GLFW Window!");
@@ -405,8 +454,14 @@ int main(int argc, char* argv[]) try {
 	InitGeo();
 	auto end = std::chrono::high_resolution_clock::now();
 	//auto duration = std::chrono::duration_cast<std::chrono::microseconds>(end - start);
-	auto duration = std::chrono::duration<double, std::milli>(end - start); // high_res
-	log("Loading took: " << duration.count() << " ms");
+	//auto milliseconds = std::chrono::duration_cast<std::chrono::milliseconds>(end - start);
+	//auto seconds = std::chrono::duration<double>(end - start).count(); // high_res
+	double ms = (std::chrono::duration<double, std::milli>(end - start)).count();
+	log("Loading took: " << ms << " ms");
+
+#ifdef USE_WIN32_STUFF
+	util::printStackUsage();
+#endif
 
 	while (!glfwWindowShouldClose(Wnd.get())) {
 		processInput(Wnd.get());
