@@ -19,6 +19,9 @@ public:
 
 	GLuint Load();
 	GLuint Load(uint bufferSize, void* pData);
+
+	GLuint LoadFromMemory(void* pData, uint bufferSize);
+
 	void setTexUnit(class Shader& shader, const char* uniform, GLuint unit);
 	void Bind();
 	void Bind(GLenum texUnit);

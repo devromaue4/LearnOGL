@@ -51,11 +51,12 @@ namespace util {
 
 	bool verifyPath(std::string_view path);
 
+	std::vector<char> ReadFileBin(const char* filename);
+	//std::vector<u8> ReadFileBin(const char* filename);
+
 	bool ReadFile(const char* fileName, std::string& outFile);
 
 	//std::string readFile(const char* filename);
-
-	//std::vector<char> readFileBin(const std::string& filename);
 
 	////////////////////// Utils //////////////////////
 

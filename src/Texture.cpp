@@ -121,11 +121,49 @@ GLuint Texture::Load(uint bufferSize, void* pData) {
 	else if (nrChannels == 3) format = GL_RGB;
 	else if (nrChannels == 4) format = GL_RGBA;
 
-	glTexImage2D(m_TexType, 0, format, width, height, 0, format, m_pixelType, image_data);
+	glTexImage2D(m_TexType, 0, format, width, height/2, 0, format, m_pixelType, image_data);
 	glGenerateMipmap(m_TexType);
 	glBindTexture(m_TexType, 0);
 
 	stbi_image_free(image_data);
+
+	log("Loaded texture from memory: " << width << "x" << height << " channels: " << nrChannels);
+
+	return m_ID;
+}
+
+GLuint Texture::LoadFromMemory(void* pData, uint bufferSize) {
+	if (m_TexType != GL_TEXTURE_2D) {
+		log("Texture target is not GL_TEXTURE_2D! Support is not implemented!");
+		return 0;
+	}
+
+	int width = 4096, height = 4096, nrChannels = 3;
+	//int width = bufferSize, height = 0, nrChannels = 3;
+
+	glGenTextures(1, &m_ID);
+	//glActiveTexture(m_TexUnit);
+	glBindTexture(m_TexType, m_ID);
+
+	// texture filtering
+	glTexParameteri(m_TexType, GL_TEXTURE_WRAP_S, GL_REPEAT);
+	glTexParameteri(m_TexType, GL_TEXTURE_WRAP_T, GL_REPEAT);
+	glTexParameteri(m_TexType, GL_TEXTURE_MIN_FILTER, GL_LINEAR_MIPMAP_LINEAR);
+	glTexParameteri(m_TexType, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
+
+	GLenum format = m_format;
+	if (nrChannels == 1)
+		format = GL_RED;
+	else if (nrChannels == 3)
+		format = GL_RGB;
+	else if (nrChannels == 4)
+		format = GL_RGBA;
+
+	//glTexImage2D(m_TexType, 0, format, width, height, 0, format, m_pixelType, pData);
+	//glTexImage2D(m_TexType, 0, GL_RGB, width, height, 0, GL_RGB, GL_BYTE, pData);
+	glTexImage2D(m_TexType, 0, GL_RGB, width, height, 0, GL_RGB, GL_UNSIGNED_BYTE, pData);
+	glGenerateMipmap(m_TexType);
+	glBindTexture(m_TexType, 0);
 
 	log("Loaded texture from memory: " << width << "x" << height << " channels: " << nrChannels);
 

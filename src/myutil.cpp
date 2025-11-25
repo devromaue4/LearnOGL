@@ -40,9 +40,9 @@ bool util::verifyPath(std::string_view path) {
 	shaderFile.close();
 	code = shaderStream.str();
 	return code;
-}
+}*/
 
-std::vector<char> util::readFileBin(const std::string& filename) {
+std::vector<char> util::ReadFileBin(const char* filename) {
 	std::ifstream file(filename, std::ios::ate | std::ios::binary);
 	if (!file.is_open())
 		throw std::runtime_error("failed to open file!");
@@ -54,7 +54,43 @@ std::vector<char> util::readFileBin(const std::string& filename) {
 	file.close();
 
 	return buffer;
-}*/
+}
+
+// my
+//std::vector<u8> util::ReadFileBin(const char* filename) {
+//	std::ifstream file_r(filename, std::ios::binary);
+//	if (!file_r) 
+//		throw std::runtime_error("failed to open file!");
+//
+//	// get size
+//	file_r.seekg(0, std::ios::end);
+//	std::streamsize size = file_r.tellg();
+//	file_r.seekg(0, std::ios::beg);
+//
+//	 std::vector<unsigned char> data(size);
+//
+//	 if(!file_r.read(reinterpret_cast<char*>(data.data()), size))
+//		 throw std::runtime_error("failed to read file!");
+//
+//	file_r.close();
+//
+//	return data;
+//}
+
+//std::vector<u8> util::ReadFileBin(const char* filename) {
+//	std::ifstream file(filename, std::ios::ate | std::ios::binary);
+//	if (!file.is_open())
+//		throw std::runtime_error("failed to open file!");
+//
+//	size_t fileSize = (size_t)file.tellg();
+//	std::vector<u8> buffer(fileSize);
+//	file.seekg(0);
+//	//file.read(buffer.data(), fileSize);
+//	file.read(reinterpret_cast<char*>(buffer.data()), fileSize);
+//	file.close();
+//
+//	return buffer;
+//}
 
 bool util::ReadFile(const char* fileName, std::string& outFile) {
 	try {

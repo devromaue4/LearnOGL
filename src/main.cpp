@@ -30,7 +30,7 @@ bool gWireframe = false;
 bool gUseTextures = true;
 
 std::shared_ptr<Shader> gShaderBase;
-//std::shared_ptr<Texture> gTex0, gTex1;
+std::shared_ptr<Texture> gTex0, gTex1;
 
 //CameraEuler GameCamera(WIDTH, HEIGHT, glm::vec3(0, 10.f, 50.f));
 CameraQuat GameCamera(WIDTH, HEIGHT, glm::vec3(0,10,50), glm::vec3(0.0f, 0.0f, -1));
@@ -59,7 +59,13 @@ float deltaTime = 0;
 float lastFrame = 0;
 
 void LoadTextures() {
-	//gTex0 = std::make_shared<Texture>("../media_files/textures/brick.png"); gTex0->Load();
+	//gTex0 = std::make_shared<Texture>("../media_files/models/antique_ceramic_vase/textures/antique_ceramic_vase_01_diff_4k.jpg"); gTex0->Load();
+
+	std::vector<char> data = util::ReadFileBin("../media_files/models/antique_ceramic_vase/textures/test.bin");
+	gTex0 = std::make_shared<Texture>(); 
+	gTex0->LoadFromMemory(data.data(), (uint)data.size());
+	data.clear();
+
 	//gTex1 = std::make_shared<Texture>("../media_files/textures/wall.jpg"); gTex1->Load();
 	//gTex0 = std::make_shared<Texture>("../media_files/textures/Cobble2.tga", GL_TEXTURE0); gTex0->Load();
 	//gTex0->setTexUnit(*gShaderBase,"texture_specular1", 1);
@@ -79,15 +85,15 @@ void InitGeo() {
 
 	//scene.addModel(name, pos);
 	gBox = std::make_shared<SBox>(3.f);
-	SM_Barrel = std::make_shared<StaticModel>();
-	SM_Bunny = std::make_shared<StaticModel>();
+	//SM_Barrel = std::make_shared<StaticModel>();
+	//SM_Bunny = std::make_shared<StaticModel>();
 	SM_Room = std::make_shared<StaticModel>();
-	SM_Sphere = std::make_shared<StaticModel>();
-	SM_Bunny->Load("../media_files/models/misc/bunny.fbx");
+	//SM_Sphere = std::make_shared<StaticModel>();
+	//SM_Bunny->Load("../media_files/models/misc/bunny.fbx");
 	SM_Room->Load("../media_files/models/misc/room.fbx");
-	SM_Sphere->Load("../media_files/models/misc/sphere.fbx");
+	//SM_Sphere->Load("../media_files/models/misc/sphere.fbx");
 	//SM_Barrel->Load("../media_files/models/wine_barrel/wine_barrel_01.fbx");
-	SM_Barrel->Load("../media_files/models/antique_ceramic_vase/antique_ceramic_vase_01.fbx");
+	//SM_Barrel->Load("../media_files/models/antique_ceramic_vase/antique_ceramic_vase_01.fbx");
 
 	GameCamera.SetSpeedMove(1.2f);
 	//GameCamera.Speed = 50.2f;
@@ -143,10 +149,10 @@ void Render() {
 	deltaTime = currentFrame - lastFrame;
 	lastFrame = currentFrame;
 	
-	mModel = glm::translate(mModel, glm::vec3(-18, 0, 0));
-	mModel = glm::rotate(mModel, glm::radians(-90.0f), glm::vec3(1, 0, 0));
-	float scaleBunny = 8.0f;
-	mModel = glm::scale(mModel, glm::vec3(scaleBunny, scaleBunny, scaleBunny));
+	//mModel = glm::translate(mModel, glm::vec3(-18, 0, 0));
+	//mModel = glm::rotate(mModel, glm::radians(-90.0f), glm::vec3(1, 0, 0));
+	//float scaleBunny = 8.0f;
+	//mModel = glm::scale(mModel, glm::vec3(scaleBunny, scaleBunny, scaleBunny));
 	const glm::mat4& mView = GameCamera.getMat();
 	const glm::mat4& mProj = GameCamera.getProj();
 
@@ -160,7 +166,8 @@ void Render() {
 
 	// direction light
 	gLight.m_AmbientIntesity = .1f;
-	gLight.m_DiffuseIntesity = .2f;
+	gLight.m_DiffuseIntesity = 1.f;
+	//gLight.m_DiffuseIntesity = .2f;
 	gMaterial.AmbientColor = glm::vec3(1.0f, 1.0f, 1.f);
 	gMaterial.DiffuseColor = glm::vec3(1.0f, 1.0f, 1.f);
 	gMaterial.SpecularColor = glm::vec3(1.0f, 1.0f, 1.f);
@@ -174,77 +181,79 @@ void Render() {
 
 	////////////////////////////////////////////////////////////////////
 	// set point lights
-	gShaderBase->setInt("gNumPointLights", MAX_POINT_LIGHTS);
+	//gShaderBase->setInt("gNumPointLights", MAX_POINT_LIGHTS);
 
-	for (int i = 0; i < MAX_POINT_LIGHTS; i++) {
-		gShaderBase->setVec3("gPointLights[" + std::to_string(i) + "].Base.Color", gPointLights[i].m_Color);
-		gShaderBase->setFloat("gPointLights[" + std::to_string(i) + "].Base.AmbientIntensity", gPointLights[i].m_AmbientIntesity);
-		gShaderBase->setFloat("gPointLights[" + std::to_string(i) + "].Base.DiffuseIntensity", gPointLights[i].m_DiffuseIntesity);
-		gShaderBase->setVec3("gPointLights[" + std::to_string(i) + "].Pos", gPointLights[i].m_WorldPos);
-		gShaderBase->setFloat("gPointLights[" + std::to_string(i) + "].Atten.Constant", gPointLights[i].Attenuation.Constant);
-		gShaderBase->setFloat("gPointLights[" + std::to_string(i) + "].Atten.Linear", gPointLights[i].Attenuation.Linear);
-		gShaderBase->setFloat("gPointLights[" + std::to_string(i) + "].Atten.Exp", gPointLights[i].Attenuation.Exp);
-	}
+	//for (int i = 0; i < MAX_POINT_LIGHTS; i++) {
+	//	gShaderBase->setVec3("gPointLights[" + std::to_string(i) + "].Base.Color", gPointLights[i].m_Color);
+	//	gShaderBase->setFloat("gPointLights[" + std::to_string(i) + "].Base.AmbientIntensity", gPointLights[i].m_AmbientIntesity);
+	//	gShaderBase->setFloat("gPointLights[" + std::to_string(i) + "].Base.DiffuseIntensity", gPointLights[i].m_DiffuseIntesity);
+	//	gShaderBase->setVec3("gPointLights[" + std::to_string(i) + "].Pos", gPointLights[i].m_WorldPos);
+	//	gShaderBase->setFloat("gPointLights[" + std::to_string(i) + "].Atten.Constant", gPointLights[i].Attenuation.Constant);
+	//	gShaderBase->setFloat("gPointLights[" + std::to_string(i) + "].Atten.Linear", gPointLights[i].Attenuation.Linear);
+	//	gShaderBase->setFloat("gPointLights[" + std::to_string(i) + "].Atten.Exp", gPointLights[i].Attenuation.Exp);
+	//}
 	////////////////////////////////////////////////////////////////////
 
-	gSpotLights[1].m_WorldPos = GameCamera.GetPosition();
-	gSpotLights[1].m_WorldDir = GameCamera.GetLookAt();
+	//gSpotLights[1].m_WorldPos = GameCamera.GetPosition();
+	//gSpotLights[1].m_WorldDir = GameCamera.GetLookAt();
 
-	gShaderBase->setInt("gNumSpotLights", MAX_SPOT_LIGHTS);
+	//gShaderBase->setInt("gNumSpotLights", MAX_SPOT_LIGHTS);
 
-	// spot lights
-	for (int i = 0; i < numSpotLights; i++) {
-		gShaderBase->setVec3("gSpotLights[" + std::to_string(i) + "].Base.Pos", gSpotLights[i].m_WorldPos);
-		gShaderBase->setVec3("gSpotLights[" + std::to_string(i) + "].Direction", glm::normalize(gSpotLights[i].m_WorldDir));
-		gShaderBase->setVec3("gSpotLights[" + std::to_string(i) + "].Base.Base.Color", gSpotLights[i].m_Color);
-		gShaderBase->setFloat("gSpotLights[" + std::to_string(i) + "].Base.Base.AmbientIntensity", gSpotLights[i].m_AmbientIntesity);
-		gShaderBase->setFloat("gSpotLights[" + std::to_string(i) + "].Base.Base.DiffuseIntensity", gSpotLights[i].m_DiffuseIntesity);
-		gShaderBase->setFloat("gSpotLights[" + std::to_string(i) + "].Base.Atten.Constant", gSpotLights[i].Attenuation.Constant);
-		gShaderBase->setFloat("gSpotLights[" + std::to_string(i) + "].Base.Atten.Linear", gSpotLights[i].Attenuation.Linear);
-		gShaderBase->setFloat("gSpotLights[" + std::to_string(i) + "].Base.Atten.Exp", gSpotLights[i].Attenuation.Exp);
-		gShaderBase->setFloat("gSpotLights[" + std::to_string(i) + "].Cutoff", cos(glm::radians(gSpotLights[i].Cutoff)));
-	}
+	//// spot lights
+	//for (int i = 0; i < numSpotLights; i++) {
+	//	gShaderBase->setVec3("gSpotLights[" + std::to_string(i) + "].Base.Pos", gSpotLights[i].m_WorldPos);
+	//	gShaderBase->setVec3("gSpotLights[" + std::to_string(i) + "].Direction", glm::normalize(gSpotLights[i].m_WorldDir));
+	//	gShaderBase->setVec3("gSpotLights[" + std::to_string(i) + "].Base.Base.Color", gSpotLights[i].m_Color);
+	//	gShaderBase->setFloat("gSpotLights[" + std::to_string(i) + "].Base.Base.AmbientIntensity", gSpotLights[i].m_AmbientIntesity);
+	//	gShaderBase->setFloat("gSpotLights[" + std::to_string(i) + "].Base.Base.DiffuseIntensity", gSpotLights[i].m_DiffuseIntesity);
+	//	gShaderBase->setFloat("gSpotLights[" + std::to_string(i) + "].Base.Atten.Constant", gSpotLights[i].Attenuation.Constant);
+	//	gShaderBase->setFloat("gSpotLights[" + std::to_string(i) + "].Base.Atten.Linear", gSpotLights[i].Attenuation.Linear);
+	//	gShaderBase->setFloat("gSpotLights[" + std::to_string(i) + "].Base.Atten.Exp", gSpotLights[i].Attenuation.Exp);
+	//	gShaderBase->setFloat("gSpotLights[" + std::to_string(i) + "].Cutoff", cos(glm::radians(gSpotLights[i].Cutoff)));
+	//}
 
 	gShaderBase->setMat4("mModel", mModel);
 	gShaderBase->setMat4("mView", mView);
 	gShaderBase->setMat4("mProj", mProj);
 
 	// bunny
-	SM_Bunny->Render();
+	//SM_Bunny->Render();
 
 	// reset
-	mModel = glm::mat4(1);
+	//mModel = glm::mat4(1);
+
+	gTex0->Bind();
 
 	gShaderBase->setMat4("mModel", mModel);
 	SM_Room->Render();
 
 	// sphere
-	mModel = glm::translate(mModel, glm::vec3(25, 10, -10));
-	gShaderBase->setMat4("mModel", mModel);
-	SM_Sphere->Render();
+	//mModel = glm::translate(mModel, glm::vec3(25, 10, -10));
+	//gShaderBase->setMat4("mModel", mModel);
+	//SM_Sphere->Render();
 
 	// reset
-	mModel = glm::mat4(1);
+	//mModel = glm::mat4(1);
 
 	// barrel
-	static float rot = 0;
-	rot += 0.5f;
-	float scaleModel = .5f;
-	//mModel = glm::translate(mModel, glm::vec3(15, 0, 0));
-	mModel = glm::rotate(mModel, glm::radians(rot), glm::vec3(0, 1.0f, 0));
-	mModel = glm::scale(mModel, glm::vec3(scaleModel, scaleModel, scaleModel));
-	gShaderBase->setMat4("mModel", mModel);
-	SM_Barrel->Render();
+	//static float rot = 0;
+	//rot += 0.5f;
+	//float scaleModel = .5f;
+	////mModel = glm::translate(mModel, glm::vec3(15, 0, 0));
+	//mModel = glm::rotate(mModel, glm::radians(rot), glm::vec3(0, 1.0f, 0));
+	//mModel = glm::scale(mModel, glm::vec3(scaleModel, scaleModel, scaleModel));
+	//gShaderBase->setMat4("mModel", mModel);
+	//SM_Barrel->Render();
 
 	// reset
-	mModel = glm::mat4(1);
+	//mModel = glm::mat4(1);
 
 	// light box
-	gBox->Render(mProj, mView, glm::translate(glm::mat4(1), gSpotLights[0].m_WorldPos)); // spot light 0
+	//gBox->Render(mProj, mView, glm::translate(glm::mat4(1), gSpotLights[0].m_WorldPos)); // spot light 0
 	gBox->Render(mProj, mView, glm::translate(glm::mat4(1), glightDir));
-	gBox->Render(mProj, mView, glm::translate(glm::mat4(1), gPointLights[0].m_WorldPos));
-	gBox->Render(mProj, mView, glm::translate(glm::mat4(1), gPointLights[1].m_WorldPos));
-	gBox->Render(mProj, mView, glm::translate(glm::mat4(1), gPointLights[2].m_WorldPos));
+	//gBox->Render(mProj, mView, glm::translate(glm::mat4(1), gPointLights[0].m_WorldPos));
+	//gBox->Render(mProj, mView, glm::translate(glm::mat4(1), gPointLights[1].m_WorldPos));
+	//gBox->Render(mProj, mView, glm::translate(glm::mat4(1), gPointLights[2].m_WorldPos));
 
 	//std::this_thread::sleep_for(5ms);
 }
