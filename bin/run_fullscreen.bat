@@ -1,1 +1,1 @@
-LearnOGL-SpotLight.exe -f
+LearnOGL-All-Lights.exe -f

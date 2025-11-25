@@ -140,18 +140,15 @@ vec4 CalcPointLight(PointLight pl, vec3 Normal) {
 }
 
 vec4 CalcSpotLight(SpotLight sl, vec3 Normal) {
-	// vec3 LightToPixel = normalize(sl.Base.Pos - modelPos);
 	vec3 LightToPixel = normalize(modelPos - sl.Base.Pos);
 	float SpotFactor = dot(LightToPixel, sl.Direction);
-	// float SpotFactor = dot(sl.Direction, LightToPixel);
 
 	if(SpotFactor > sl.Cutoff) {
 		vec4 Color = CalcPointLight(sl.Base, Normal);
 		float SpotIntensity = (1.0 - (1.0 - SpotFactor) / (1.0 - sl.Cutoff));
 		return Color * SpotIntensity;
 	}
-	else 
-		return vec4(0,0,0,0);
+	else return vec4(0,0,0,0);
 }
 
 void main() {

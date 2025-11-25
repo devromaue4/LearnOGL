@@ -43,7 +43,7 @@ std::shared_ptr<SBox> gBox;
 
 constexpr int MAX_POINT_LIGHTS = 3;
 constexpr int MAX_SPOT_LIGHTS = 2;
-
+ 
 DirectLight gLight;
 PointLight gPointLights[MAX_POINT_LIGHTS];
 SpotLight gSpotLights[MAX_SPOT_LIGHTS];
@@ -174,9 +174,9 @@ void Render() {
 
 	////////////////////////////////////////////////////////////////////
 	// set point lights
-	gShaderBase->setInt("gNumPointLights", 0);
+	gShaderBase->setInt("gNumPointLights", MAX_POINT_LIGHTS);
 
-	for (int i = 0; i < 0; i++) {
+	for (int i = 0; i < MAX_POINT_LIGHTS; i++) {
 		gShaderBase->setVec3("gPointLights[" + std::to_string(i) + "].Base.Color", gPointLights[i].m_Color);
 		gShaderBase->setFloat("gPointLights[" + std::to_string(i) + "].Base.AmbientIntensity", gPointLights[i].m_AmbientIntesity);
 		gShaderBase->setFloat("gPointLights[" + std::to_string(i) + "].Base.DiffuseIntensity", gPointLights[i].m_DiffuseIntesity);
@@ -242,9 +242,9 @@ void Render() {
 	// light box
 	gBox->Render(mProj, mView, glm::translate(glm::mat4(1), gSpotLights[0].m_WorldPos)); // spot light 0
 	gBox->Render(mProj, mView, glm::translate(glm::mat4(1), glightDir));
-	//gBox->Render(mProj, mView, glm::translate(glm::mat4(1), gPointLights[0].m_WorldPos));
-	//gBox->Render(mProj, mView, glm::translate(glm::mat4(1), gPointLights[1].m_WorldPos));
-	//gBox->Render(mProj, mView, glm::translate(glm::mat4(1), gPointLights[2].m_WorldPos));
+	gBox->Render(mProj, mView, glm::translate(glm::mat4(1), gPointLights[0].m_WorldPos));
+	gBox->Render(mProj, mView, glm::translate(glm::mat4(1), gPointLights[1].m_WorldPos));
+	gBox->Render(mProj, mView, glm::translate(glm::mat4(1), gPointLights[2].m_WorldPos));
 
 	//std::this_thread::sleep_for(5ms);
 }
@@ -396,11 +396,11 @@ GLFWwindow* InitWindow() {
 
 		WIDTH = mode->width, HEIGHT = mode->height;
 		// window mode: if monitor = null, else fullscreen
-		pWnd = glfwCreateWindow(mode->width, mode->height, "OpenGL: [ ... ]", primMonitor, nullptr);
+		pWnd = glfwCreateWindow(mode->width, mode->height, "OpenGL", primMonitor, nullptr);
 	}
 	else {
 		pWnd = glfwCreateWindow(WIDTH, HEIGHT, "Lighting: [ Spot Lights ]", nullptr, nullptr);
-		glfwSetWindowPos(pWnd, 150, 90);
+		glfwSetWindowPos(pWnd, 130, 80);
 	}
 
 	if (!pWnd) throw glfw_error("failed to create GLFW Window!");
@@ -434,7 +434,8 @@ int main(int argc, char* argv[]) try {
 
 	if (argc > 1) {
 		std::string cmdLine(argv[1]);
-		if (cmdLine.find("-f") != std::string::npos) gFullScreen = true;
+		if (cmdLine.find_first_of("-f") != std::string::npos) gFullScreen = true;
+		//if(cmdLine.find_first_of("-c") != std::string::npos) return -1; // for test
 	}
 
 	std::cout << ".............. start opengl app ..............\n";
@@ -468,8 +469,8 @@ int main(int argc, char* argv[]) try {
 		//start = std::chrono::high_resolution_clock::now();
 		Render();
 		//end = std::chrono::high_resolution_clock::now();
-		//duration = std::chrono::duration<double, std::milli>(end - start);
-		//log("Render: " << duration.count() << " ms");
+		//ms = (std::chrono::duration<double, std::milli>(end - start)).count();
+		//log("Render: " << ms << " ms");
 
 		glfwPollEvents();
 		glfwSwapBuffers(Wnd.get());
