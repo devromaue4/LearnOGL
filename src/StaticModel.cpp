@@ -1,5 +1,4 @@
 #include "StaticModel.h"
-#include <filesystem>
 
 void StaticModel::clear() {
 	if (m_EBO != 0) { glDeleteBuffers(1, &m_EBO); m_EBO = 0; }
@@ -149,7 +148,7 @@ void StaticModel::loadSpecularTexture(const aiScene* pScene, const aiMaterial* p
 			}
 			else {
 				std::string fullPath = m_Directory + "/" + path.data;
-				m_Materials[index].texSpecular = std::make_shared<Texture>(fullPath.c_str());// , GL_TEXTURE6);
+				m_Materials[index].texSpecular = std::make_shared<Texture>(fullPath.c_str(), GL_TEXTURE6);
 				if (!m_Materials[index].texSpecular->Load()) {
 					log_error("loading texture " << fullPath);
 					m_Materials[index].texSpecular = nullptr;
@@ -196,7 +195,8 @@ void StaticModel::Render() {
 		assert(MatIndex < m_Materials.size());
 		if (m_Materials.size()) {
 			if (m_Materials[MatIndex].texDiffuse) m_Materials[MatIndex].texDiffuse->Bind();
-			if (m_Materials[MatIndex].texSpecular) m_Materials[MatIndex].texSpecular->Bind(GL_TEXTURE6);
+			//if (m_Materials[MatIndex].texSpecular) m_Materials[MatIndex].texSpecular->Bind(GL_TEXTURE6);
+			if (m_Materials[MatIndex].texSpecular) m_Materials[MatIndex].texSpecular->Bind();
 		}
 
 		glDrawElementsBaseVertex(GL_TRIANGLES, m_Meshes[i].NumIndices, GL_UNSIGNED_INT, (void*)(sizeof(uint) * m_Meshes[i].BaseIndex), m_Meshes[i].BaseVertex);
@@ -227,3 +227,145 @@ void StaticModel::Render() {
 //
 //	glBindVertexArray(0);
 //}
+
+void StaticModel::Write(std::string_view fileName) {
+	std::ofstream file(fileName.data(), std::ios::binary);
+	if (!file) {
+		log_error("can't create file: " << fileName);
+		throw std::exception("failed to write!");
+	}
+
+	MeshHeader mh;
+	mh.mNumMeshes = (uint)m_Meshes.size();
+	mh.mNumMaterials = (uint)m_Materials.size();
+	mh.numVertices = (uint)m_Vertices.size();
+	mh.numIndices = (uint)m_Indices.size();
+
+	// write header info
+	if (!file.write(reinterpret_cast<const char*>(&mh), sizeof(mh))) log_error("can't write!");
+
+	// write MeshIndexedData
+	if (!file.write(reinterpret_cast<const char*>(m_Meshes.data()), sizeof(MeshIndexedData) * m_Meshes.size())) log_error("can't write!");
+
+	// write vertex data
+	if (!file.write(reinterpret_cast<const char*>(m_Vertices.data()), sizeof(SVertex) * m_Vertices.size())) log_error("can't write!");
+
+	// write index data
+	if (!file.write(reinterpret_cast<const char*>(m_Indices.data()), sizeof(uint) * m_Indices.size())) log_error("can't write!");
+
+	// write mat info
+	std::vector<MaterialHeader> materHd(m_Materials.size());
+
+	for (int i = 0; i < m_Materials.size(); i++) {
+		materHd[i].AmbientColor = toColor(m_Materials[i].AmbientColor);
+		materHd[i].DiffuseColor = toColor(m_Materials[i].DiffuseColor);
+		materHd[i].SpecularColor = toColor(m_Materials[i].SpecularColor);
+
+		if (!file.write(reinterpret_cast<const char*>(materHd.data()), sizeof(MaterialHeader))) log_error("can't write!");
+
+		// write texture path
+
+		// write size of string diff path
+		size_t strSize = 0;
+		if (m_Materials[i].texDiffuse) {
+			strSize = m_Materials[i].texDiffuse->GetFileName().size() + 1;
+			if (!file.write(reinterpret_cast<const char*>(&strSize), sizeof(size_t))) log_error("can't write!");
+			// write path diff tex
+			if (!file.write(reinterpret_cast<const char*>(m_Materials[i].texDiffuse->GetFileName().data()), strSize)) log_error("can't write!");
+		}
+		else // write zero
+			if (!file.write(reinterpret_cast<const char*>(&strSize), sizeof(size_t))) log_error("can't write!");
+
+		strSize = 0;
+
+		// write size of string spec path
+		if (m_Materials[i].texSpecular) {
+			strSize = m_Materials[i].texSpecular->GetFileName().size() + 1;
+			if (!file.write(reinterpret_cast<const char*>(&strSize), sizeof(size_t))) log_error("can't write!");
+			if (!file.write(reinterpret_cast<const char*>(m_Materials[i].texSpecular->GetFileName().data()), strSize)) log_error("can't write!");
+		}
+		else // write zero
+			if (!file.write(reinterpret_cast<const char*>(&strSize), sizeof(size_t))) log_error("can't write!");
+	}
+
+	file.close();
+	log("writed: " << fileName);
+}
+
+void StaticModel::Read(std::string_view fileName) {
+	std::ifstream file_r(fileName.data(), std::ios::binary);
+	if (!file_r) {
+		log_error("can't read file: " << fileName);
+		throw std::exception("failed to read!");
+	}
+
+	MeshHeader mh;
+	if (!file_r.read(reinterpret_cast<char*>(&mh), sizeof(mh))) log_error("can't read file!");
+
+	m_Meshes.resize(mh.mNumMeshes);
+	m_Materials.resize(mh.mNumMaterials);
+
+	// read MeshIndexedData
+	if (!file_r.read(reinterpret_cast<char*>(&m_Meshes[0]), sizeof(MeshIndexedData) * m_Meshes.size())) log_error("can't read file!");
+
+	m_Vertices.resize(mh.numVertices);
+	m_Indices.resize(mh.numIndices);
+
+	// read vertex data
+	if (!file_r.read(reinterpret_cast<char*>(&m_Vertices[0]), sizeof(SVertex) * m_Vertices.size())) log_error("can't read file!");
+
+	// read index data
+	if (!file_r.read(reinterpret_cast<char*>(&m_Indices[0]), sizeof(uint) * m_Indices.size())) log_error("can't read file!");
+
+	// read mat info
+	std::vector<MaterialHeader> materHd(m_Materials.size());
+
+	std::vector<char> data;
+	std::string path;
+	for (int i = 0; i < m_Materials.size(); i++) {
+		if (!file_r.read(reinterpret_cast<char*>(&materHd[i]), sizeof(MaterialHeader))) log_error("can't read file!");
+
+		// read string diff path
+		size_t strSize = 0;
+		if (!file_r.read(reinterpret_cast<char*>(&strSize), sizeof(size_t))) log_error("can't write!");
+
+		if (strSize > 0) {
+			data.resize(strSize);
+			if (!file_r.read(reinterpret_cast<char*>(data.data()), strSize)) log_error("can't read file!");
+
+			path = data.data();
+			data.clear();
+
+			m_Materials[i].texDiffuse = std::make_shared<Texture>(path.c_str());
+			if (!m_Materials[i].texDiffuse->Load()) {
+				log_error("loading texture " << path);
+				m_Materials[i].texDiffuse = nullptr;
+			}
+		}
+		else m_Materials[i].texDiffuse = nullptr;
+
+		strSize = 0;
+
+		// read string spec path
+		if (!file_r.read(reinterpret_cast<char*>(&strSize), sizeof(size_t))) log_error("can't write!");
+		if (strSize > 0) {
+			data.resize(strSize);
+			if (!file_r.read(reinterpret_cast<char*>(data.data()), strSize)) log_error("can't read file!");
+
+			path = data.data();
+			data.clear();
+
+			m_Materials[i].texSpecular = std::make_shared<Texture>(path.c_str(), GL_TEXTURE6);
+			if (!m_Materials[i].texSpecular->Load()) {
+				log_error("loading texture " << path);
+				m_Materials[i].texSpecular = nullptr;
+			}
+		}
+		else m_Materials[i].texSpecular = nullptr;
+	}
+
+	file_r.close();
+	log("readed: " << fileName);
+
+	buildBuffers();
+}

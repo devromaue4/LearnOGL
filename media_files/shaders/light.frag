@@ -101,8 +101,8 @@ vec4 CalcLightInternal(BaseLight Light, vec3 LightDirection, vec3 Normal) {
 	vec3 lightReflect = reflect(-lightDir, Normal);
 	float spec_fact = max(dot(pixelToCamera, lightReflect), 0.0);
 	float specExp = texture(texture_specular1, TexCoordO).r * 255.0;
-	// spec_fact = pow(spec_fact, specExp); // use map
-	spec_fact = pow(spec_fact, 50); // use const
+	spec_fact = pow(spec_fact, specExp); // use map
+	// spec_fact = pow(spec_fact, 50); // use const
 	vec4 SpecularColor = vec4(Light.Color, 1.0f) * vec4(gMaterial.SpecularColor, 1.0) * spec_fact;
 
 	//////////////////////////////////////////////////////////////////

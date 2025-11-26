@@ -47,12 +47,12 @@
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">
     <IntDir>..\Intermediate\$(ProjectName)\$(Configuration)\</IntDir>
     <OutDir>$(SolutionDir)bin\</OutDir>
-    <IncludePath>..\External\Image;..\External\assimp\include;..\External\OpenGL\include;..\External\glm;$(IncludePath)</IncludePath>
-    <LibraryPath>..\External\assimp\lib;$(LibraryPath)</LibraryPath>
+    <IncludePath>..\src;..\External\Image;..\External\assimp\include;..\External\OpenGL\include;..\External\glm;$(IncludePath)</IncludePath>
+    <LibraryPath>..\External\OpenGL\lib;..\External\assimp\lib;$(LibraryPath)</LibraryPath>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|x64'">
-    <IncludePath>..\External\Image;..\External\assimp\include;..\External\OpenGL\include;..\External\glm;$(IncludePath)</IncludePath>
-    <LibraryPath>..\External\assimp\lib;$(LibraryPath)</LibraryPath>
+    <IncludePath>..\src;..\External\Image;..\External\assimp\include;..\External\OpenGL\include;..\External\glm;$(IncludePath)</IncludePath>
+    <LibraryPath>..\External\OpenGL\lib;..\External\assimp\lib;$(LibraryPath)</LibraryPath>
     <OutDir>$(SolutionDir)bin\</OutDir>
     <IntDir>..\Intermediate\$(ProjectName)\$(Configuration)\</IntDir>
     <TargetName>$(ProjectName)_release</TargetName>

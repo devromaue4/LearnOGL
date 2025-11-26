@@ -47,9 +47,6 @@
     <ClCompile Include="src\shader.cpp">
       <Filter>Render</Filter>
     </ClCompile>
-    <ClCompile Include="External\OpenGL\src\glad.c">
-      <Filter>Render</Filter>
-    </ClCompile>
     <ClCompile Include="src\core.cpp">
       <Filter>core</Filter>
     </ClCompile>
@@ -85,6 +82,9 @@
     </ClCompile>
     <ClCompile Include="src\camera_quat.cpp">
       <Filter>misc</Filter>
+    </ClCompile>
+    <ClCompile Include="External\OpenGL\src\glad.c">
+      <Filter>core</Filter>
     </ClCompile>
   </ItemGroup>
   <ItemGroup>

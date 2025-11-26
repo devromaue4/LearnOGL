@@ -132,14 +132,15 @@ GLuint Texture::Load(uint bufferSize, void* pData) {
 	return m_ID;
 }
 
-GLuint Texture::LoadFromMemory(void* pData, uint bufferSize) {
+// test only in release need load: width, height, nrChannels
+GLuint Texture::LoadFromMemory(void* pData, int width, int height, int nrChannels) {
 	if (m_TexType != GL_TEXTURE_2D) {
 		log("Texture target is not GL_TEXTURE_2D! Support is not implemented!");
 		return 0;
 	}
 
-	int width = 4096, height = 4096, nrChannels = 3;
-	//int width = bufferSize, height = 0, nrChannels = 3;
+	// test only in release need load: width, height, nrChannels
+	//int width = 4096, height = 4096, nrChannels = 3;
 
 	glGenTextures(1, &m_ID);
 	//glActiveTexture(m_TexUnit);
@@ -159,9 +160,8 @@ GLuint Texture::LoadFromMemory(void* pData, uint bufferSize) {
 	else if (nrChannels == 4)
 		format = GL_RGBA;
 
-	//glTexImage2D(m_TexType, 0, format, width, height, 0, format, m_pixelType, pData);
-	//glTexImage2D(m_TexType, 0, GL_RGB, width, height, 0, GL_RGB, GL_BYTE, pData);
-	glTexImage2D(m_TexType, 0, GL_RGB, width, height, 0, GL_RGB, GL_UNSIGNED_BYTE, pData);
+	glTexImage2D(m_TexType, 0, format, width, height, 0, format, m_pixelType, pData);
+	//glTexImage2D(m_TexType, 0, GL_RGB, width, height, 0, GL_RGB, GL_UNSIGNED_BYTE, pData);
 	glGenerateMipmap(m_TexType);
 	glBindTexture(m_TexType, 0);
 

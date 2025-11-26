@@ -30,7 +30,7 @@ bool gWireframe = false;
 bool gUseTextures = true;
 
 std::shared_ptr<Shader> gShaderBase;
-std::shared_ptr<Texture> gTex0, gTex1;
+//std::shared_ptr<Texture> gTex0, gTex1;
 
 //CameraEuler GameCamera(WIDTH, HEIGHT, glm::vec3(0, 10.f, 50.f));
 CameraQuat GameCamera(WIDTH, HEIGHT, glm::vec3(0,10,50), glm::vec3(0.0f, 0.0f, -1));
@@ -39,6 +39,7 @@ std::shared_ptr<StaticModel> SM_Bunny;
 std::shared_ptr<StaticModel> SM_Barrel;
 std::shared_ptr<StaticModel> SM_Room;
 std::shared_ptr<StaticModel> SM_Sphere;
+std::shared_ptr<StaticModel> SM_vase, SM_backpack, SM_submeshes;
 std::shared_ptr<SBox> gBox;
 
 constexpr int MAX_POINT_LIGHTS = 3;
@@ -51,7 +52,7 @@ int numSpotLights = 2;
 bool bToggleFlashLight = true;
 Material gMaterial;
 
-glm::vec3 glightDir(25.0f, 10, 0.0f);
+glm::vec3 glightDir(25.0f, 10, 20.0f);
 
 glm::mat4 mModel(1.0f);
 
@@ -60,13 +61,6 @@ float lastFrame = 0;
 
 void LoadTextures() {
 	//gTex0 = std::make_shared<Texture>("../media_files/models/antique_ceramic_vase/textures/antique_ceramic_vase_01_diff_4k.jpg"); gTex0->Load();
-
-	std::vector<char> data = util::ReadFileBin("../media_files/models/antique_ceramic_vase/textures/test.bin");
-	gTex0 = std::make_shared<Texture>(); 
-	gTex0->LoadFromMemory(data.data(), (uint)data.size());
-	data.clear();
-
-	//gTex1 = std::make_shared<Texture>("../media_files/textures/wall.jpg"); gTex1->Load();
 	//gTex0 = std::make_shared<Texture>("../media_files/textures/Cobble2.tga", GL_TEXTURE0); gTex0->Load();
 	//gTex0->setTexUnit(*gShaderBase,"texture_specular1", 1);
 	//gTex1 = new Texture("../media_files/textures/awesomeface.png", true, GL_TEXTURE1, GL_RGBA);  gTex1->Load();
@@ -87,13 +81,25 @@ void InitGeo() {
 	gBox = std::make_shared<SBox>(3.f);
 	//SM_Barrel = std::make_shared<StaticModel>();
 	//SM_Bunny = std::make_shared<StaticModel>();
-	SM_Room = std::make_shared<StaticModel>();
+	//SM_Room = std::make_shared<StaticModel>();
 	//SM_Sphere = std::make_shared<StaticModel>();
 	//SM_Bunny->Load("../media_files/models/misc/bunny.fbx");
-	SM_Room->Load("../media_files/models/misc/room.fbx");
+	//SM_Room->Load("../media_files/models/misc/room.fbx");
 	//SM_Sphere->Load("../media_files/models/misc/sphere.fbx");
-	//SM_Barrel->Load("../media_files/models/wine_barrel/wine_barrel_01.fbx");
-	//SM_Barrel->Load("../media_files/models/antique_ceramic_vase/antique_ceramic_vase_01.fbx");
+
+	SM_vase = std::make_shared<StaticModel>();
+	SM_backpack = std::make_shared<StaticModel>();
+	SM_submeshes = std::make_shared<StaticModel>();
+
+	//SM_vase->Load("../media_files/models/antique_ceramic_vase/antique_ceramic_vase_01.fbx");
+	//SM_submeshes->Load("../media_files/models/misc/sub-meshes.fbx");
+	//SM_backpack->Load("../media_files/models/backpack/backpack.obj", true);
+	//SM_backpack->Load("../media_files/models/backpack/backpack_01.fbx");
+	//SM_backpack->Write("backpack.bin");
+
+	SM_vase->Read("../media_files/models/antique_ceramic_vase/vase.bin");
+	SM_submeshes->Read("../media_files/models/misc/sub-meshes.bin");
+	SM_backpack->Read("../media_files/models/backpack/backpack.bin");
 
 	GameCamera.SetSpeedMove(1.2f);
 	//GameCamera.Speed = 50.2f;
@@ -151,8 +157,8 @@ void Render() {
 	
 	//mModel = glm::translate(mModel, glm::vec3(-18, 0, 0));
 	//mModel = glm::rotate(mModel, glm::radians(-90.0f), glm::vec3(1, 0, 0));
-	//float scaleBunny = 8.0f;
-	//mModel = glm::scale(mModel, glm::vec3(scaleBunny, scaleBunny, scaleBunny));
+	float scaleBunny = .5f;
+	mModel = glm::scale(mModel, glm::vec3(scaleBunny, scaleBunny, scaleBunny));
 	const glm::mat4& mView = GameCamera.getMat();
 	const glm::mat4& mProj = GameCamera.getProj();
 
@@ -219,34 +225,36 @@ void Render() {
 	// bunny
 	//SM_Bunny->Render();
 
+	SM_vase->Render();
+
 	// reset
-	//mModel = glm::mat4(1);
+	mModel = glm::mat4(1);
 
-	gTex0->Bind();
-
-	gShaderBase->setMat4("mModel", mModel);
-	SM_Room->Render();
+	//gShaderBase->setMat4("mModel", mModel);
+	//SM_Room->Render();
 
 	// sphere
-	//mModel = glm::translate(mModel, glm::vec3(25, 10, -10));
-	//gShaderBase->setMat4("mModel", mModel);
+	mModel = glm::translate(mModel, glm::vec3(-25, 0, -10));
+	gShaderBase->setMat4("mModel", mModel);
 	//SM_Sphere->Render();
+	SM_submeshes->Render();
 
 	// reset
-	//mModel = glm::mat4(1);
+	mModel = glm::mat4(1);
 
 	// barrel
-	//static float rot = 0;
-	//rot += 0.5f;
-	//float scaleModel = .5f;
-	////mModel = glm::translate(mModel, glm::vec3(15, 0, 0));
-	//mModel = glm::rotate(mModel, glm::radians(rot), glm::vec3(0, 1.0f, 0));
-	//mModel = glm::scale(mModel, glm::vec3(scaleModel, scaleModel, scaleModel));
-	//gShaderBase->setMat4("mModel", mModel);
+	static float rot = 0;
+	rot += 0.5f;
+	float scaleModel = 4.0f;
+	mModel = glm::translate(mModel, glm::vec3(15, 5, 0));
+	mModel = glm::rotate(mModel, glm::radians(rot), glm::vec3(0, 1.0f, 0));
+	mModel = glm::scale(mModel, glm::vec3(scaleModel, scaleModel, scaleModel));
+	gShaderBase->setMat4("mModel", mModel);
 	//SM_Barrel->Render();
+	SM_backpack->Render();
 
 	// reset
-	//mModel = glm::mat4(1);
+	mModel = glm::mat4(1);
 
 	// light box
 	//gBox->Render(mProj, mView, glm::translate(glm::mat4(1), gSpotLights[0].m_WorldPos)); // spot light 0
@@ -364,19 +372,19 @@ void processInput(GLFWwindow* wnd) {
 	}
 
 	float lightStep = 0.3f;
-	//if (glfwGetKey(wnd, GLFW_KEY_UP) == GLFW_PRESS) glightDir.z -= lightStep;
-	//if (glfwGetKey(wnd, GLFW_KEY_DOWN) == GLFW_PRESS) glightDir.z += lightStep;
-	//if (glfwGetKey(wnd, GLFW_KEY_LEFT) == GLFW_PRESS) glightDir.x -= lightStep;
-	//if (glfwGetKey(wnd, GLFW_KEY_RIGHT) == GLFW_PRESS) glightDir.x += lightStep;
-	//if (glfwGetKey(wnd, GLFW_KEY_MINUS) == GLFW_PRESS) glightDir.y += lightStep;
-	//if (glfwGetKey(wnd, GLFW_KEY_EQUAL) == GLFW_PRESS) glightDir.y -= lightStep;
+	if (glfwGetKey(wnd, GLFW_KEY_UP) == GLFW_PRESS) glightDir.z -= lightStep;
+	if (glfwGetKey(wnd, GLFW_KEY_DOWN) == GLFW_PRESS) glightDir.z += lightStep;
+	if (glfwGetKey(wnd, GLFW_KEY_LEFT) == GLFW_PRESS) glightDir.x -= lightStep;
+	if (glfwGetKey(wnd, GLFW_KEY_RIGHT) == GLFW_PRESS) glightDir.x += lightStep;
+	if (glfwGetKey(wnd, GLFW_KEY_MINUS) == GLFW_PRESS) glightDir.y += lightStep;
+	if (glfwGetKey(wnd, GLFW_KEY_EQUAL) == GLFW_PRESS) glightDir.y -= lightStep;
 	 
-	if (glfwGetKey(wnd, GLFW_KEY_UP) == GLFW_PRESS)		gSpotLights[0].m_WorldPos.z -= lightStep;
-	if (glfwGetKey(wnd, GLFW_KEY_DOWN) == GLFW_PRESS)	gSpotLights[0].m_WorldPos.z += lightStep;
-	if (glfwGetKey(wnd, GLFW_KEY_LEFT) == GLFW_PRESS)	gSpotLights[0].m_WorldPos.x -= lightStep;
-	if (glfwGetKey(wnd, GLFW_KEY_RIGHT) == GLFW_PRESS)	gSpotLights[0].m_WorldPos.x += lightStep;
-	if (glfwGetKey(wnd, GLFW_KEY_MINUS) == GLFW_PRESS)	gSpotLights[0].m_WorldPos.y += lightStep;
-	if (glfwGetKey(wnd, GLFW_KEY_EQUAL) == GLFW_PRESS)	gSpotLights[0].m_WorldPos.y -= lightStep;
+	//if (glfwGetKey(wnd, GLFW_KEY_UP) == GLFW_PRESS)		gSpotLights[0].m_WorldPos.z -= lightStep;
+	//if (glfwGetKey(wnd, GLFW_KEY_DOWN) == GLFW_PRESS)	gSpotLights[0].m_WorldPos.z += lightStep;
+	//if (glfwGetKey(wnd, GLFW_KEY_LEFT) == GLFW_PRESS)	gSpotLights[0].m_WorldPos.x -= lightStep;
+	//if (glfwGetKey(wnd, GLFW_KEY_RIGHT) == GLFW_PRESS)	gSpotLights[0].m_WorldPos.x += lightStep;
+	//if (glfwGetKey(wnd, GLFW_KEY_MINUS) == GLFW_PRESS)	gSpotLights[0].m_WorldPos.y += lightStep;
+	//if (glfwGetKey(wnd, GLFW_KEY_EQUAL) == GLFW_PRESS)	gSpotLights[0].m_WorldPos.y -= lightStep;
 
 	//if (glfwGetKey(wnd, GLFW_KEY_SPACE) == GLFW_PRESS) {
 	//	DisplayBoneIndex++;
@@ -408,7 +416,7 @@ GLFWwindow* InitWindow() {
 		pWnd = glfwCreateWindow(mode->width, mode->height, "OpenGL", primMonitor, nullptr);
 	}
 	else {
-		pWnd = glfwCreateWindow(WIDTH, HEIGHT, "Lighting: [ Spot Lights ]", nullptr, nullptr);
+		pWnd = glfwCreateWindow(WIDTH, HEIGHT, "Load meshes: write & read from binary file", nullptr, nullptr);
 		glfwSetWindowPos(pWnd, 130, 80);
 	}
 
