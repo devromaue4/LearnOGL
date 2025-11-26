@@ -161,7 +161,6 @@ GLuint Texture::LoadFromMemory(void* pData, int width, int height, int nrChannel
 		format = GL_RGBA;
 
 	glTexImage2D(m_TexType, 0, format, width, height, 0, format, m_pixelType, pData);
-	//glTexImage2D(m_TexType, 0, GL_RGB, width, height, 0, GL_RGB, GL_UNSIGNED_BYTE, pData);
 	glGenerateMipmap(m_TexType);
 	glBindTexture(m_TexType, 0);
 

@@ -1,0 +1,23 @@
+// struct of bin file
+
+struct MeshHeader {
+	uint mNumMeshes;
+	uint mNumMaterials;
+	uint numVertices;
+	uint numIndices;
+};
+
+meshes data
+
+vertex data
+
+index data
+
+materials
+color info
+
+size of string
+string texPath diff
+
+size of string
+string texPath spec

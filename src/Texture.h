@@ -19,8 +19,6 @@ public:
 
 	GLuint Load();
 	GLuint Load(uint bufferSize, void* pData);
-	
-	// test only in release need implement load: width, height, nrChannels
 	GLuint LoadFromMemory(void* pData, int width, int height, int nrChannels);
 
 	void setTexUnit(class Shader& shader, const char* uniform, GLuint unit);
