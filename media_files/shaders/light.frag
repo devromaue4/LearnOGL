@@ -151,6 +151,14 @@ vec4 CalcSpotLight(SpotLight sl, vec3 Normal) {
 	else return vec4(0,0,0,0);
 }
 
+float near = 0.1;
+float far = 100.0;
+
+float LenearDepth(float depth) {
+	float z = depth * 2.0 - 1.0;
+	return (2.0 * near * far) / (far + near - z * (far -near));
+}
+
 void main() {
 	vec3 normal = normalize(NormalO);
 	vec4 TotalLight = CalcLightInternal(gDirLight.Base, gDirLight.Direction, normal); // dir light
@@ -160,4 +168,8 @@ void main() {
 	for(int i = 0; i < gNumSpotLights; i++) TotalLight += CalcSpotLight(gSpotLights[i], normal);
 
 	FragColor = gUseTextures ? texture(texture_diffuse1, TexCoordO) * TotalLight : TotalLight;
+
+	// Visualizing the depth buffer
+	// float depth = LenearDepth(gl_FragCoord.z) / far;
+	// FragColor = vec4(vec3(depth), 1.0);
 }
